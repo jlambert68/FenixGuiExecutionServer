@@ -3,8 +3,9 @@ module FenixGuiExecutionServer
 go 1.18
 
 require (
+	github.com/go-gota/gota v0.12.0
 	github.com/jackc/pgx/v4 v4.17.2
-	github.com/jlambert68/FenixGrpcApi v0.0.0-20220912160640-5d9bbd52e495
+	github.com/jlambert68/FenixGrpcApi v0.0.0-20220913191004-2899960b7560
 	github.com/jlambert68/FenixSyncShared v0.0.0-20220309201741-aa2c115e0cc1
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
@@ -16,7 +17,6 @@ require (
 
 require (
 	cloud.google.com/go/compute v1.7.0 // indirect
-	github.com/go-gota/gota v0.12.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect

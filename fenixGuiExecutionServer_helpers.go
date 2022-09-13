@@ -2,6 +2,7 @@ package main
 
 import (
 	"FenixGuiTestCaseBuilderServer/common_config"
+	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixTestCaseBuilderServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixTestCaseBuilderServer/fenixTestCaseBuilderServerGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -62,14 +63,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 // ********************************************************************************************************************
 // Check if Calling Client is using correct proto-file version
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) isClientUsingCorrectTestDataProtoFileVersion(callingClientUuid string, usedProtoFileVersion fenixTestCaseBuilderServerGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum) (returnMessage *fenixTestCaseBuilderServerGrpcApi.AckNackResponse) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) isClientUsingCorrectTestDataProtoFileVersion(callingClientUuid string, usedProtoFileVersion fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum) (returnMessage *fenixTestCaseBuilderServerGrpcApi.AckNackResponse) {
 
 	var clientUseCorrectProtoFileVersion bool
-	var protoFileExpected fenixTestCaseBuilderServerGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum
-	var protoFileUsed fenixTestCaseBuilderServerGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum
+	var protoFileExpected fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum
+	var protoFileUsed fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum
 
 	protoFileUsed = usedProtoFileVersion
-	protoFileExpected = fenixTestCaseBuilderServerGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiTestCaseBuilderServerObject.getHighestFenixTestDataProtoFileVersion())
+	protoFileExpected = fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiTestCaseBuilderServerObject.getHighestFenixTestDataProtoFileVersion())
 
 	// Check if correct proto files is used
 	if protoFileExpected == protoFileUsed {
@@ -83,14 +84,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		// Not correct proto-file version is used
 
 		// Set Error codes to return message
-		var errorCodes []fenixTestCaseBuilderServerGrpcApi.ErrorCodesEnum
-		var errorCode fenixTestCaseBuilderServerGrpcApi.ErrorCodesEnum
+		var errorCodes []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+		var errorCode fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
 
-		errorCode = fenixTestCaseBuilderServerGrpcApi.ErrorCodesEnum_ERROR_WRONG_PROTO_FILE_VERSION
+		errorCode = fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_WRONG_PROTO_FILE_VERSION
 		errorCodes = append(errorCodes, errorCode)
 
 		// Create Return message
-		returnMessage = &fenixTestCaseBuilderServerGrpcApi.AckNackResponse{
+		returnMessage = &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 			AckNack:                      false,
 			Comments:                     "Wrong proto file used. Expected: '" + protoFileExpected.String() + "', but got: '" + protoFileUsed.String() + "'",
 			ErrorCodes:                   errorCodes,
@@ -122,7 +123,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var maxValue int32
 	maxValue = 0
 
-	for _, v := range fenixTestCaseBuilderServerGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum_value {
+	for _, v := range fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum_value {
 		if v > maxValue {
 			maxValue = v
 		}

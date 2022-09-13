@@ -32,7 +32,7 @@ var (
 	FenixTestDataSyncServerAddress string // TODO remove, but is referenced by code that is not removed yet
 	FenixTestDataSyncServerPort    int    // TODO remove,
 	FenixGuiServerAddress          string
-	FenixGuiServerPort             int
+	FenixExecutionGuiServerPort    int
 )
 
 // ***********************************************************************************************************

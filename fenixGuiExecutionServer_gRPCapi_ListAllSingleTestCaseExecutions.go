@@ -2,33 +2,35 @@ package main
 
 import (
 	"context"
-	fenixTestCaseBuilderServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixTestCaseBuilderServer/fenixTestCaseBuilderServerGrpcApi/go_grpc_api"
+	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
+
+
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
 )
 
 // ListAllImmatureTestInstructionAttributes - *********************************************************************
 // The TestCase Builder asks for all TestInstructions Attributes that the user must add values to in TestCase
-func (s *fenixTestCaseBuilderServerGrpcServicesServer) ListAllImmatureTestInstructionAttributes(ctx context.Context, userIdentificationMessage *fenixTestCaseBuilderServerGrpcApi.UserIdentificationMessage) (*fenixTestCaseBuilderServerGrpcApi.ImmatureTestInstructionAttributesMessage, error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) ListAllSingleTestCaseExecutions(ctx context.Context, listAllSingleTestCaseExecutionsRequest *fenixExecutionServerGuiGrpcApi.ListAllSingleTestCaseExecutionsRequest) (*fenixExecutionServerGuiGrpcApi.ListAllSingleTestCaseExecutionsResponse, error) {
 
 	// Define the response message
-	var responseMessage *fenixTestCaseBuilderServerGrpcApi.ImmatureTestInstructionAttributesMessage
+	var responseMessage *fenixExecutionServerGuiGrpcApi.ListAllSingleTestCaseExecutionsResponse
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "a55f9c82-1d74-44a5-8662-058b8bc9e48f",
-	}).Debug("Incoming 'gRPC - ListAllAvailableTestInstructionsAndTestContainers'")
+	}).Debug("Incoming 'gRPC - ListAllSingleTestCaseExecutions'")
 
 	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "27fb45fe-3266-41aa-a6af-958513977e28",
-	}).Debug("Outgoing 'gRPC - ListAllAvailableTestInstructionsAndTestContainers'")
+	}).Debug("Outgoing 'gRPC - ListAllSingleTestCaseExecutions'")
 
 	// Check if Client is using correct proto files version
-	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion("666", userIdentificationMessage.ProtoFileVersionUsedByClient)
+	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(listAllSingleTestCaseExecutionsRequest.UserIdentification.UserId, fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(listAllSingleTestCaseExecutionsRequest.UserIdentification.ProtoFileVersionUsedByClient)))
 	if returnMessage != nil {
-		// Not correct proto-file version is used
-		responseMessage = &fenixTestCaseBuilderServerGrpcApi.ImmatureTestInstructionAttributesMessage{
-			TestInstructionAttributesList: nil,
-			AckNackResponse:               returnMessage,
+
+		responseMessage = &fenixExecutionServerGuiGrpcApi.ListAllSingleTestCaseExecutionsResponse{
+			SingleTestCaseExecutionSummary: nil,
+			A:                returnMessage,
 		}
 
 		// Exiting
@@ -39,19 +41,19 @@ func (s *fenixTestCaseBuilderServerGrpcServicesServer) ListAllImmatureTestInstru
 	userID := userIdentificationMessage.UserId
 
 	// Define variables to store data from DB in
-	var testInstructionAttributesList []*fenixTestCaseBuilderServerGrpcApi.ImmatureTestInstructionAttributesMessage_TestInstructionAttributeMessage
+	var testInstructionAttributesList []*fenixExecutionServerGuiGrpcApi.SingleTestCaseExecutionSummaryMessage
 
 	// Get users ImmatureTestInstruction-data from CloudDB
 	testInstructionAttributesList, err := fenixGuiExecutionServerObject.loadClientsImmatureTestInstructionAttributesFromCloudDB(userID)
 	if err != nil {
 		// Something went wrong so return an error to caller
-		responseMessage = &fenixTestCaseBuilderServerGrpcApi.ImmatureTestInstructionAttributesMessage{
-			TestInstructionAttributesList: nil,
-			AckNackResponse: &fenixTestCaseBuilderServerGrpcApi.AckNackResponse{
+		responseMessage = &fenixExecutionServerGuiGrpcApi.ListAllSingleTestCaseExecutionsResponse{
+			SingleTestCaseExecutionSummary: nil,
+			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 				AckNack:                      false,
 				Comments:                     "Got some Error when retrieving ImmatureTestInstructionAttributes from database",
-				ErrorCodes:                   []fenixTestCaseBuilderServerGrpcApi.ErrorCodesEnum{fenixTestCaseBuilderServerGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
-				ProtoFileVersionUsedByClient: fenixTestCaseBuilderServerGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
+				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
 			},
 		}
 
@@ -60,20 +62,20 @@ func (s *fenixTestCaseBuilderServerGrpcServicesServer) ListAllImmatureTestInstru
 	}
 
 	// Create the response to caller
-	responseMessage = &fenixTestCaseBuilderServerGrpcApi.ImmatureTestInstructionAttributesMessage{
+	responseMessage = &fenixExecutionServerGuiGrpcApi.ImmatureTestInstructionAttributesMessage{
 		TestInstructionAttributesList: testInstructionAttributesList,
-		AckNackResponse: &fenixTestCaseBuilderServerGrpcApi.AckNackResponse{
+		AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 			AckNack:                      true,
 			Comments:                     "",
 			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixTestCaseBuilderServerGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
 		},
 	}
 
 	return responseMessage, nil
 }
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadClientsImmatureTestInstructionAttributesFromCloudDB(userID string) (testInstructionAttributesMessage []*fenixTestCaseBuilderServerGrpcApi.ImmatureTestInstructionAttributesMessage_TestInstructionAttributeMessage, err error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadClientsImmatureTestInstructionAttributesFromCloudDB(userID string) (testInstructionAttributesMessage []*fenixExecutionServerGuiGrpcApi.ImmatureTestInstructionAttributesMessage_TestInstructionAttributeMessage, err error) {
 
 	usedDBSchema := "FenixGuiBuilder" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
@@ -103,7 +105,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	for rows.Next() {
 
 		// Initiate a new variable to store the data
-		immatureTestInstructionAttribute := fenixTestCaseBuilderServerGrpcApi.ImmatureTestInstructionAttributesMessage_TestInstructionAttributeMessage{}
+		immatureTestInstructionAttribute := fenixExecutionServerGuiGrpcApi.ImmatureTestInstructionAttributesMessage_TestInstructionAttributeMessage{}
 
 		err := rows.Scan(
 			&immatureTestInstructionAttribute.DomainUuid,
