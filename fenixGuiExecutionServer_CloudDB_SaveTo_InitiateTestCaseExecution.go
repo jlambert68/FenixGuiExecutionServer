@@ -1,7 +1,6 @@
 package main
 
 import (
-	"FenixGuiExecutionServer/common_config"
 	"context"
 	uuidGenerator "github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
@@ -55,7 +54,6 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Extract TestCase-information to be added to TestCaseExecution-data
 	testCaseToExecute := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
 	//TODO Load TestCase-data from Database
-
 
 	// Prepare TestDataExecution-data to be saved in database
 	testCaseExecutionToBeSaved := fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage{
@@ -136,11 +134,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		}).Debug("Exiting: saveInitiateTestCaseExecutionSaveToCloudDB()")
 	}()
 
-	// Get current user
-	currentUserUuid := pinnedTestInstructionsAndTestContainersMessage.UserId
-
 	// Get a common dateTimeStamp to use
-	currentDataTimeStamp := fenixSyncShared.GenerateDatetimeTimeStampForDB()
+	//currentDataTimeStamp := fenixSyncShared.GenerateDatetimeTimeStampForDB()
 
 	var dataRowToBeInsertedMultiType []interface{}
 	var dataRowsToBeInsertedMultiType [][]interface{}
@@ -153,29 +148,10 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Data to be inserted in the DB-table
 	dataRowsToBeInsertedMultiType = nil
 
-	x:= *fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage{
-		DomainUuid:                          "",
-		:                          "",
-		:                       "",
-		:                       "",
-		:                    0,
-		:              "",
-		:           0,
-		:                        "",
-		:                        "",
-		:                     0,
-		:               "",
-		:            0,
-		: nil,
-		:                     "",
-		:                   0,
-	}
+	dataRowToBeInsertedMultiType = nil
 
-
-		dataRowToBeInsertedMultiType = nil
-
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainName)
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainName)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainName)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainName)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteName)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteVersion)
@@ -190,10 +166,13 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestDataSetUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.ExecutionPriority)
 
+	dataRowsToBeInsertedMultiType = append(dataRowsToBeInsertedMultiType, dataRowToBeInsertedMultiType)
 
-	sqlToExecute = sqlToExecute + "INSERT INTO \"" + usedDBSchema + "\".\"PinnedTestInstructionsAndPreCreatedTestInstructionContainers\" "
-	sqlToExecute = sqlToExecute + "(\"UserId\", \"PinnedUuid\", \"PinnedName\", \"PinnedType\", \"TimeStamp\") "
-	sqlToExecute = sqlToExecute + fenixGuiTestCaseBuilderServerObject.generateSQLInsertValues(generateSQLInsertValues)
+	sqlToExecute = sqlToExecute + "INSERT INTO \"" + usedDBSchema + "\".\"TestCaseExecutionQueue\" "
+	sqlToExecute = sqlToExecute + "(\"DomainUuid\", \"DomainName\", \"TestSuiteUuid\", \"TestSuiteName\", \"TestSuiteVersion\", " +
+		"\"TestSuiteExecutionUuid\", \"TestSuiteExecutionVersion\", \"TestCaseUuid\", \"TestCaseName\", \"TestCaseVersion\"," +
+		" \"TestCaseExecutionUuid\", \"TestCaseExecutionVersion\", \"QueueTimeStamp\", \"TestDataSetUuid\", \"ExecutionPriority\") "
+	sqlToExecute = sqlToExecute + fenixGuiTestCaseBuilderServerObject.generateSQLInsertValues(dataRowsToBeInsertedMultiType)
 	sqlToExecute = sqlToExecute + ";"
 
 	// Execute Query CloudDB

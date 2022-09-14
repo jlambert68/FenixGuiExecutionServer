@@ -8,7 +8,7 @@ import (
 
 // InitiateTestCaseExecution - *********************************************************************
 // Initiate a TestExecution from a TestCase and a TestDataSet
-func (s *fenixExecutionServerGuiGrpcServicesServer) InitiateTestCaseExecution(ctx context.Context, initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (*fenixExecutionServerGuiGrpcApi.AckNackResponse, error) {
+func (s *fenixExecutionServerGuiGrpcServicesServer) InitiateTestCaseExecution(ctx context.Context, initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (*fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage, error) {
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "a93fb1bd-1a5b-4417-80c3-082d34267c06",
@@ -19,25 +19,21 @@ func (s *fenixExecutionServerGuiGrpcServicesServer) InitiateTestCaseExecution(ct
 	}).Debug("Outgoing 'gRPC - InitiateTestCaseExecution'")
 
 	// Check if Client is using correct proto files version
-	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(initiateSingleTestCaseExecutionRequestMessage.UserIdentification.UserId, initiateSingleTestCaseExecutionRequestMessage.UserIdentification.ProtoFileVersionUsedByClient)
-	if returnMessage != nil {
+	ackNackRespons := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(initiateSingleTestCaseExecutionRequestMessage.UserIdentification.UserId, initiateSingleTestCaseExecutionRequestMessage.UserIdentification.ProtoFileVersionUsedByClient)
+	if ackNackRespons != nil {
 		// Not correct proto-file version is used
 		// Exiting
-		return returnMessage, nil
+		initiateSingleTestCaseExecutionResponseMessage := fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
+			TestCaseExecutionUuid: "",
+			AckNackResponse:       ackNackRespons,
+		}
+
+		return &initiateSingleTestCaseExecutionResponseMessage, nil
 	}
 
-	// Save Pinned TestInstructions and pre-created TestInstructionContainers to Cloud DB
-	returnMessage = fenixGuiExecutionServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(initiateSingleTestCaseExecutionRequestMessage)
-	if returnMessage != nil {
-		// Something went wrong when saving to database
-		// Exiting
-		return returnMessage, nil
-	}
+	// Save TestCaseExecution in Cloud DB
+	initiateSingleTestCaseExecutionResponseMessage := fenixGuiExecutionServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(initiateSingleTestCaseExecutionRequestMessage)
 
-	return &fenixExecutionServerGuiGrpcApi.AckNackResponse{
-		AckNack:                      true,
-		Comments:                     "",
-		ErrorCodes:                   nil,
-		ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
-	}, nil
+	return initiateSingleTestCaseExecutionResponseMessage, nil
+
 }
