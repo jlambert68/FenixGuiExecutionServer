@@ -15,12 +15,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	sqlToExecute := ""
 	sqlToExecute = sqlToExecute + "SELECT TCUE.* "
-	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCaseExecutionQueue\" TCUE "
-	sqlToExecute = sqlToExecute + "WHERE TCUE.\"ExecutionHasFinished\" = true"
-	sqlToExecute = sqlToExecute + "ORDER BY TCUE.\"ExecutionStartTimeStamp\" ASC, TCUE.\"DomainName\" ASC, TCUE.\"TestSuiteName\" ASC, TCUE.\"TestInstructionName\" ASC "
-	sqlToExecute = sqlToExecute + "UNION "
+	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCasesFinishedExecution\" TCUE "
+	sqlToExecute = sqlToExecute + "WHERE TCUE.\"ExecutionHasFinished\" = true "
+	sqlToExecute = sqlToExecute + "UNION ALL "
 	sqlToExecute = sqlToExecute + "SELECT TCFE.* "
 	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCasesFinishedExecution\" TCFE "
+	sqlToExecute = sqlToExecute + "ORDER BY \"ExecutionStartTimeStamp\" ASC, \"DomainName\" ASC, \"TestSuiteName\" ASC, \"TestCaseName\" ASC "
 
 	// Query DB
 	rows, err := fenixSyncShared.DbPool.Query(context.Background(), sqlToExecute)

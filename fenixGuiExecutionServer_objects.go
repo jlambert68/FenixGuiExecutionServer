@@ -6,7 +6,6 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"net"
-	//	ecpb "github.com/jlambert68/FenixGrpcApi/Client/fenixExecutionServerGuiGrpcApi/echo/go_grpc_api"
 )
 
 type fenixGuiExecutionServerObjectStruct struct {

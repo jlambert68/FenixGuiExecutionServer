@@ -8,13 +8,13 @@ import (
 
 // AreYouAlive - *********************************************************************
 //Anyone can check if Fenix TestCase Builder server is alive with this service
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) AreYouAlive(ctx context.Context, emptyParameter *fenixExecutionServerGuiGrpcApi.EmptyParameter) (*fenixExecutionServerGuiGrpcApi.AckNackResponse, error) {
+func (s *fenixExecutionServerGuiGrpcServicesServer) AreYouAlive(ctx context.Context, emptyParameter *fenixExecutionServerGuiGrpcApi.EmptyParameter) (*fenixExecutionServerGuiGrpcApi.AckNackResponse, error) {
 
-	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "1ff67695-9a8b-4821-811d-0ab8d33c4d8b",
 	}).Debug("Incoming 'gRPC - AreYouAlive'")
 
-	defer fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "9c7f0c3d-7e9f-4c91-934e-8d7a22926d84",
 	}).Debug("Outgoing 'gRPC - AreYouAlive'")
 

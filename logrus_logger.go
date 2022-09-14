@@ -1,7 +1,7 @@
 package main
 
 import (
-	"FenixGuiTestCaseBuilderServer/common_config"
+	"FenixGuiExecutionServer/common_config"
 	"github.com/sirupsen/logrus"
 	"log"
 	"os"
