@@ -53,7 +53,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Extract TestCase-information to be added to TestCaseExecution-data
 	testCaseToExecute := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
-	//TODO Load TestCase-data from Database
+	//TODO Load TestCase-data  from Database
 
 	// Prepare TestDataExecution-data to be saved in database
 	testCaseExecutionToBeSaved := fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage{
