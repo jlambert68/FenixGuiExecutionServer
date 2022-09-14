@@ -4,7 +4,9 @@ go 1.18
 
 require (
 	github.com/go-gota/gota v0.12.0
-	github.com/jlambert68/FenixGrpcApi v0.0.0-20220914102845-6b8a72591bbf
+	github.com/google/uuid v1.3.0
+	github.com/jackc/pgx/v4 v4.17.2
+	github.com/jlambert68/FenixGrpcApi v0.0.0-20220914171625-5fea2db0a4f2
 	github.com/jlambert68/FenixSyncShared v0.0.0-20220309201741-aa2c115e0cc1
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
@@ -26,7 +28,6 @@ require (
 	github.com/jackc/pgproto3/v2 v2.3.1 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.12.0 // indirect
-	github.com/jackc/pgx/v4 v4.17.2 // indirect
 	github.com/jackc/puddle v1.3.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
