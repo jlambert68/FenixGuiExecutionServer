@@ -14,23 +14,22 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var responseMessage *fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-		"id": "2fa84f86-4ccc-479c-b73d-c329897c1873",
+		"id": "30e50aed-e860-467f-abdf-673d37788616",
 	}).Debug("Incoming 'gRPC - ListTestCasesUnderExecution'")
 
 	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-		"id": "567a589f-d832-4e22-80a7-b37179eb6f94",
+		"id": "e316b0ac-edd9-48f7-a550-dcf1a30aeab8",
 	}).Debug("Outgoing 'gRPC - ListTestCasesUnderExecution'")
 
 	// Current user
 	userID := listTestCasesUnderExecutionRequest.UserIdentification.UserId
 
 	// Check if Client is using correct proto files version
-	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(listTestCasesUnderExecutionRequest.UserIdentification.ProtoFileVersionUsedByClient))
+	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(listTestCasesUnderExecutionRequest.UserIdentification.ProtoFileVersionUsedByClient))
 	if returnMessage != nil {
 
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse{
-			SingleTestCaseExecutionSummary: nil,
-			AckNackResponse:                returnMessage,
+			AckNackResponse: returnMessage,
 		}
 
 		// Exiting
@@ -38,20 +37,20 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Define variables to store data from DB in
-	var singleTestCaseExecutionSummary []*fenixExecutionServerGuiGrpcApi.SingleTestCaseExecutionSummaryMessage
+	var testCaseUnderExecutionMessage []*fenixExecutionServerGuiGrpcApi.TestCaseUnderExecutionMessage
 
 	// Get users ImmatureTestInstruction-data from CloudDB
-	singleTestCaseExecutionSummary, err := fenixGuiExecutionServerObject.loadSingleTestCaseExecutionSummaryFromCloudDB(userID)
+	testCaseUnderExecutionMessage, err := fenixGuiExecutionServerObject.listTestCasesUnderExecutionLoadFromCloudDB(userID)
 	if err != nil {
 		// Something went wrong so return an error to caller
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse{
-			SingleTestCaseExecutionSummary: nil,
 			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 				AckNack:                      false,
-				Comments:                     "Got some Error when retrieving ImmatureTestInstructionAttributes from database",
+				Comments:                     "Got some Error when retrieving TestCaseUnderExecutionMessage from database",
 				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
-				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
 			},
+			TestCasesUnderExecution: nil,
 		}
 
 		// Exiting
@@ -60,13 +59,13 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Create the response to caller
 	responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse{
-		SingleTestCaseExecutionSummary: singleTestCaseExecutionSummary,
 		AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 			AckNack:                      true,
 			Comments:                     "",
 			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
 		},
+		TestCasesUnderExecution: testCaseUnderExecutionMessage,
 	}
 
 	return responseMessage, nil

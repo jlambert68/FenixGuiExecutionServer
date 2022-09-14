@@ -14,23 +14,23 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var responseMessage *fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsResponse
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-		"id": "a55f9c82-1d74-44a5-8662-058b8bc9e48f",
-	}).Debug("Incoming 'gRPC - ListAllSingleTestCaseExecutions'")
+		"id": "33451c5f-1230-4ea1-817e-08afa1c1192b",
+	}).Debug("Incoming 'gRPC - ListTestCasesWithFinishedExecutions'")
 
 	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-		"id": "27fb45fe-3266-41aa-a6af-958513977e28",
-	}).Debug("Outgoing 'gRPC - ListAllSingleTestCaseExecutions'")
+		"id": "1cabcbc9-86ab-4ffb-b41f-8562c3bc1d75",
+	}).Debug("Outgoing 'gRPC - ListTestCasesWithFinishedExecutions'")
 
 	// Current user
 	userID := listTestCasesWithFinishedExecutionsRequest.UserIdentification.UserId
 
 	// Check if Client is using correct proto files version
-	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(listTestCasesWithFinishedExecutionsRequest.UserIdentification.ProtoFileVersionUsedByClient))
+	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(listTestCasesWithFinishedExecutionsRequest.UserIdentification.ProtoFileVersionUsedByClient))
 	if returnMessage != nil {
 
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsResponse{
-			SingleTestCaseExecutionSummary: nil,
-			AckNackResponse:                returnMessage,
+			AckNackResponse:               returnMessage,
+			TestCaseWithFinishedExecution: nil,
 		}
 
 		// Exiting
@@ -38,20 +38,20 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Define variables to store data from DB in
-	var singleTestCaseExecutionSummary []*fenixExecutionServerGuiGrpcApi.SingleTestCaseExecutionSummaryMessage
+	var listTestCasesWithFinishedExecutionsResponse []*fenixExecutionServerGuiGrpcApi.TestCaseWithFinishedExecutionMessage
 
 	// Get users ImmatureTestInstruction-data from CloudDB
-	singleTestCaseExecutionSummary, err := fenixGuiExecutionServerObject.loadSingleTestCaseExecutionSummaryFromCloudDB(userID)
+	listTestCasesWithFinishedExecutionsResponse, err := fenixGuiExecutionServerObject.listTestCasesWithFinishedExecutionsLoadFromCloudDB(userID)
 	if err != nil {
 		// Something went wrong so return an error to caller
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsResponse{
-			SingleTestCaseExecutionSummary: nil,
 			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 				AckNack:                      false,
-				Comments:                     "Got some Error when retrieving ImmatureTestInstructionAttributes from database",
+				Comments:                     "Got some Error when retrieving ListTestCasesWithFinishedExecutions from database",
 				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
-				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
 			},
+			TestCaseWithFinishedExecution: nil,
 		}
 
 		// Exiting
@@ -60,13 +60,13 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Create the response to caller
 	responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsResponse{
-		SingleTestCaseExecutionSummary: singleTestCaseExecutionSummary,
 		AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 			AckNack:                      true,
 			Comments:                     "",
 			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixTestCaseBuilderProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
 		},
+		TestCaseWithFinishedExecution: listTestCasesWithFinishedExecutionsResponse,
 	}
 
 	return responseMessage, nil

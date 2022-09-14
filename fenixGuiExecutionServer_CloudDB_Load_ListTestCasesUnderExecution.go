@@ -9,21 +9,22 @@ import (
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(userID string) (testCaseExecutionBasicInformationMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage, err error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesUnderExecutionLoadFromCloudDB(userID string) (testCaseUnderExecutionMessage []*fenixExecutionServerGuiGrpcApi.TestCaseUnderExecutionMessage, err error) {
 
 	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
 	sqlToExecute := ""
-	sqlToExecute = sqlToExecute + "SELECT TCEQ.* "
-	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCaseExecutionQueue\" TCEQ "
-	sqlToExecute = sqlToExecute + "ORDER BY TCEQ.\"QueueTimeStamp\" ASC, TCEQ.\"DomainName\" ASC, TCEQ.\"TestSuiteName\" ASC, TCEQ.\"TestInstructionName\" ASC; "
+	sqlToExecute = sqlToExecute + "SELECT TCUE.* "
+	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCaseExecutionQueue\" TCUE "
+	sqlToExecute = sqlToExecute + "WHERE TCUE.\"ExecutionHasFinished\" = false"
+	sqlToExecute = sqlToExecute + "ORDER BY TCUE.\"ExecutionStartTimeStamp\" ASC, TCUE.\"DomainName\" ASC, TCUE.\"TestSuiteName\" ASC, TCUE.\"TestInstructionName\" ASC; "
 
 	// Query DB
 	rows, err := fenixSyncShared.DbPool.Query(context.Background(), sqlToExecute)
 
 	if err != nil {
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
-			"Id":           "e935a5a5-bed1-445c-8115-1150d59a6301",
+			"Id":           "f5b88d14-dbdb-4cb3-a33a-2b71ab1eeda9",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
 		}).Error("Something went wrong when executing SQL")
@@ -35,13 +36,20 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempPlacedOnTestExecutionQueueTimeStamp time.Time
 	var tempExecutionPriority int
 
+	var tempExecutionStartTimeStamp time.Time
+	var tempExecutionStopTimeStamp time.Time
+	var tempTestCaseExecutionStatus int
+
 	// Extract data from DB result set
 	for rows.Next() {
 
 		// Initiate a new variable to store the data
+		testCaseUnderExecution := fenixExecutionServerGuiGrpcApi.TestCaseUnderExecutionMessage{}
 		testCaseExecutionBasicInformation := fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage{}
+		testCaseExecutionDetails := fenixExecutionServerGuiGrpcApi.TestCaseExecutionDetailsMessage{}
 
 		err := rows.Scan(
+			// TestCaseExecutionBasicInformationMessage
 			&testCaseExecutionBasicInformation.DomainUuid,
 			&testCaseExecutionBasicInformation.DomainName,
 			&testCaseExecutionBasicInformation.TestSuiteUuid,
@@ -57,11 +65,17 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempPlacedOnTestExecutionQueueTimeStamp,
 			&testCaseExecutionBasicInformation.TestDataSetUuid,
 			&tempExecutionPriority,
+
+			// TestCaseExecutionDetailsMessage
+			&tempExecutionStartTimeStamp,
+			&tempExecutionStopTimeStamp,
+			&tempTestCaseExecutionStatus,
+			testCaseExecutionDetails.ExecutionHasFinished,
 		)
 
 		if err != nil {
 			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
-				"Id":           "1600d7c4-ce72-430c-9a2f-3b530e5c0f83",
+				"Id":           "a1833e32-5ad5-468d-8e5f-ca6280d58099",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
 			}).Error("Something went wrong when processing result from database")
@@ -73,10 +87,18 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		testCaseExecutionBasicInformation.PlacedOnTestExecutionQueueTimeStamp = timestamppb.New(tempPlacedOnTestExecutionQueueTimeStamp)
 		testCaseExecutionBasicInformation.ExecutionPriority = fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum(tempExecutionPriority)
 
-		// Add 'testCaseExecutionBasicInformation' to 'testCaseExecutionBasicInformationMessage'
-		testCaseExecutionBasicInformationMessage = append(testCaseExecutionBasicInformationMessage, &testCaseExecutionBasicInformation)
+		testCaseExecutionDetails.ExecutionStartTimeStamp = timestamppb.New(tempExecutionStartTimeStamp)
+		testCaseExecutionDetails.ExecutionStopTimeStamp = timestamppb.New(tempExecutionStopTimeStamp)
+		testCaseExecutionDetails.TestCaseExecutionStatus = fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum(tempTestCaseExecutionStatus)
+
+		// Build 'TestCaseUnderExecutionMessage'
+		testCaseUnderExecution.TestCaseExecutionBasicInformation = &testCaseExecutionBasicInformation
+		testCaseUnderExecution.TestCaseExecutionDetails = &testCaseExecutionDetails
+
+		// Add 'TestCaseUnderExecutionMessage' to slice of all 'TestCaseUnderExecutionMessage's
+		testCaseUnderExecutionMessage = append(testCaseUnderExecutionMessage, &testCaseUnderExecution)
 
 	}
 
-	return testCaseExecutionBasicInformationMessage, err
+	return testCaseUnderExecutionMessage, err
 }

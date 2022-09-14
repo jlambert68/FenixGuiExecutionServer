@@ -4,13 +4,14 @@ go 1.18
 
 require (
 	github.com/go-gota/gota v0.12.0
-	github.com/jlambert68/FenixGrpcApi v0.0.0-20220914085444-4a03889c12b3
+	github.com/jlambert68/FenixGrpcApi v0.0.0-20220914102845-6b8a72591bbf
 	github.com/jlambert68/FenixSyncShared v0.0.0-20220309201741-aa2c115e0cc1
 	github.com/sirupsen/logrus v1.9.0
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 	google.golang.org/api v0.95.0
 	google.golang.org/grpc v1.49.0
+	google.golang.org/protobuf v1.28.1
 )
 
 require (
@@ -34,5 +35,4 @@ require (
 	gonum.org/v1/gonum v0.9.1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220624142145-8cd45d7dbd1f // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
 )
