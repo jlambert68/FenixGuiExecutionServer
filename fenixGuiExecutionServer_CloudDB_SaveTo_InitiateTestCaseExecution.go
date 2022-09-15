@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	uuidGenerator "github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
@@ -52,7 +55,30 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	placedOnTestExecutionQueueTimeStamp := time.Now()
 
 	// Extract TestCase-information to be added to TestCaseExecution-data
-	testCaseToExecute := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
+	//testCaseToExecute := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
+	testCaseToExecute, err := fenixGuiTestCaseBuilderServerObject.loadTestCaseBasicInformation(initiateSingleTestCaseExecutionRequestMessage.TestCaseUuid)
+	if err != nil {
+
+		// Set Error codes to return message
+		var errorCodes []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+		var errorCode fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+
+		errorCode = fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM
+		errorCodes = append(errorCodes, errorCode)
+
+		// Create Return message
+		initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
+			TestCaseExecutionUuid: "",
+			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+				AckNack:                      false,
+				Comments:                     "Problem when Loading TestCase Basic Information from database",
+				ErrorCodes:                   errorCodes,
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiTestCaseBuilderServerObject.getHighestFenixTestDataProtoFileVersion()),
+			},
+		}
+
+		return initiateSingleTestCaseExecutionResponseMessage
+	}
 	//TODO Load TestCase-data  from Database
 
 	// Prepare TestDataExecution-data to be saved in database
@@ -196,4 +222,79 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// No errors occurred
 	return nil
 
+}
+
+// Load BasicInformation for TestCase to be able to populate the TestCaseExecution
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseBasicInformation(testCaseUuid string) (testCaseBasicInformation *fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage, err error) {
+
+	usedDBSchema := "FenixGuiBuilder" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
+
+	sqlToExecute := ""
+	sqlToExecute = sqlToExecute + "SELECT TC.\"TestCaseBasicInformationAsJsonb\" "
+	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCases\" TC "
+	sqlToExecute = sqlToExecute + "WHERE TC.\"TestCaseUuid\" = '" + testCaseUuid + "' AND "
+	sqlToExecute = sqlToExecute + "TC.\"TestCaseVersion\" = (SELECT MAX(TC2.\"TestCaseVersion\") "
+	sqlToExecute = sqlToExecute + "FROM \"FenixGuiBuilder\".\"TestCases\" TC2 "
+	sqlToExecute = sqlToExecute + "WHERE TC2.\"TestCaseUuid\" = '" + testCaseUuid + "');"
+
+	// Query DB
+	rows, err := fenixSyncShared.DbPool.Query(context.Background(), sqlToExecute)
+
+	if err != nil {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "79c43b90-7539-4bab-bff9-41acfeb2b5bc",
+			"Error":        err,
+			"sqlToExecute": sqlToExecute,
+		}).Error("Something went wrong when executing SQL")
+
+		return &fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}, err
+	}
+
+	// Extract data from DB result set
+	for rows.Next() {
+
+		// Initiate a new variable to store the data
+		testCaseBasicInformation := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
+
+		err := rows.Scan(
+			&testCaseBasicInformation,
+		)
+
+		if err != nil {
+			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+				"Id":           "ee291325-3517-4c3f-b571-13a3c37fc4b8",
+				"Error":        err,
+				"sqlToExecute": sqlToExecute,
+			}).Error("Something went wrong when processing result from database")
+
+			return nil, err
+		}
+
+	}
+
+	return testCaseBasicInformation, err
+
+}
+
+// See https://www.alexedwards.net/blog/using-postgresql-jsonb
+// Make the Attrs struct implement the driver.Valuer interface. This method
+// simply returns the JSON-encoded representation of the struct.
+func (a myAttrStruct) Value() (driver.Value, error) {
+
+	return json.Marshal(a)
+}
+
+// Make the Attrs struct implement the sql.Scanner interface. This method
+// simply decodes a JSON-encoded value into the struct fields.
+func (a *myAttrStruct) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+
+	return json.Unmarshal(b, &a)
+}
+
+type myAttrStruct struct {
+	fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage
 }
