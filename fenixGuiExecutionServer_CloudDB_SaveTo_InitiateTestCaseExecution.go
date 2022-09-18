@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	uuidGenerator "github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
@@ -55,8 +56,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	placedOnTestExecutionQueueTimeStamp := time.Now()
 
 	// Extract TestCase-information to be added to TestCaseExecution-data
-	//testCaseToExecute := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
-	testCaseToExecute, err := fenixGuiTestCaseBuilderServerObject.loadTestCaseBasicInformation(initiateSingleTestCaseExecutionRequestMessage.TestCaseUuid)
+	//testCaseToExecuteBasicInformation := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
+	testCaseToExecuteBasicInformation, err := fenixGuiTestCaseBuilderServerObject.loadTestCaseBasicInformation(initiateSingleTestCaseExecutionRequestMessage.TestCaseUuid)
 	if err != nil {
 
 		// Set Error codes to return message
@@ -83,16 +84,16 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Prepare TestDataExecution-data to be saved in database
 	testCaseExecutionToBeSaved := fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage{
-		DomainUuid:                          testCaseToExecute.NonEditableInformation.DomainUuid,
-		DomainName:                          testCaseToExecute.NonEditableInformation.DomainName,
+		DomainUuid:                          testCaseToExecuteBasicInformation.domainUuid,
+		DomainName:                          testCaseToExecuteBasicInformation.domainName,
 		TestSuiteUuid:                       "",
 		TestSuiteName:                       "",
 		TestSuiteVersion:                    0,
 		TestSuiteExecutionUuid:              "",
 		TestSuiteExecutionVersion:           0,
-		TestCaseUuid:                        testCaseToExecute.NonEditableInformation.TestCaseUuid,
-		TestCaseName:                        testCaseToExecute.EditableInformation.TestCaseName,
-		TestCaseVersion:                     testCaseToExecute.NonEditableInformation.TestCaseVersion,
+		TestCaseUuid:                        testCaseToExecuteBasicInformation.testCaseUuid,
+		TestCaseName:                        testCaseToExecuteBasicInformation.testCaseName,
+		TestCaseVersion:                     uint32(testCaseToExecuteBasicInformation.testCaseVersion),
 		TestCaseExecutionUuid:               testCaseExecutionUuid,
 		TestCaseExecutionVersion:            1,
 		PlacedOnTestExecutionQueueTimeStamp: timestamppb.New(placedOnTestExecutionQueueTimeStamp),
@@ -224,13 +225,22 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 }
 
+// Temporary variabel for storing temp result from database
+type tempTestCaseBasicInformationStruct struct {
+	domainUuid      string
+	domainName      string
+	testCaseUuid    string
+	testCaseName    string
+	testCaseVersion int
+}
+
 // Load BasicInformation for TestCase to be able to populate the TestCaseExecution
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseBasicInformation(testCaseUuid string) (testCaseBasicInformation *fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage, err error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseBasicInformation(testCaseUuid string) (testCaseBasicInformation tempTestCaseBasicInformationStruct, err error) {
 
 	usedDBSchema := "FenixGuiBuilder" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
 	sqlToExecute := ""
-	sqlToExecute = sqlToExecute + "SELECT TC.\"TestCaseBasicInformationAsJsonb\" "
+	sqlToExecute = sqlToExecute + "SELECT TC.\"DomainUuid\", TC.\"DomainName\", TC.\"TestCaseUuid\", TC.\"TestCaseName\", TC.\"TestCaseVersion\""
 	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCases\" TC "
 	sqlToExecute = sqlToExecute + "WHERE TC.\"TestCaseUuid\" = '" + testCaseUuid + "' AND "
 	sqlToExecute = sqlToExecute + "TC.\"TestCaseVersion\" = (SELECT MAX(TC2.\"TestCaseVersion\") "
@@ -247,28 +257,63 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			"sqlToExecute": sqlToExecute,
 		}).Error("Something went wrong when executing SQL")
 
-		return &fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}, err
+		return tempTestCaseBasicInformationStruct{}, err
 	}
+
+	// USed to secure that exactly one row was found
+	numberOfRowFromDB := 0
 
 	// Extract data from DB result set
 	for rows.Next() {
 
-		// Initiate a new variable to store the data
-		testCaseBasicInformation := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
+		numberOfRowFromDB = numberOfRowFromDB + 1
 
 		err := rows.Scan(
-			&testCaseBasicInformation,
+			&testCaseBasicInformation.domainUuid,
+			&testCaseBasicInformation.domainName,
+			&testCaseBasicInformation.testCaseUuid,
+			&testCaseBasicInformation.testCaseName,
+			&testCaseBasicInformation.testCaseVersion,
 		)
 
 		if err != nil {
+
 			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
-				"Id":           "ee291325-3517-4c3f-b571-13a3c37fc4b8",
+				"Id":           "9cdde993-689a-4b49-b362-9929007425ae",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
 			}).Error("Something went wrong when processing result from database")
 
-			return nil, err
+			return tempTestCaseBasicInformationStruct{}, err
 		}
+
+	}
+
+	if numberOfRowFromDB > 1 {
+		numberOfRowFromDB = 2
+	}
+
+	switch numberOfRowFromDB {
+	case 0:
+
+		err := errors.New(fmt.Sprintf("expected one row from datavase but got zero rows for testcase: %s", testCaseUuid))
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "91bf8bf6-9c03-433c-8125-e08efe8ccb2d",
+			"testCaseUuid": testCaseUuid,
+		}).Error("Expected 1 row but got zero rows")
+
+		return tempTestCaseBasicInformationStruct{}, err
+
+	case 1:
+
+	case 2:
+		err := errors.New(fmt.Sprintf("expected exactly one row from database but got more then one rows for testcase: %s", testCaseUuid))
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "f91489e5-78fe-4cca-95b4-f1a102eaf6cc",
+			"testCaseUuid": testCaseUuid,
+		}).Error("Expected 1 row but got more then 1 rows")
+
+		return tempTestCaseBasicInformationStruct{}, err
 
 	}
 
