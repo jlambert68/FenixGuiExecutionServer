@@ -1,8 +1,11 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/common_config"
 	"fmt"
+	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Generates all "VALUES('xxx', 'yyy')..." for insert statements
@@ -25,11 +28,24 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			case bool:
 				sqlInsertValuesString = sqlInsertValuesString + fmt.Sprint(value)
 
-			case int:
+			case int, uint32:
 				sqlInsertValuesString = sqlInsertValuesString + fmt.Sprint(value)
+
 			case string:
 
 				sqlInsertValuesString = sqlInsertValuesString + "'" + fmt.Sprint(value) + "'"
+
+			case *timestamppb.Timestamp:
+
+				valueAsTimeGrpcTimeStamp := value.(*timestamppb.Timestamp)
+
+				valueAsString := common_config.ConvertGrpcTimeStampToStringForDB(valueAsTimeGrpcTimeStamp)
+
+				sqlInsertValuesString = sqlInsertValuesString + "'" + fmt.Sprint(valueAsString) + "'"
+
+			case fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum:
+				valueAsNumber := value.(fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum).Number()
+				sqlInsertValuesString = sqlInsertValuesString + fmt.Sprint(valueAsNumber)
 
 			default:
 				fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
