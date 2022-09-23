@@ -16,6 +16,17 @@ import (
 	"time"
 )
 
+// After all stuff is done, then Commit or Rollback depending on result
+var doCommitNotRoleBack bool
+
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) commitOrRoleBack(dbTransaction pgx.Tx) {
+	if doCommitNotRoleBack == true {
+		dbTransaction.Commit(context.Background())
+	} else {
+		dbTransaction.Rollback(context.Background())
+	}
+}
+
 // Prepare for Saving the Initiation of a new TestCaseExecution in the CloudDB
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) prepareInitiateTestCaseExecutionSaveToCloudDB(initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (initiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage) {
 
@@ -47,7 +58,10 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		return initiateSingleTestCaseExecutionResponseMessage
 	}
-	defer txn.Commit(context.Background())
+
+	// Standard is to do a Rollback
+	doCommitNotRoleBack = false
+	defer fenixGuiTestCaseBuilderServerObject.commitOrRoleBack(txn) //txn.Commit(context.Background())
 
 	// Generate a new TestCaseExecution-UUID
 	testCaseExecutionUuid := uuidGenerator.New().String()
@@ -144,6 +158,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiTestCaseBuilderServerObject.getHighestFenixTestDataProtoFileVersion()),
 		},
 	}
+
+	// Commit every database change
+	doCommitNotRoleBack = true
 
 	return initiateSingleTestCaseExecutionResponseMessage
 }

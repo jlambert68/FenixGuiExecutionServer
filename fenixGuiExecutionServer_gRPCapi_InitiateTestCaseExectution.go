@@ -8,7 +8,7 @@ import (
 
 // InitiateTestCaseExecution - *********************************************************************
 // Initiate a TestExecution from a TestCase and a TestDataSet
-func (s *fenixExecutionServerGuiGrpcServicesServer) InitiateTestCaseExecution(ctx context.Context, initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (*fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage, error) {
+func (s *fenixExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ctx context.Context, initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (*fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage, error) {
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "a93fb1bd-1a5b-4417-80c3-082d34267c06",
@@ -33,6 +33,9 @@ func (s *fenixExecutionServerGuiGrpcServicesServer) InitiateTestCaseExecution(ct
 
 	// Save TestCaseExecution in Cloud DB
 	initiateSingleTestCaseExecutionResponseMessage := fenixGuiExecutionServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(initiateSingleTestCaseExecutionRequestMessage)
+
+	// Trigger ExecutionEngine to start process TestCase
+	//TODO Trigger ExecutionEngine
 
 	return initiateSingleTestCaseExecutionResponseMessage, nil
 

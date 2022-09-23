@@ -18,12 +18,12 @@ var fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct
 
 // gRPC variables
 var (
-	registerFenixExecutionServerGuiGrpcServicesServer *grpc.Server // registerFenixExecutionServerGuiGrpcServicesServer *grpc.Server
-	lis                                               net.Listener
+	registerFenixExecutionServerGrpcServicesServer *grpc.Server // registerFenixExecutionServerGrpcServicesServer *grpc.Server
+	lis                                            net.Listener
 )
 
 // gRPC Server used for register clients Name, Ip and Por and Clients Test Enviroments and Clients Test Commandst
-type fenixExecutionServerGuiGrpcServicesServer struct {
+type fenixExecutionServerGrpcServicesServer struct {
 	fenixExecutionServerGuiGrpcApi.UnimplementedFenixExecutionServerGuiGrpcServicesServer
 }
 

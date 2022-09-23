@@ -8,7 +8,7 @@ import (
 
 // AreYouAlive - *********************************************************************
 //Anyone can check if Fenix TestCase Builder server is alive with this service
-func (s *fenixExecutionServerGuiGrpcServicesServer) AreYouAlive(ctx context.Context, emptyParameter *fenixExecutionServerGuiGrpcApi.EmptyParameter) (*fenixExecutionServerGuiGrpcApi.AckNackResponse, error) {
+func (s *fenixExecutionServerGrpcServicesServer) AreYouAlive(ctx context.Context, emptyParameter *fenixExecutionServerGuiGrpcApi.EmptyParameter) (*fenixExecutionServerGuiGrpcApi.AckNackResponse, error) {
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "1ff67695-9a8b-4821-811d-0ab8d33c4d8b",

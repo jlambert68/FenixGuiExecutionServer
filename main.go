@@ -54,7 +54,7 @@ func init() {
 	common_config.FenixGuiServerAddress = mustGetenv("FenixGuiBuilderServerAddress")
 
 	// Port for GuiBuilderServer
-	common_config.FenixExecutionGuiServerPort, err = strconv.Atoi(mustGetenv("FenixGuiBuilderServerPort"))
+	common_config.FenixExecutionServerPort, err = strconv.Atoi(mustGetenv("FenixGuiBuilderServerPort"))
 	if err != nil {
 		fmt.Println("Couldn't convert environment variable 'FenixGuiBuilderServerPort' to an integer, error: ", err)
 		os.Exit(0)
