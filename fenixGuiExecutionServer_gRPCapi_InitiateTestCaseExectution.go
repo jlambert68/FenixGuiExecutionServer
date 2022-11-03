@@ -3,6 +3,7 @@ package main
 import (
 	"FenixGuiExecutionServer/messagesToExecutionServer"
 	"context"
+	"fmt"
 	fenixExecutionServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGrpcApi/go_grpc_api"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
@@ -41,10 +42,22 @@ func (s *fenixExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ctx c
 		return initiateSingleTestCaseExecutionResponseMessage, nil
 	}
 
-	// Trigger ExecutionEngine to start process TestCase
-	//TODO Trigger ExecutionEngine
-	var ackNackResponse *fenixExecutionServerGrpcApi.AckNackResponse
-	ackNackResponse = messagesToExecutionServer.SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer()
+	// Trigger ExecutionEngine to start process TestCase from TestCaseExecution-queue
+	var sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse *fenixExecutionServerGrpcApi.AckNackResponse
+	sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse = messagesToExecutionServer.MessagesToExecutionServerObject.SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer()
+
+	// If triggering ExecutionServer to read TestCaseExecutionQueue wasn't successful then change 'initiateSingleTestCaseExecutionResponseMessage'
+	if sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse.AckNack == false {
+		var ackNackResponseToRespond *fenixExecutionServerGuiGrpcApi.AckNackResponse
+		ackNackResponseToRespond = &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+			AckNack:                      ackNackRespons.AckNack,
+			Comments:                     fmt.Sprintf("Message from ExecutionServer is: '%s'", ackNackRespons.Comments),
+			ErrorCodes:                   nil,
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+		}
+
+		initiateSingleTestCaseExecutionResponseMessage.AckNackResponse = ackNackResponseToRespond
+	}
 
 	return initiateSingleTestCaseExecutionResponseMessage, nil
 

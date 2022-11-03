@@ -49,7 +49,7 @@ func (s *fenixExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExecut
 				AckNack:                      false,
 				Comments:                     "Got some Error when retrieving ListTestCasesWithFinishedExecutions from database",
 				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
-				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixGuiExecutionServerProtoFileVersion()),
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 			},
 			TestCaseWithFinishedExecution: nil,
 		}
@@ -64,7 +64,7 @@ func (s *fenixExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExecut
 			AckNack:                      true,
 			Comments:                     "",
 			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixGuiExecutionServerProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 		},
 		TestCaseWithFinishedExecution: listTestCasesWithFinishedExecutionsResponse,
 	}

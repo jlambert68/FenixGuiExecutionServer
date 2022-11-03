@@ -69,7 +69,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var protoFileUsed fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum
 
 	protoFileUsed = usedProtoFileVersion
-	protoFileExpected = fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiTestCaseBuilderServerObject.getHighestFenixGuiExecutionServerProtoFileVersion())
+	protoFileExpected = fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiTestCaseBuilderServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion())
 
 	// Check if correct proto files is used
 	if protoFileExpected == protoFileUsed {
@@ -111,7 +111,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 // ********************************************************************************************************************
 // Get the highest FenixGuiExecutionServerProtoFileVersionEnumeration
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) getHighestFenixGuiExecutionServerProtoFileVersion() int32 {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) GetHighestFenixGuiExecutionServerProtoFileVersion() int32 {
 
 	// Check if there already is a 'highestFenixGuiExecutionServerProtoFileVersion' saved, if so use that one
 	if highestFenixGuiExecutionServerProtoFileVersion != -1 {
