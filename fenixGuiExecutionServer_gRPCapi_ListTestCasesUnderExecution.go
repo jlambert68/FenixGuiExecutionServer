@@ -8,7 +8,7 @@ import (
 
 // ListAllImmatureTestInstructionAttributes - *********************************************************************
 // The TestCase Builder asks for all TestInstructions Attributes that the user must add values to in TestCase
-func (s *fenixExecutionServerGrpcServicesServer) ListTestCasesUnderExecution(ctx context.Context, listTestCasesUnderExecutionRequest *fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionRequest) (*fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse, error) {
+func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesUnderExecution(ctx context.Context, listTestCasesUnderExecutionRequest *fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionRequest) (*fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse, error) {
 
 	// Define the response message
 	var responseMessage *fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse

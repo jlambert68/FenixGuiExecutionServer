@@ -1,7 +1,7 @@
 package main
 
 import (
-	"FenixGuiExecutionServer/common_config"
+	"FenixGuiExecutionServer/messagesToExecutionServer"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -19,11 +19,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		// Create an identity token.
 		// With a global TokenSource tokens would be reused and auto-refreshed at need.
 		// A given TokenSource is specific to the audience.
-		tokenSource, err := idtoken.NewTokenSource(ctx, "https://"+common_config.FenixTestDataSyncServerAddress)
+		tokenSource, err := idtoken.NewTokenSource(ctx, "https://"+messagesToExecutionServer.FenixExecutionServerAddressToUse)
 		if err != nil {
 			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
 				"ID":  "8ba622d8-b4cd-46c7-9f81-d9ade2568eca",
 				"err": err,
+				"messagesToExecutionServer.FenixExecutionServerAddressToUse": messagesToExecutionServer.FenixExecutionServerAddressToUse,
 			}).Error("Couldn't generate access token")
 
 			return nil, false, "Couldn't generate access token"

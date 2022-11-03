@@ -2,6 +2,7 @@ package main
 
 import (
 	"FenixGuiExecutionServer/common_config"
+	"FenixGuiExecutionServer/messagesToExecutionServer"
 	"strconv"
 
 	//"flag"
@@ -26,15 +27,15 @@ func main() {
 }
 
 func init() {
-	//executionLocation := flag.String("startupType", "0", "The application should be started with one of the following: LOCALHOST_NODOCKER, LOCALHOST_DOCKER, GCP")
+	//executionLocationForGuiExecutionServer := flag.String("startupType", "0", "The application should be started with one of the following: LOCALHOST_NODOCKER, LOCALHOST_DOCKER, GCP")
 	//flag.Parse()
 
 	var err error
 
-	// Get Environment variable to tell how this program was started
-	var executionLocation = mustGetenv("ExecutionLocation")
+	// Where is GuiExecutionServer started
+	var executionLocationForGuiExecutionServer = mustGetenv("ExecutionLocationForFenixGuiExecutionServer")
 
-	switch executionLocation {
+	switch executionLocationForGuiExecutionServer {
 	case "LOCALHOST_NODOCKER":
 		common_config.ExecutionLocationForFenixGuiExecutionServer = common_config.LocalhostNoDocker
 
@@ -45,20 +46,56 @@ func init() {
 		common_config.ExecutionLocationForFenixGuiExecutionServer = common_config.GCP
 
 	default:
-		fmt.Println("Unknown Execution location for FenixGuiServer: " + executionLocation + ". Expected one of the following: LOCALHOST_NODOCKER, LOCALHOST_DOCKER, GCP")
+		fmt.Println("Unknown Execution location for FenixGuiExecutionServer: " + executionLocationForGuiExecutionServer + ". Expected one of the following: LOCALHOST_NODOCKER, LOCALHOST_DOCKER, GCP")
 		os.Exit(0)
 
 	}
 
-	// Address to GuiBuilderServer
-	common_config.FenixGuiServerAddress = mustGetenv("FenixGuiBuilderServerAddress")
+	// Address to GuiExecutionServer
+	common_config.FenixGuiExecutionServerAddress = mustGetenv("FenixGuiExecutionServerAddress")
 
-	// Port for GuiBuilderServer
-	common_config.FenixExecutionServerPort, err = strconv.Atoi(mustGetenv("FenixGuiBuilderServerPort"))
+	// Port for GuiExecutionServer
+	common_config.FenixGuiExecutionServerPort, err = strconv.Atoi(mustGetenv("FenixGuiExecutionServerPort"))
 	if err != nil {
-		fmt.Println("Couldn't convert environment variable 'FenixGuiBuilderServerPort' to an integer, error: ", err)
+		fmt.Println("Couldn't convert environment variable 'FenixGuiExecutionServerPort' to an integer, error: ", err)
 		os.Exit(0)
 
 	}
+
+	// Where is ExecutionServer started
+	var executionLocationForExecutionServer = mustGetenv("ExecutionLocationForFenixExecutionServer")
+
+	switch executionLocationForExecutionServer {
+	case "LOCALHOST_NODOCKER":
+		common_config.ExecutionLocationForFenixExecutionServer = common_config.LocalhostNoDocker
+
+	case "LOCALHOST_DOCKER":
+		common_config.ExecutionLocationForFenixExecutionServer = common_config.LocalhostDocker
+
+	case "GCP":
+		common_config.ExecutionLocationForFenixExecutionServer = common_config.GCP
+
+	default:
+		fmt.Println("Unknown Execution location for FenixExecutionServer: " + executionLocationForExecutionServer + ". Expected one of the following: LOCALHOST_NODOCKER, LOCALHOST_DOCKER, GCP")
+		os.Exit(0)
+
+	}
+
+	// Address to ExecutionServer
+	common_config.FenixExecutionServerAddress = mustGetenv("FenixExecutionServerAddress")
+
+	// Port for ExecutionServer
+	common_config.FenixExecutionServerPort, err = strconv.Atoi(mustGetenv("FenixExecutionServerPort"))
+	if err != nil {
+		fmt.Println("Couldn't convert environment variable 'FenixExecutionServerPort' to an integer, error: ", err)
+		os.Exit(0)
+
+	}
+
+	// Save the Dial-string to use for connecting to ExecutionServer
+	messagesToExecutionServer.FenixExecutionServerAddressToDial = common_config.FenixExecutionServerAddress + ":" + strconv.Itoa(common_config.FenixExecutionServerPort)
+
+	// Save the address to use for getting access token
+	messagesToExecutionServer.FenixExecutionServerAddressToUse = common_config.FenixExecutionServerAddress
 
 }
