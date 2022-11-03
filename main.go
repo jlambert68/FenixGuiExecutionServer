@@ -36,13 +36,13 @@ func init() {
 
 	switch executionLocation {
 	case "LOCALHOST_NODOCKER":
-		common_config.ExecutionLocationForClient = common_config.LocalhostNoDocker
+		common_config.ExecutionLocationForFenixGuiExecutionServer = common_config.LocalhostNoDocker
 
 	case "LOCALHOST_DOCKER":
-		common_config.ExecutionLocationForClient = common_config.LocalhostDocker
+		common_config.ExecutionLocationForFenixGuiExecutionServer = common_config.LocalhostDocker
 
 	case "GCP":
-		common_config.ExecutionLocationForClient = common_config.GCP
+		common_config.ExecutionLocationForFenixGuiExecutionServer = common_config.GCP
 
 	default:
 		fmt.Println("Unknown Execution location for FenixGuiServer: " + executionLocation + ". Expected one of the following: LOCALHOST_NODOCKER, LOCALHOST_DOCKER, GCP")

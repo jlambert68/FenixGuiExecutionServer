@@ -31,5 +31,4 @@ type fenixExecutionServerGrpcServicesServer struct {
 // For now hardcoded MerklePath
 //var merkleFilterPath string = //"AccountEnvironment/ClientJuristictionCountryCode/MarketSubType/MarketName/" //SecurityType/"
 
-var highestFenixProtoFileVersion int32 = -1
-var highestClientProtoFileVersion int32 = -1
+var highestFenixGuiExecutionServerProtoFileVersion int32 = -1

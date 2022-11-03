@@ -48,7 +48,7 @@ func (s *fenixExecutionServerGrpcServicesServer) ListTestCasesUnderExecution(ctx
 				AckNack:                      false,
 				Comments:                     "Got some Error when retrieving TestCaseUnderExecutionMessage from database",
 				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
-				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixGuiExecutionServerProtoFileVersion()),
 			},
 			TestCasesUnderExecution: nil,
 		}
@@ -63,7 +63,7 @@ func (s *fenixExecutionServerGrpcServicesServer) ListTestCasesUnderExecution(ctx
 			AckNack:                      true,
 			Comments:                     "",
 			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixTestDataProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.getHighestFenixGuiExecutionServerProtoFileVersion()),
 		},
 		TestCasesUnderExecution: testCaseUnderExecutionMessage,
 	}

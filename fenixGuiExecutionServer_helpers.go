@@ -69,7 +69,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var protoFileUsed fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum
 
 	protoFileUsed = usedProtoFileVersion
-	protoFileExpected = fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiTestCaseBuilderServerObject.getHighestFenixTestDataProtoFileVersion())
+	protoFileExpected = fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiTestCaseBuilderServerObject.getHighestFenixGuiExecutionServerProtoFileVersion())
 
 	// Check if correct proto files is used
 	if protoFileExpected == protoFileUsed {
@@ -110,12 +110,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // ********************************************************************************************************************
-// Get the highest FenixProtoFileVersionEnumeration
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) getHighestFenixTestDataProtoFileVersion() int32 {
+// Get the highest FenixGuiExecutionServerProtoFileVersionEnumeration
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) getHighestFenixGuiExecutionServerProtoFileVersion() int32 {
 
-	// Check if there already is a 'highestFenixProtoFileVersion' saved, if so use that one
-	if highestFenixProtoFileVersion != -1 {
-		return highestFenixProtoFileVersion
+	// Check if there already is a 'highestFenixGuiExecutionServerProtoFileVersion' saved, if so use that one
+	if highestFenixGuiExecutionServerProtoFileVersion != -1 {
+		return highestFenixGuiExecutionServerProtoFileVersion
 	}
 
 	// Find the highest value for proto-file version
@@ -128,7 +128,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		}
 	}
 
-	highestFenixProtoFileVersion = maxValue
+	highestFenixGuiExecutionServerProtoFileVersion = maxValue
 
-	return highestFenixProtoFileVersion
+	return highestFenixGuiExecutionServerProtoFileVersion
 }

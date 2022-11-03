@@ -1,7 +1,9 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/messagesToExecutionServer"
 	"context"
+	fenixExecutionServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGrpcApi/go_grpc_api"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
 )
@@ -34,8 +36,15 @@ func (s *fenixExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ctx c
 	// Save TestCaseExecution in Cloud DB
 	initiateSingleTestCaseExecutionResponseMessage := fenixGuiExecutionServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(initiateSingleTestCaseExecutionRequestMessage)
 
+	// Exit due to error in saving TestCaseExecution in database
+	if initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.AckNack == false {
+		return initiateSingleTestCaseExecutionResponseMessage, nil
+	}
+
 	// Trigger ExecutionEngine to start process TestCase
 	//TODO Trigger ExecutionEngine
+	var ackNackResponse *fenixExecutionServerGrpcApi.AckNackResponse
+	ackNackResponse = messagesToExecutionServer.SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer()
 
 	return initiateSingleTestCaseExecutionResponseMessage, nil
 

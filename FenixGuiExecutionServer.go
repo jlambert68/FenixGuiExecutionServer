@@ -1,6 +1,7 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/messagesToExecutionServer"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
 )
@@ -38,6 +39,11 @@ func fenixGuiExecutionServerMain() {
 
 	// Clean up when leaving. Is placed after logger because shutdown logs information
 	defer cleanup()
+
+	// Initiate 'MessagesToExecutionServerObject' tfor messages to be sent to ExecutionServer
+	messagesToExecutionServer.MessagesToExecutionServerObject = messagesToExecutionServer.MessagesToExecutionServerObjectStruct{
+		Logger: fenixGuiExecutionServerObject.logger,
+	}
 
 	// Start Backend gRPC-server
 	fenixGuiExecutionServerObject.InitGrpcServer()
