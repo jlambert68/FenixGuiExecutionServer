@@ -106,6 +106,11 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 		// Do gRPC-call to ExecutionServer
 		informThatThereAreNewTestCasesOnExecutionQueueResponse, err = FenixExecutionServerGrpcClient.InformThatThereAreNewTestCasesOnExecutionQueue(ctx, emptyParameter)
 
+		// Exit when there was a success calll
+		if err == nil && informThatThereAreNewTestCasesOnExecutionQueueResponse.AckNack == true {
+			return informThatThereAreNewTestCasesOnExecutionQueueResponse
+		}
+
 		// Add to counter for how many gRPC-call-attempts to Worker that have been done
 		gRPCCallAttemptCounter = gRPCCallAttemptCounter + 1
 
@@ -138,6 +143,9 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 
 			}
 
+			// Sleep for some time before retrying to connect
+			time.Sleep(time.Millisecond * time.Duration(sleepTimeBetweenGrpcCallAttempts[gRPCCallAttemptCounter-1]))
+
 		} else if informThatThereAreNewTestCasesOnExecutionQueueResponse.AckNack == false {
 
 			// ExecutionServer couldn't handle gPRC call
@@ -164,9 +172,6 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 			return ackNackResponse
 
 		}
-
-		// Sleep for some time before retrying to connect
-		time.Sleep(time.Millisecond * time.Duration(sleepTimeBetweenGrpcCallAttempts[gRPCCallAttemptCounter-1]))
 
 	}
 

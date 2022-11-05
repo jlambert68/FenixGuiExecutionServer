@@ -48,7 +48,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	registerFenixGuiExecutionServerGrpcServicesServer = grpc.NewServer()
 	fenixExecutionServerGuiGrpcApi.RegisterFenixExecutionServerGuiGrpcServicesServer(registerFenixGuiExecutionServerGrpcServicesServer, &fenixGuiExecutionServerGrpcServicesServer{})
 
-	// Register RouteGuide on the same server.
+	// Register Reflection for this gRPC-server.
 	reflection.Register(registerFenixGuiExecutionServerGrpcServicesServer)
 
 	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
