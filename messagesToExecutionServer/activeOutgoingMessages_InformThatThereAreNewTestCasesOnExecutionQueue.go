@@ -14,7 +14,8 @@ import (
 func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer(testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage) (ackNackResponse *fenixExecutionServerGrpcApi.AckNackResponse) {
 
 	messagesToExecutionServerObject.Logger.WithFields(logrus.Fields{
-		"id": "3d3de917-77fe-4768-a5a5-7e107173d74f",
+		"id":                                 "3d3de917-77fe-4768-a5a5-7e107173d74f",
+		"testCaseExecutionsToProcessMessage": testCaseExecutionsToProcessMessage,
 	}).Debug("Incoming 'SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer'")
 
 	messagesToExecutionServerObject.Logger.WithFields(logrus.Fields{
@@ -134,7 +135,7 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 					AckNack:                      false,
 					Comments:                     fmt.Sprintf("Error when doing gRPC-call for ExecutionServe. Error message is: '%s'", err.Error()),
 					ErrorCodes:                   errorCodes,
-					ProtoFileVersionUsedByClient: informThatThereAreNewTestCasesOnExecutionQueueResponse.ProtoFileVersionUsedByClient,
+					ProtoFileVersionUsedByClient: fenixExecutionServerGrpcApi.CurrentFenixExecutionServerProtoFileVersionEnum(messagesToExecutionServerObject.GetHighestFenixExecutionServerProtoFileVersion()),
 				}
 
 				return ackNackResponse

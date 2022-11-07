@@ -15,6 +15,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "a93fb1bd-1a5b-4417-80c3-082d34267c06",
+		"initiateSingleTestCaseExecutionRequestMessage": initiateSingleTestCaseExecutionRequestMessage,
 	}).Debug("Incoming 'gRPC - InitiateTestCaseExecution'")
 
 	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
@@ -65,8 +66,8 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 	if sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse.AckNack == false {
 		var ackNackResponseToRespond *fenixExecutionServerGuiGrpcApi.AckNackResponse
 		ackNackResponseToRespond = &fenixExecutionServerGuiGrpcApi.AckNackResponse{
-			AckNack:                      ackNackRespons.AckNack,
-			Comments:                     fmt.Sprintf("Message from ExecutionServer is: '%s'", ackNackRespons.Comments),
+			AckNack:                      initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.AckNack,
+			Comments:                     fmt.Sprintf("Message from ExecutionServer is: '%s'", initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.Comments),
 			ErrorCodes:                   nil,
 			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 		}
