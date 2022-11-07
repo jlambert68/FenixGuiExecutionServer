@@ -42,9 +42,24 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		return initiateSingleTestCaseExecutionResponseMessage, nil
 	}
 
+	// Prepare message to be sent to ExecutionServer
+	var testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage
+	var testCaseExecutionToProcess *fenixExecutionServerGrpcApi.TestCaseExecutionToProcess
+	var testCaseExecutionsToProcess []*fenixExecutionServerGrpcApi.TestCaseExecutionToProcess
+
+	testCaseExecutionToProcess = &fenixExecutionServerGrpcApi.TestCaseExecutionToProcess{
+		TestCaseExecutionsUuid:   initiateSingleTestCaseExecutionResponseMessage.TestCaseExecutionUuid,
+		TestCaseExecutionVersion: 1,
+	}
+	testCaseExecutionsToProcess = append(testCaseExecutionsToProcess, testCaseExecutionToProcess)
+
+	testCaseExecutionsToProcessMessage = &fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage{
+		TestCaseExecutionsToProcess: testCaseExecutionsToProcess,
+	}
+
 	// Trigger ExecutionEngine to start process TestCase from TestCaseExecution-queue
 	var sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse *fenixExecutionServerGrpcApi.AckNackResponse
-	sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse = messagesToExecutionServer.MessagesToExecutionServerObject.SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer()
+	sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse = messagesToExecutionServer.MessagesToExecutionServerObject.SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer(testCaseExecutionsToProcessMessage)
 
 	// If triggering ExecutionServer to read TestCaseExecutionQueue wasn't successful then change 'initiateSingleTestCaseExecutionResponseMessage'
 	if sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse.AckNack == false {

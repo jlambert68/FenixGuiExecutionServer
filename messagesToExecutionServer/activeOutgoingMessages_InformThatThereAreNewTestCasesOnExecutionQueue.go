@@ -11,7 +11,7 @@ import (
 )
 
 // SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer - Fenix Gui Execution Server inform ExecutionServer that there is/are new TestCase(s) on TestCaseExecutionQueue
-func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer() (ackNackResponse *fenixExecutionServerGrpcApi.AckNackResponse) {
+func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer(testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage) (ackNackResponse *fenixExecutionServerGrpcApi.AckNackResponse) {
 
 	messagesToExecutionServerObject.Logger.WithFields(logrus.Fields{
 		"id": "3d3de917-77fe-4768-a5a5-7e107173d74f",
@@ -84,10 +84,8 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 
 	}
 
-	// Create message to be sent to ExecutionServer
-	var emptyParameter *fenixExecutionServerGrpcApi.EmptyParameter
-	emptyParameter = &fenixExecutionServerGrpcApi.EmptyParameter{
-		ProtoFileVersionUsedByClient: fenixExecutionServerGrpcApi.CurrentFenixExecutionServerProtoFileVersionEnum(messagesToExecutionServerObject.GetHighestFenixExecutionServerProtoFileVersion())}
+	// Finish the preparation of the message to ExecutionServer
+	testCaseExecutionsToProcessMessage.ProtoFileVersionUsedByClient = fenixExecutionServerGrpcApi.CurrentFenixExecutionServerProtoFileVersionEnum(messagesToExecutionServerObject.GetHighestFenixExecutionServerProtoFileVersion())
 
 	// slice with sleep time, in milliseconds, between each attempt to do gRPC-call to ExecutionServer
 	var sleepTimeBetweenGrpcCallAttempts []int
@@ -104,9 +102,9 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 	for {
 
 		// Do gRPC-call to ExecutionServer
-		informThatThereAreNewTestCasesOnExecutionQueueResponse, err = FenixExecutionServerGrpcClient.InformThatThereAreNewTestCasesOnExecutionQueue(ctx, emptyParameter)
+		informThatThereAreNewTestCasesOnExecutionQueueResponse, err = FenixExecutionServerGrpcClient.InformThatThereAreNewTestCasesOnExecutionQueue(ctx, testCaseExecutionsToProcessMessage)
 
-		// Exit when there was a success calll
+		// Exit when there was a success call
 		if err == nil && informThatThereAreNewTestCasesOnExecutionQueueResponse.AckNack == true {
 			return informThatThereAreNewTestCasesOnExecutionQueueResponse
 		}
