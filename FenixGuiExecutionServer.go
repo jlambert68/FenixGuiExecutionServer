@@ -1,6 +1,8 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/broadcastingEngine"
+	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
@@ -36,6 +38,7 @@ func fenixGuiExecutionServerMain() {
 
 	// Init logger
 	fenixGuiExecutionServerObject.InitLogger("")
+	common_config.Logger = fenixGuiExecutionServerObject.logger
 
 	// Clean up when leaving. Is placed after logger because shutdown logs information
 	defer cleanup()
@@ -44,6 +47,9 @@ func fenixGuiExecutionServerMain() {
 	messagesToExecutionServer.MessagesToExecutionServerObject = messagesToExecutionServer.MessagesToExecutionServerObjectStruct{
 		Logger: fenixGuiExecutionServerObject.logger,
 	}
+
+	// Start listen for Broadcasts regarding change in status TestCaseExecutions and TestInstructionExecutions
+	broadcastingEngine.InitiateAndStartBroadcastNotifyEngine()
 
 	// Start Backend gRPC-server
 	fenixGuiExecutionServerObject.InitGrpcServer()
