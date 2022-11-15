@@ -24,7 +24,7 @@ var (
 
 // gRPC Server used for register clients Name, Ip and Por and Clients Test Enviroments and Clients Test Commandst
 type fenixGuiExecutionServerGrpcServicesServer struct {
-	fenixExecutionServerGuiGrpcApi.UnimplementedFenixExecutionServerGuiGrpcServicesServer
+	fenixExecutionServerGuiGrpcApi.UnimplementedFenixExecutionServerGuiGrpcServicesForGuiClientServer
 }
 
 //TODO FIXA DENNA PATH, HMMM borde köra i DB framöver
@@ -32,3 +32,19 @@ type fenixGuiExecutionServerGrpcServicesServer struct {
 //var merkleFilterPath string = //"AccountEnvironment/ClientJuristictionCountryCode/MarketSubType/MarketName/" //SecurityType/"
 
 var highestFenixGuiExecutionServerProtoFileVersion int32 = -1
+
+// Used  by gRPC server that receives Connector-connections to inform gRPC-server that receives ExecutionServer-connections
+var TesterGuiHasConnected bool
+
+// *******************************************************************************************
+// Channel used for forwarding TestInstructionExecutions to stream-server which then forwards it to the Connector
+var messageToTesterGuiForwardChannel messageToTesterGuiForwardChannelType
+
+type messageToTesterGuiForwardChannelType chan messageToTestGuiForwardChannelStruct
+
+const messageToTesterGuiForwardChannelMaxSize int32 = 100
+
+type messageToTestGuiForwardChannelStruct struct {
+	processTestInstructionExecutionReveredRequest *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
+	isKeepAliveMessage                            bool
+}
