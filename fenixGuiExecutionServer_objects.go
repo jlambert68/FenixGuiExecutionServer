@@ -45,6 +45,6 @@ type messageToTesterGuiForwardChannelType chan messageToTestGuiForwardChannelStr
 const messageToTesterGuiForwardChannelMaxSize int32 = 100
 
 type messageToTestGuiForwardChannelStruct struct {
-	processTestInstructionExecutionReveredRequest *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
-	isKeepAliveMessage                            bool
+	subscribeToMessagesStreamResponse *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
+	isKeepAliveMessage                bool
 }

@@ -44,7 +44,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 			// Wait for incoming TestInstructionExecution from Execution Server
 			executionForwardChannelMessage := <-messageToTesterGuiForwardChannel
 
-			testInstructionExecution := executionForwardChannelMessage.processTestInstructionExecutionReveredRequest
+			testInstructionExecution := executionForwardChannelMessage.subscribeToMessagesStreamResponse
 
 			// If TesterGui stops responding then exit
 			if TesterGuiHasConnected == false {
@@ -97,23 +97,16 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 	go func() {
 
 		// Create keep alive message
-		ProcessTestInstructionExecutionReveredRequest_TestInstructionExecutionMessage := fenixExecutionWorkerGrpcApi.ProcessTestInstructionExecutionReveredRequest_TestInstructionExecutionMessage{
-			TestInstructionExecutionUuid: "KeepAlive",
-			TestInstructionUuid:          "KeepAlive",
-			TestInstructionName:          "KeepAlive",
-			MajorVersionNumber:           0,
-			MinorVersionNumber:           0,
-			TestInstructionAttributes:    nil,
+		var subscribeToMessagesStreamResponse *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
+		subscribeToMessagesStreamResponse = &fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse{
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			IsKeepAliveMessage:           true,
+			ExecutionsStatus:             nil,
 		}
-		processTestInstructionExecutionReveredRequest := fenixExecutionWorkerGrpcApi.ProcessTestInstructionExecutionReveredRequest{
-			ProtoFileVersionUsedByClient: fenixExecutionWorkerGrpcApi.CurrentFenixExecutionWorkerProtoFileVersionEnum(common_config.GetHighestExecutionWorkerProtoFileVersion()),
-			TestInstruction:              &ProcessTestInstructionExecutionReveredRequest_TestInstructionExecutionMessage,
-			TestData:                     nil,
-		}
-		keepAliveMessageToConnector := messageToTestGuiForwardChannelStruct{
-			processTestInstructionExecutionReveredRequest: &processTestInstructionExecutionReveredRequest,
-			executionResponseChannelReference:             nil,
-			isKeepAliveMessage:                            true,
+		var keepAliveMessageToTesterGui messageToTestGuiForwardChannelStruct
+		keepAliveMessageToTesterGui = messageToTestGuiForwardChannelStruct{
+			subscribeToMessagesStreamResponse: subscribeToMessagesStreamResponse,
+			isKeepAliveMessage:                true,
 		}
 
 		var messageWasPickedFromExecutionForwardChannel bool
@@ -123,7 +116,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 			// Sleep for 15 seconds before continue
 			time.Sleep(time.Second * 15)
 
-			// If we haven't got an answer from Connector in 30 seconds then it must be down.
+			// If we haven't got an answer from TesterGui in 30 seconds then it must be down.
 			// We can get in this state if 'messageToTesterGuiForwardChannel' is full and nobody picks the message from queue
 			messageWasPickedFromExecutionForwardChannel = false
 
@@ -134,15 +127,15 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 					TesterGuiHasConnected = false
 					fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 						"id": "ad24ded4-4218-4ddd-93bb-2b8ec1a1a046",
-					}).Debug("No answer regarding Keep Alive-message, Connector is not responding")
+					}).Debug("No answer regarding Keep Alive-message, TesterGui is not responding")
 
 					done <- true //close(done)
 
 				}
 			}()
 
-			// Send Keep Alive message on channel to be sent to Connector
-			messageToTesterGuiForwardChannel <- keepAliveMessageToConnector
+			// Send Keep Alive message on channel to be sent to TesterGui
+			messageToTesterGuiForwardChannel <- keepAliveMessageToTesterGui
 			messageWasPickedFromExecutionForwardChannel = true
 
 		}
