@@ -75,10 +75,16 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		}
 
 		initiateSingleTestCaseExecutionResponseMessage.AckNackResponse = ackNackResponseToRespond
+
+		return initiateSingleTestCaseExecutionResponseMessage, nil
 	}
 
-	// Create a Subscription on this TestCaseExecution for this TestGui
-	broadcastEngine.AddSubscriptionForTestCaseExecutionToTesterGui(broadcastEngine.ApplicationRunTimeUuidType(initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid), broadcastEngine.TestCaseExecutionUuidType(initiateSingleTestCaseExecutionResponseMessage.TestCaseExecutionUuid))
+	// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
+	broadcastEngine.AddSubscriptionForTestCaseExecutionToTesterGui(
+		broadcastEngine.ApplicationRunTimeUuidType(
+			initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
+		broadcastEngine.TestCaseExecutionUuidType(
+			initiateSingleTestCaseExecutionResponseMessage.TestCaseExecutionUuid))
 
 	return initiateSingleTestCaseExecutionResponseMessage, nil
 

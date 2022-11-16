@@ -31,14 +31,14 @@ var TestCaseExecutionsSubscriptionChannelInformationMap map[ApplicationRunTimeUu
 // TestCaseExecutionsSubscriptionsMap
 // Map that holds information about who is subscribing to a certain TestCaseExecution
 // map['TestCaseExecutionUuid']*TestCaseExecutionsSubscriptionsStruct
-var TestCaseExecutionsSubscriptionsMap map[TestCaseExecutionUuidType]*[]ApplicationRunTimeUuidType
+var TestCaseExecutionsSubscriptionsMap map[TestCaseExecutionsSubscriptionsMapKeyType]*[]ApplicationRunTimeUuidType
 
 // TestCaseExecutionsSubscriptionChannelInformationStruct
 // Holds all information needed to be able to send ExecutionStatus-messages back to correct TesterGui
 type TestCaseExecutionsSubscriptionChannelInformationStruct struct {
 	ApplicationRunTimeUuid           ApplicationRunTimeUuidType
 	LastConnectionFromTesterGui      time.Time
-	MessageToTesterGuiForwardChannel MessageToTesterGuiForwardChannelType
+	MessageToTesterGuiForwardChannel *MessageToTesterGuiForwardChannelType
 }
 
 // ApplicationRunTimeUuidType
@@ -48,3 +48,11 @@ type ApplicationRunTimeUuidType string
 // TestCaseExecutionUuidType
 // Type used for 'TestCaseExecutionUuid'
 type TestCaseExecutionUuidType string
+
+// TestCaseExecutionsSubscriptionsMapKeyType
+// the Key to 'TestCaseExecutionsSubscriptionsMap'. Is a concatenation of 'TestCaseExecutionUuid' and 'TestCaseExecutionUuidVersion'
+type TestCaseExecutionsSubscriptionsMapKeyType string
+
+// TestCaseExecutionUuidVersionType
+// Type used for 'TestCaseExecutionUuidVersion'
+type TestCaseExecutionUuidVersionType int

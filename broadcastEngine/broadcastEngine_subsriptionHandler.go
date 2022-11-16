@@ -1,5 +1,7 @@
 package broadcastEngine
 
+import "strconv"
+
 // InitiateSubscriptionHandler
 // Initiate the handler that takes care of the information about which TesterGui:s that subscribe to what TestCaseExecution, regarding status updates
 func InitiateSubscriptionHandler() {
@@ -8,18 +10,22 @@ func InitiateSubscriptionHandler() {
 	TestCaseExecutionsSubscriptionChannelInformationMap = make(map[ApplicationRunTimeUuidType]*TestCaseExecutionsSubscriptionChannelInformationStruct)
 
 	// Initiate map that holds information about who is subscribing to a certain TestCaseExecution
-	TestCaseExecutionsSubscriptionsMap = make(map[TestCaseExecutionUuidType]*[]ApplicationRunTimeUuidType)
+	TestCaseExecutionsSubscriptionsMap = make(map[TestCaseExecutionsSubscriptionsMapKeyType]*[]ApplicationRunTimeUuidType)
 }
 
 // AddSubscriptionForTestCaseExecutionToTesterGui
 // Create Subscription on this TestCaseExecution and this TestGui
-func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid ApplicationRunTimeUuidType, testCaseExecutionUuid TestCaseExecutionUuidType) {
+func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid ApplicationRunTimeUuidType, testCaseExecutionUuid TestCaseExecutionUuidType, testCaseExecutionUuidVersion TestCaseExecutionUuidVersionType) {
 
 	var allApplicationRunTimeUuids *[]ApplicationRunTimeUuidType
 	var existInMap bool
 
+	// Create Key used for 'TestCaseExecutionsSubscriptionsMap'
+	var testCaseExecutionsSubscriptionsMapKey TestCaseExecutionsSubscriptionsMapKeyType
+	testCaseExecutionsSubscriptionsMapKey = TestCaseExecutionsSubscriptionsMapKeyType(string(testCaseExecutionUuid) + strconv.Itoa(int(testCaseExecutionUuidVersion)))
+
 	// Check if TesterGui already exist in Subscription-map for incoming 'TestCaseExecutionUuid'
-	allApplicationRunTimeUuids, existInMap = TestCaseExecutionsSubscriptionsMap[testCaseExecutionUuid]
+	allApplicationRunTimeUuids, existInMap = TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey]
 
 	// TestCaseExecution doesn't have any subscriptions yet, so just add it
 	if existInMap == false {
@@ -42,4 +48,8 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid Appli
 			*allApplicationRunTimeUuids = append(*allApplicationRunTimeUuids, applicationRunTimeUuid)
 		}
 	}
+}
+
+func WhoIsSubscribingToTestCaseExecution() (messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType) {
+
 }

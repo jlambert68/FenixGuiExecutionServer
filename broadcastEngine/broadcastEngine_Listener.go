@@ -187,6 +187,10 @@ func BroadcastListener() error {
 				IsKeepAliveMessage:                false,
 			}
 
+			// Extract who is subscribing to this 'TestCaseExecution'
+			var messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType
+			messageToTesterGuiForwardChannels = WhoIsSubscribingToTestCaseExecution()
+
 			// Send Message over 'MessageChannel'
 			MessageToTesterGuiForwardChannel <- messageToTestGuiForwardChannelStruct
 
