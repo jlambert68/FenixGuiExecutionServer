@@ -48,6 +48,9 @@ func fenixGuiExecutionServerMain() {
 		Logger: fenixGuiExecutionServerObject.logger,
 	}
 
+	// Initiate the handler that 'knows' who is subscribing to which TestCaseExecutions, regarding status updates
+	broadcastEngine.InitiateSubscriptionHandler()
+
 	// Start listen for Broadcasts regarding change in status TestCaseExecutions and TestInstructionExecutions
 	broadcastEngine.InitiateAndStartBroadcastNotifyEngine()
 

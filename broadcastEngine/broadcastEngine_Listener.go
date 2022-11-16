@@ -9,8 +9,8 @@ import (
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
 	"log"
-	"os"
 	"strconv"
+	"time"
 )
 
 type BroadcastingMessageForExecutionsStruct struct {
@@ -37,15 +37,22 @@ type TestInstructionExecutionStruct struct {
 func InitiateAndStartBroadcastNotifyEngine() {
 
 	go func() {
-		err := Listen()
-		if err != nil {
-			log.Println("unable start listener:", err)
-			os.Exit(1)
+		for {
+			err := BroadcastListener()
+			if err != nil {
+				log.Println("unable start listener:", err)
+
+				common_config.Logger.WithFields(logrus.Fields{
+					"Id":  "c46d3d7c-3a13-4fe2-8633-d339a5f594db",
+					"err": err,
+				}).Error("Unable to start Broadcast listener. Will retry in 5 seconds")
+			}
+			time.Sleep(time.Second * 5)
 		}
 	}()
 }
 
-func Listen() error {
+func BroadcastListener() error {
 
 	var err error
 	var broadcastingMessageForExecutions BroadcastingMessageForExecutionsStruct

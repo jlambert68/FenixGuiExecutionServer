@@ -1,6 +1,7 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/broadcastEngine"
 	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
 	"context"
@@ -24,7 +25,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 	}).Debug("Outgoing 'gRPC - InitiateTestCaseExecution'")
 
 	// Check if Client is using correct proto files version
-	ackNackRespons := common_config.IsClientUsingCorrectTestDataProtoFileVersion(initiateSingleTestCaseExecutionRequestMessage.UserIdentification.UserId, initiateSingleTestCaseExecutionRequestMessage.UserIdentification.ProtoFileVersionUsedByClient)
+	ackNackRespons := common_config.IsClientUsingCorrectTestDataProtoFileVersion(initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.UserId, initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient)
 	if ackNackRespons != nil {
 		// Not correct proto-file version is used
 		// Exiting
@@ -75,6 +76,9 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 
 		initiateSingleTestCaseExecutionResponseMessage.AckNackResponse = ackNackResponseToRespond
 	}
+
+	// Create a Subscription on this TestCaseExecution for this TestGui
+	broadcastEngine.AddSubscriptionForTestCaseExecutionToTesterGui(broadcastEngine.ApplicationRunTimeUuidType(initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid), broadcastEngine.TestCaseExecutionUuidType(initiateSingleTestCaseExecutionResponseMessage.TestCaseExecutionUuid))
 
 	return initiateSingleTestCaseExecutionResponseMessage, nil
 
