@@ -1,6 +1,7 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
 	"context"
 	"fmt"
@@ -23,7 +24,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 	}).Debug("Outgoing 'gRPC - InitiateTestCaseExecution'")
 
 	// Check if Client is using correct proto files version
-	ackNackRespons := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(initiateSingleTestCaseExecutionRequestMessage.UserIdentification.UserId, initiateSingleTestCaseExecutionRequestMessage.UserIdentification.ProtoFileVersionUsedByClient)
+	ackNackRespons := common_config.IsClientUsingCorrectTestDataProtoFileVersion(initiateSingleTestCaseExecutionRequestMessage.UserIdentification.UserId, initiateSingleTestCaseExecutionRequestMessage.UserIdentification.ProtoFileVersionUsedByClient)
 	if ackNackRespons != nil {
 		// Not correct proto-file version is used
 		// Exiting
@@ -69,7 +70,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 			AckNack:                      initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.AckNack,
 			Comments:                     fmt.Sprintf("Message from ExecutionServer is: '%s'", initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.Comments),
 			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 		}
 
 		initiateSingleTestCaseExecutionResponseMessage.AckNackResponse = ackNackResponseToRespond

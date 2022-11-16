@@ -1,6 +1,9 @@
 package common_config
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
+)
 
 // Logrus debug level
 
@@ -9,3 +12,7 @@ import "github.com/sirupsen/logrus"
 const LoggingLevel = logrus.DebugLevel // InfoLevel
 
 var Logger *logrus.Logger
+
+var highestFenixGuiExecutionServerProtoFileVersion int32 = -1
+
+var gcpAccessToken *oauth2.Token

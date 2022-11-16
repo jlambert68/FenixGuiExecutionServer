@@ -1,6 +1,8 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/broadcastEngine"
+	"FenixGuiExecutionServer/common_config"
 	"errors"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
@@ -23,14 +25,14 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 	userId := "TesterGui"
 
 	// Check if Client is using correct proto files version
-	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(userId, emptyParameter.ProtoFileVersionUsedByClient)
+	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(userId, emptyParameter.ProtoFileVersionUsedByClient)
 	if returnMessage != nil {
 
 		return errors.New(returnMessage.Comments)
 	}
 
 	// Recreate channel for incoming TestInstructionExecution from Execution Server
-	messageToTesterGuiForwardChannel = make(chan messageToTestGuiForwardChannelStruct)
+	broadcastEngine.MessageToTesterGuiForwardChannel = make(chan broadcastEngine.MessageToTestGuiForwardChannelStruct, broadcastEngine.MessageToTesterGuiForwardChannelMaxSize)
 
 	// Local channel to decide when Server stopped sending
 	done := make(chan bool)
@@ -42,9 +44,9 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 
 		for {
 			// Wait for incoming TestInstructionExecution from Execution Server
-			executionForwardChannelMessage := <-messageToTesterGuiForwardChannel
+			executionForwardChannelMessage := <-broadcastEngine.MessageToTesterGuiForwardChannel
 
-			testInstructionExecution := executionForwardChannelMessage.subscribeToMessagesStreamResponse
+			testInstructionExecution := executionForwardChannelMessage.SubscribeToMessagesStreamResponse
 
 			// If TesterGui stops responding then exit
 			if TesterGuiHasConnected == false {
@@ -73,7 +75,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 			}
 
 			// Check if message only was a keep alive message to TesterGui
-			if executionForwardChannelMessage.isKeepAliveMessage == false {
+			if executionForwardChannelMessage.IsKeepAliveMessage == false {
 
 				// Is a standard TestInstructionExecution that was sent to TesterGui
 				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
@@ -93,20 +95,20 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 
 	}()
 
-	// Feed 'messageToTesterGuiForwardChannel' with messages every 15 seconds to check if TesterGui is alive
+	// Feed 'MessageToTesterGuiForwardChannel' with messages every 15 seconds to check if TesterGui is alive
 	go func() {
 
 		// Create keep alive message
 		var subscribeToMessagesStreamResponse *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
 		subscribeToMessagesStreamResponse = &fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse{
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 			IsKeepAliveMessage:           true,
 			ExecutionsStatus:             nil,
 		}
-		var keepAliveMessageToTesterGui messageToTestGuiForwardChannelStruct
-		keepAliveMessageToTesterGui = messageToTestGuiForwardChannelStruct{
-			subscribeToMessagesStreamResponse: subscribeToMessagesStreamResponse,
-			isKeepAliveMessage:                true,
+		var keepAliveMessageToTesterGui broadcastEngine.MessageToTestGuiForwardChannelStruct
+		keepAliveMessageToTesterGui = broadcastEngine.MessageToTestGuiForwardChannelStruct{
+			SubscribeToMessagesStreamResponse: subscribeToMessagesStreamResponse,
+			IsKeepAliveMessage:                true,
 		}
 
 		var messageWasPickedFromExecutionForwardChannel bool
@@ -117,7 +119,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 			time.Sleep(time.Second * 15)
 
 			// If we haven't got an answer from TesterGui in 30 seconds then it must be down.
-			// We can get in this state if 'messageToTesterGuiForwardChannel' is full and nobody picks the message from queue
+			// We can get in this state if 'MessageToTesterGuiForwardChannel' is full and nobody picks the message from queue
 			messageWasPickedFromExecutionForwardChannel = false
 
 			go func() {
@@ -135,7 +137,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 			}()
 
 			// Send Keep Alive message on channel to be sent to TesterGui
-			messageToTesterGuiForwardChannel <- keepAliveMessageToTesterGui
+			broadcastEngine.MessageToTesterGuiForwardChannel <- keepAliveMessageToTesterGui
 			messageWasPickedFromExecutionForwardChannel = true
 
 		}

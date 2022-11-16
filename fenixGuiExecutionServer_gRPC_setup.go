@@ -46,7 +46,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}).Info("Starting Backend gRPC Server")
 
 	registerFenixGuiExecutionServerGrpcServicesServer = grpc.NewServer()
-	fenixExecutionServerGuiGrpcApi.RegisterFenixExecutionServerGuiGrpcServicesServer(registerFenixGuiExecutionServerGrpcServicesServer, &fenixGuiExecutionServerGrpcServicesServer{})
+	fenixExecutionServerGuiGrpcApi.RegisterFenixExecutionServerGuiGrpcServicesForGuiClientServer(registerFenixGuiExecutionServerGrpcServicesServer, &fenixGuiExecutionServerGrpcServicesServer{})
 
 	// Register Reflection for this gRPC-server.
 	reflection.Register(registerFenixGuiExecutionServerGrpcServicesServer)

@@ -1,19 +1,18 @@
-package gRPCServer
+package broadcastEngine
 
 import (
-	"FenixExecutionWorker/common_config"
+	"FenixGuiExecutionServer/common_config"
 	"context"
 	"fmt"
-	fenixExecutionWorkerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionWorkerGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
 	"time"
 )
 
 // ProcessTestInstructionExecution
 // Fenix Execution Server send a request to Execution Worker to initiate a execution of a TestInstruction
-func (s *fenixExecutionWorkerGrpcServicesServer) ProcessTestInstructionExecution(ctx context.Context, processTestInstructionExecutionRequest *fenixExecutionWorkerGrpcApi.ProcessTestInstructionExecutionReveredRequest) (processTestInstructionExecutionResponse *fenixExecutionWorkerGrpcApi.ProcessTestInstructionExecutionResponse, err error) {
+func SendBroadCastMessageOverMessageChannel(ctx context.Context, processTestInstructionExecutionRequest *fenixExecutionWorkerGrpcApi.ProcessTestInstructionExecutionReveredRequest) (err error) {
 
-	s.logger.WithFields(logrus.Fields{
+	common_config.Logger.WithFields(logrus.Fields{
 		"id":                                     "37bc2356-33a2-4e2c-9420-122df581d757",
 		"processTestInstructionExecutionRequest": processTestInstructionExecutionRequest,
 	}).Debug("Incoming 'gRPCServer - ProcessTestInstructionExecution'")

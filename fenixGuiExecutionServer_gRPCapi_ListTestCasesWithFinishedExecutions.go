@@ -1,6 +1,7 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/common_config"
 	"context"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExe
 	userID := listTestCasesWithFinishedExecutionsRequest.UserIdentification.UserId
 
 	// Check if Client is using correct proto files version
-	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(listTestCasesWithFinishedExecutionsRequest.UserIdentification.ProtoFileVersionUsedByClient))
+	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(listTestCasesWithFinishedExecutionsRequest.UserIdentification.ProtoFileVersionUsedByClient))
 	if returnMessage != nil {
 
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsResponse{
@@ -49,7 +50,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExe
 				AckNack:                      false,
 				Comments:                     "Got some Error when retrieving ListTestCasesWithFinishedExecutions from database",
 				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
-				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 			},
 			TestCaseWithFinishedExecution: nil,
 		}
@@ -64,7 +65,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExe
 			AckNack:                      true,
 			Comments:                     "",
 			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 		},
 		TestCaseWithFinishedExecution: listTestCasesWithFinishedExecutionsResponse,
 	}

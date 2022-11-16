@@ -1,7 +1,7 @@
 package main
 
 import (
-	"FenixGuiExecutionServer/broadcastingEngine"
+	"FenixGuiExecutionServer/broadcastEngine"
 	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
@@ -49,7 +49,7 @@ func fenixGuiExecutionServerMain() {
 	}
 
 	// Start listen for Broadcasts regarding change in status TestCaseExecutions and TestInstructionExecutions
-	broadcastingEngine.InitiateAndStartBroadcastNotifyEngine()
+	broadcastEngine.InitiateAndStartBroadcastNotifyEngine()
 
 	// Start Backend gRPC-server
 	fenixGuiExecutionServerObject.InitGrpcServer()

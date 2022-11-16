@@ -1,6 +1,7 @@
 package main
 
 import (
+	"FenixGuiExecutionServer/common_config"
 	"context"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesOnExecutionQueu
 	userID := listTestCasesInExecutionQueueRequest.UserIdentification.UserId
 
 	// Check if Client is using correct proto files version
-	returnMessage := fenixGuiExecutionServerObject.isClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(listTestCasesInExecutionQueueRequest.UserIdentification.ProtoFileVersionUsedByClient))
+	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(listTestCasesInExecutionQueueRequest.UserIdentification.ProtoFileVersionUsedByClient))
 	if returnMessage != nil {
 
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesInExecutionQueueResponse{
@@ -49,7 +50,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesOnExecutionQueu
 				AckNack:                      false,
 				Comments:                     "Got some Error when retrieving TestCaseExecutionBasicInformationMessage from database",
 				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
-				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 			},
 			TestCasesInExecutionQueue: nil,
 		}
@@ -64,7 +65,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesOnExecutionQueu
 			AckNack:                      true,
 			Comments:                     "",
 			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(fenixGuiExecutionServerObject.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 		},
 		TestCasesInExecutionQueue: testCaseExecutionBasicInformation,
 	}
