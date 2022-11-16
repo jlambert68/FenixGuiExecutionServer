@@ -2,10 +2,9 @@ package messagesToExecutionServer
 
 import (
 	"FenixGuiExecutionServer/common_config"
-	fenixExecutionServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGrpcApi/go_grpc_api"
-	//"FenixExecutionServer/common_config"
 	"context"
 	"fmt"
+	fenixExecutionServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
 	"time"
 )
