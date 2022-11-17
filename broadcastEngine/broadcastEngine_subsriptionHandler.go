@@ -21,6 +21,7 @@ func InitiateSubscriptionHandler() {
 // Create Subscription on this TestCaseExecution for this TestGui
 func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid ApplicationRunTimeUuidType, testCaseExecutionUuid TestCaseExecutionUuidType, testCaseExecutionUuidVersion TestCaseExecutionUuidVersionType) {
 
+	//var allApplicationRunTimeUuidsReference *[]ApplicationRunTimeUuidType
 	var allApplicationRunTimeUuids *[]ApplicationRunTimeUuidType
 	var existInMap bool
 
@@ -31,27 +32,37 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid Appli
 	// Check if TesterGui already exist in Subscription-map for incoming 'TestCaseExecutionUuid'
 	allApplicationRunTimeUuids, existInMap = TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey]
 
-	// TestCaseExecution doesn't have any subscriptions yet, so just add it
-	if existInMap == false {
-
-		*allApplicationRunTimeUuids = append(*allApplicationRunTimeUuids, applicationRunTimeUuid)
+	// Nothing in subscription-map then initiate it and store it in Map
+	if allApplicationRunTimeUuids == nil {
+		var tempAllApplicationRunTimeUuids []ApplicationRunTimeUuidType
+		TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey] = &tempAllApplicationRunTimeUuids
+		allApplicationRunTimeUuids = &tempAllApplicationRunTimeUuids
 	} else {
+		// TestCaseExecution doesn't have any subscriptions yet, so just add it
+		if existInMap == false {
+			tempAllApplicationRunTimeUuids := *allApplicationRunTimeUuids
+			tempAllApplicationRunTimeUuids = append(tempAllApplicationRunTimeUuids, applicationRunTimeUuid)
+			*allApplicationRunTimeUuids = tempAllApplicationRunTimeUuids
 
-		// Loop all 'ApplicationRunTimeUuid' to verify if incoming 'applicationRunTimeUuid' exists in slice
-		var foundApplicationRunTimeUuidInSlice bool
-		for _, tempApplicationRunTimeUuid := range *allApplicationRunTimeUuids {
-			if tempApplicationRunTimeUuid == applicationRunTimeUuid {
-				// 'applicationRunTimeUuid' existed in slice
-				foundApplicationRunTimeUuidInSlice = true
-				break
+		} else {
+
+			// Loop all 'ApplicationRunTimeUuid' to verify if incoming 'applicationRunTimeUuid' exists in slice
+			var foundApplicationRunTimeUuidInSlice bool
+			for _, tempApplicationRunTimeUuid := range *allApplicationRunTimeUuids {
+				if tempApplicationRunTimeUuid == applicationRunTimeUuid {
+					// 'applicationRunTimeUuid' existed in slice
+					foundApplicationRunTimeUuidInSlice = true
+					break
+				}
+			}
+
+			// if 'applicationRunTimeUuid' didn't exist in slice then add it to the slice
+			if foundApplicationRunTimeUuidInSlice == false {
+				*allApplicationRunTimeUuids = append(*allApplicationRunTimeUuids, applicationRunTimeUuid)
 			}
 		}
-
-		// if 'applicationRunTimeUuid' didn't exist in slice then add it to the slice
-		if foundApplicationRunTimeUuidInSlice == false {
-			*allApplicationRunTimeUuids = append(*allApplicationRunTimeUuids, applicationRunTimeUuid)
-		}
 	}
+
 }
 
 // Generates a slice with pointers to qll 'MessageToTesterGuiForwardChannel' for

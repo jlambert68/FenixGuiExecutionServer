@@ -23,10 +23,13 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesUnderExecution(
 	}).Debug("Outgoing 'gRPC - ListTestCasesUnderExecution'")
 
 	// Current user
-	userID := listTestCasesUnderExecutionRequest.UserIdentification.UserId
+	userID := listTestCasesUnderExecutionRequest.UserAndApplicationRunTimeIdentification.UserId
 
 	// Check if Client is using correct proto files version
-	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(userID, fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(listTestCasesUnderExecutionRequest.UserIdentification.ProtoFileVersionUsedByClient))
+	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
+		userID,
+		fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(
+			listTestCasesUnderExecutionRequest.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient))
 	if returnMessage != nil {
 
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse{

@@ -232,7 +232,7 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 		var testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice []string
 		var tempKey string
 		testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice = make([]string, 0, len(mapKeysMap))
-		for _, tempKey = range mapKeysMap {
+		for tempKey, _ = range mapKeysMap {
 			testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice = append(testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice, tempKey)
 		}
 
