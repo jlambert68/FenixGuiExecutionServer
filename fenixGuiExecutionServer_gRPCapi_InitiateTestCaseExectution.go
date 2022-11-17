@@ -84,7 +84,8 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		broadcastEngine.ApplicationRunTimeUuidType(
 			initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
 		broadcastEngine.TestCaseExecutionUuidType(
-			initiateSingleTestCaseExecutionResponseMessage.TestCaseExecutionUuid))
+			initiateSingleTestCaseExecutionResponseMessage.TestCaseExecutionUuid),
+		1)
 
 	return initiateSingleTestCaseExecutionResponseMessage, nil
 

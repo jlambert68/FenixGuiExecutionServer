@@ -1,6 +1,10 @@
 package broadcastEngine
 
-import "strconv"
+import (
+	"FenixGuiExecutionServer/common_config"
+	"github.com/sirupsen/logrus"
+	"strconv"
+)
 
 // InitiateSubscriptionHandler
 // Initiate the handler that takes care of the information about which TesterGui:s that subscribe to what TestCaseExecution, regarding status updates
@@ -14,7 +18,7 @@ func InitiateSubscriptionHandler() {
 }
 
 // AddSubscriptionForTestCaseExecutionToTesterGui
-// Create Subscription on this TestCaseExecution and this TestGui
+// Create Subscription on this TestCaseExecution for this TestGui
 func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid ApplicationRunTimeUuidType, testCaseExecutionUuid TestCaseExecutionUuidType, testCaseExecutionUuidVersion TestCaseExecutionUuidVersionType) {
 
 	var allApplicationRunTimeUuids *[]ApplicationRunTimeUuidType
@@ -50,6 +54,47 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid Appli
 	}
 }
 
-func WhoIsSubscribingToTestCaseExecution() (messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType) {
+// Generates a slice with pointers to qll 'MessageToTesterGuiForwardChannel' for
+// 'TestCaseExecutionUuidTestCaseExecutionVersion' contains  ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion')
+func whoIsSubscribingToTestCaseExecution(testCaseExecutionUuidTestCaseExecutionVersion string) (messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType) {
+
+	var applicationsRunTimeUuid *[]ApplicationRunTimeUuidType
+	var existInMap bool
+
+	// Extract slice of Applications that subscribes to combination of ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion')
+	applicationsRunTimeUuid, existInMap = TestCaseExecutionsSubscriptionsMap[TestCaseExecutionsSubscriptionsMapKeyType(testCaseExecutionUuidTestCaseExecutionVersion)]
+	if existInMap == false {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id": "0ed78746-1ff8-4261-9657-023048d8db84",
+			"testCaseExecutionUuidTestCaseExecutionVersion": testCaseExecutionUuidTestCaseExecutionVersion,
+		}).Error("No TesterGui is subscribing to the  combination of ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion') ")
+
+		return messageToTesterGuiForwardChannels
+	}
+
+	// Loop Subscribing 'applicationsRunTimeUuid' to get their channel-reference
+	var tempApplicationRunTimeUuid ApplicationRunTimeUuidType
+	for _, tempApplicationRunTimeUuid = range *applicationsRunTimeUuid {
+
+		// Get Channel-reference based on 'tempApplicationRunTimeUuid'
+		var tempTestCaseExecutionsSubscriptionChannelInformation *TestCaseExecutionsSubscriptionChannelInformationStruct
+		tempTestCaseExecutionsSubscriptionChannelInformation, existInMap = TestCaseExecutionsSubscriptionChannelInformationMap[tempApplicationRunTimeUuid]
+
+		// If 'tempApplicationRunTimeUuid' doesn't exit the most local reason is that TestGui hasn't yet open up gRPC-stream for messages. But it could be an error
+		if existInMap == false {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                         "81fb8977-2ff4-4cfa-84e5-ba9c2f03485e",
+				"tempApplicationRunTimeUuid": tempApplicationRunTimeUuid,
+			}).Info("Couldn't find Channel data based on 'ApplicationRunTimeUuid'. Could be an error or that TesterGui hasn't yet open up gRPC-stream for Messages")
+
+			return messageToTesterGuiForwardChannels
+		}
+
+		// Add Channel-reference to return slice
+		messageToTesterGuiForwardChannels = append(messageToTesterGuiForwardChannels, tempTestCaseExecutionsSubscriptionChannelInformation.MessageToTesterGuiForwardChannel)
+
+	}
+
+	return messageToTesterGuiForwardChannels
 
 }

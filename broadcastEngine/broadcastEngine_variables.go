@@ -6,6 +6,7 @@ import (
 )
 
 // *******************************************************************************************
+// MessageToTesterGuiForwardChannel TODO Remove when map with channel is used instead of this
 // Channel used for forwarding MessagesToTestGui to stream-server which then forwards it to the TesterGui
 var MessageToTesterGuiForwardChannel MessageToTesterGuiForwardChannelType
 
