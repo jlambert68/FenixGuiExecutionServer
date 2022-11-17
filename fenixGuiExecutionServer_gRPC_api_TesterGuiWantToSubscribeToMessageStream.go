@@ -11,7 +11,7 @@ import (
 
 // SubscribeToMessageStream
 // Used to send Messages from Fenix backend to TesterGui. TesterGui connects to GuiExecutionServer and then Responses are streamed back to TesterGui
-func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emptyParameter *fenixExecutionServerGuiGrpcApi.EmptyParameter, streamServer fenixExecutionServerGuiGrpcApi.FenixExecutionServerGuiGrpcServicesForGuiClient_SubscribeToMessageStreamServer) (err error) {
+func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(userAndApplicationRunTimeIdentificationMessage *fenixExecutionServerGuiGrpcApi.UserAndApplicationRunTimeIdentificationMessage, streamServer fenixExecutionServerGuiGrpcApi.FenixExecutionServerGuiGrpcServicesForGuiClient_SubscribeToMessageStreamServer) (err error) {
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "d986194e-ec8c-4198-8160-bd7eb9838aca",
@@ -25,14 +25,49 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 	userId := "TesterGui"
 
 	// Check if Client is using correct proto files version
-	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(userId, emptyParameter.ProtoFileVersionUsedByClient)
+	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
+		userId,
+		userAndApplicationRunTimeIdentificationMessage.ProtoFileVersionUsedByClient)
 	if returnMessage != nil {
 
 		return errors.New(returnMessage.Comments)
 	}
 
-	// Recreate channel for incoming TestInstructionExecution from Execution Server
-	broadcastEngine.MessageToTesterGuiForwardChannel = make(chan broadcastEngine.MessageToTestGuiForwardChannelStruct, broadcastEngine.MessageToTesterGuiForwardChannelMaxSize)
+	// Check if TesterGui:s 'ApplicationRunTimeUuid' already exits
+	var testCaseExecutionsSubscriptionChannelInformation *broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationStruct
+	var existInMap bool
+
+	testCaseExecutionsSubscriptionChannelInformation, existInMap =
+		broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationMap[broadcastEngine.ApplicationRunTimeUuidType(
+			userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid)]
+
+	if existInMap == true {
+		// Just recreate channel for incoming TestInstructionExecution from Execution Server for this TesterGui
+		var tempMessageToTesterGuiForwardChannel broadcastEngine.MessageToTesterGuiForwardChannelType
+		tempMessageToTesterGuiForwardChannel = make(
+			chan broadcastEngine.MessageToTestGuiForwardChannelStruct,
+			broadcastEngine.MessageToTesterGuiForwardChannelMaxSize)
+		testCaseExecutionsSubscriptionChannelInformation.MessageToTesterGuiForwardChannel = &tempMessageToTesterGuiForwardChannel
+
+	} else {
+		// Create the full ChannelObject from scratch
+		var tempMessageToTesterGuiForwardChannel broadcastEngine.MessageToTesterGuiForwardChannelType
+		tempMessageToTesterGuiForwardChannel = make(
+			chan broadcastEngine.MessageToTestGuiForwardChannelStruct,
+			broadcastEngine.MessageToTesterGuiForwardChannelMaxSize)
+
+		testCaseExecutionsSubscriptionChannelInformation = &broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationStruct{
+			ApplicationRunTimeUuid: broadcastEngine.ApplicationRunTimeUuidType(
+				userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid),
+			LastConnectionFromTesterGui:      time.Now(),
+			MessageToTesterGuiForwardChannel: &tempMessageToTesterGuiForwardChannel,
+		}
+
+		// Save ChannelObject in 'TestCaseExecutionsSubscriptionChannelInformationMap'
+		broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationMap[broadcastEngine.ApplicationRunTimeUuidType(
+			userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid)] = testCaseExecutionsSubscriptionChannelInformation
+
+	}
 
 	// Local channel to decide when Server stopped sending
 	done := make(chan bool)
@@ -43,10 +78,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 		TesterGuiHasConnected = true
 
 		for {
-			// Wait for incoming TestInstructionExecution from Execution Server
-			executionForwardChannelMessage := <-broadcastEngine.MessageToTesterGuiForwardChannel
+			// Wait for ExecutionStatus-message
+			executionForwardChannelMessage := <-*testCaseExecutionsSubscriptionChannelInformation.MessageToTesterGuiForwardChannel
 
-			testInstructionExecution := executionForwardChannelMessage.SubscribeToMessagesStreamResponse
+			var executionsStatus *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
+			executionsStatus = executionForwardChannelMessage.SubscribeToMessagesStreamResponse
 
 			// If TesterGui stops responding then exit
 			if TesterGuiHasConnected == false {
@@ -55,16 +91,16 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 				return
 			}
 
-			err = streamServer.Send(testInstructionExecution)
+			err = streamServer.Send(executionsStatus)
 			if err != nil {
 
 				// We don't have an active connection to TesterGui
 				TesterGuiHasConnected = false
 
 				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-					"id":                       "70ab1dcb-0be3-49b6-b49a-694bab529ed4",
-					"err":                      err,
-					"testInstructionExecution": testInstructionExecution,
+					"id":               "70ab1dcb-0be3-49b6-b49a-694bab529ed4",
+					"err":              err,
+					"executionsStatus": executionsStatus,
 				}).Error("Got some problem when doing reversed streaming of Messages to TesterGui. Stopping Reversed Streaming")
 
 				// Have the gRPC-call be continued, end stream server
@@ -79,16 +115,16 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 
 				// Is a standard TestInstructionExecution that was sent to TesterGui
 				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-					"id":                       "6f5e6dc7-cef5-4008-a4ea-406be80ded4c",
-					"testInstructionExecution": testInstructionExecution,
+					"id":               "6f5e6dc7-cef5-4008-a4ea-406be80ded4c",
+					"executionsStatus": executionsStatus,
 				}).Debug("Success in reversed streaming TestInstructionExecution to TesterGui")
 
 			} else {
 
 				// Is a keep alive message that was sent to TesterGui
 				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-					"id":                       "c1d5a756-b7fa-48ae-953e-59dedd0671f4",
-					"testInstructionExecution": testInstructionExecution,
+					"id":               "c1d5a756-b7fa-48ae-953e-59dedd0671f4",
+					"executionsStatus": executionsStatus,
 				}).Debug("Success in reversed streaming TestInstructionExecution to TesterGui")
 			}
 		}
@@ -137,7 +173,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(emp
 			}()
 
 			// Send Keep Alive message on channel to be sent to TesterGui
-			broadcastEngine.MessageToTesterGuiForwardChannel <- keepAliveMessageToTesterGui
+			*testCaseExecutionsSubscriptionChannelInformation.MessageToTesterGuiForwardChannel <- keepAliveMessageToTesterGui
 			messageWasPickedFromExecutionForwardChannel = true
 
 		}
