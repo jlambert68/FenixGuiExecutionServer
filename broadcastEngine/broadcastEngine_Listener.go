@@ -8,6 +8,7 @@ import (
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"strconv"
 	"time"
@@ -114,15 +115,35 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 	var mapKeysMapKeyValue string
 	var existInMap bool
 
+	var broadcastTimeStamp time.Time
+	var err error
+	timeStampLayoutForParser := "2006-01-02 15:04:05.999999999 -0700 MST"
+	broadcastTimeStamp, err = time.Parse(timeStampLayoutForParser, broadcastingMessageForExecutions.BroadcastTimeStamp)
+	if err != nil {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":                               "60b77ba4-3c99-4e39-b35a-33bed1c7155b",
+			"err":                              err,
+			"broadcastingMessageForExecutions": broadcastingMessageForExecutions,
+		}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+		return
+	}
+
+	// Convert timestamp into gRPC-version
+	var broadcastTimeStampForGrpc *timestamppb.Timestamp
+	broadcastTimeStampForGrpc = timestamppb.New(broadcastTimeStamp)
+
 	// Create map for messages, grouped by Subscription-parameter-key('TestCaseExecutionUuid'+'TestCaseExecutionVersion') to be sent over MessageChannel to be forwarded to TestGui
 	var testCaseExecutionsStatusForChannelMessageMap map[string][]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
 	testCaseExecutionsStatusForChannelMessageMap = make(map[string][]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage)
 	var mapKey string
+	var testCaseExecutionVersionAsInteger int
 
 	// Create ChannelMessages for TestCaseExecutions
-	for _, testCaseExecutionFromBroadcastMessage := range broadcastingMessageForExecutions.TestCaseExecutions {
+	var testCaseExecutionFromBroadcastMessage TestCaseExecutionStruct
+	for _, testCaseExecutionFromBroadcastMessage = range broadcastingMessageForExecutions.TestCaseExecutions {
 
-		testCaseExecutionVersionAsInteger, err := strconv.Atoi(testCaseExecutionFromBroadcastMessage.TestCaseExecutionVersion)
+		testCaseExecutionVersionAsInteger, err = strconv.Atoi(testCaseExecutionFromBroadcastMessage.TestCaseExecutionVersion)
 		if err != nil {
 			common_config.Logger.WithFields(logrus.Fields{
 				"Id":  "b91af162-4fc7-416b-8681-ea101cb5ebd5",
@@ -167,11 +188,15 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 	// Create map for messages, grouped by Subscription-parameter-key('TestInstructionExecutionUuid'+'TestInstructionExecutionVersion') to be sent over MessageChannel to be forwarded to TestGui
 	var testInstructionExecutionsStatusForChannelMessageMap map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
 	testInstructionExecutionsStatusForChannelMessageMap = make(map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage)
+	var testCaseExecutionVersionError error
+	var testInstructionExecutionFromBroadcastMessage TestInstructionExecutionStruct
+	var testInstructionExecutionVersionError error
+	var testInstructionExecutionVersionAsInteger int
 
 	// Create ChannelMessages for TestInstructionExecutions
-	for _, testInstructionExecutionFromBroadcastMessage := range broadcastingMessageForExecutions.TestInstructionExecutions {
+	for _, testInstructionExecutionFromBroadcastMessage = range broadcastingMessageForExecutions.TestInstructionExecutions {
 
-		testCaseExecutionVersionAsInteger, testCaseExecutionVersionError := strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion)
+		testCaseExecutionVersionAsInteger, testCaseExecutionVersionError = strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion)
 		if testCaseExecutionVersionError != nil {
 			common_config.Logger.WithFields(logrus.Fields{
 				"Id":                            "da61719b-1444-4b35-ad55-22dd1d83f491",
@@ -181,7 +206,7 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 
 		}
 
-		testInstructionExecutionVersionAsInteger, testInstructionExecutionVersionError := strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionVersion)
+		testInstructionExecutionVersionAsInteger, testInstructionExecutionVersionError = strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionVersion)
 		if testInstructionExecutionVersionError != nil {
 			common_config.Logger.WithFields(logrus.Fields{
 				"Id":                                   "0d345833-2b64-4b1d-8433-6d9a7f2d88f6",
@@ -227,117 +252,124 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 			tempTestInstructionExecutionsStatusForChannelMessage = append(tempTestInstructionExecutionsStatusForChannelMessage, testInstructionExecutionStatusForChannelMessage)
 			testInstructionExecutionsStatusForChannelMessageMap[mapKey] = tempTestInstructionExecutionsStatusForChannelMessage
 		}
+	}
 
-		// Get all keys from 'mapKeysMap' to find all combinations of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
-		var testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice []string
-		var tempKey string
-		testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice = make([]string, 0, len(mapKeysMap))
-		for tempKey, _ = range mapKeysMap {
-			testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice = append(testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice, tempKey)
+	// Get all keys from 'mapKeysMap' to find all combinations of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+	var testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice []string
+	var tempKey string
+	testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice = make([]string, 0, len(mapKeysMap))
+	for tempKey, _ = range mapKeysMap {
+		testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice = append(testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice, tempKey)
+	}
+
+	// Loop slice of combinations of ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion')
+	var tempTestCaseExecutionUuidTestCaseExecutionVersion string
+	var executionType string
+	for _, tempTestCaseExecutionUuidTestCaseExecutionVersion = range testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice {
+
+		// Extract which TesterGuis that are subscribing to this 'TestCaseExecution(Version)'
+		var messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType
+		messageToTesterGuiForwardChannels = whoIsSubscribingToTestCaseExecution(tempTestCaseExecutionUuidTestCaseExecutionVersion)
+
+		// If there aren't any subscribers then continue to next 'TestCaseExecutionUuid+TestCaseExecutionVersion'
+		if len(messageToTesterGuiForwardChannels) == 0 {
+			continue
 		}
 
-		// Loop slice of combinations of ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion')
-		var tempTestCaseExecutionUuidTestCaseExecutionVersion string
-		var executionType string
-		for _, tempTestCaseExecutionUuidTestCaseExecutionVersion = range testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice {
+		// extract info about if there are TestCaseExecutions and/or TestInstructionExecutions
+		// map['TestCaseExecutionUuid' + 'TestCaseExecutionVersion'][]'TestCaseExecutionUuid' + 'TestCaseExecutionVersion' + indicator('TC' or 'TI')]'
+		var tempTestCaseExecutionUuidTestCaseExecutionVersionSlice []string
+		tempTestCaseExecutionUuidTestCaseExecutionVersionSlice, existInMap = mapKeysMap[tempTestCaseExecutionUuidTestCaseExecutionVersion]
 
-			// Extract which TesterGuis that are subscribing to this 'TestCaseExecution(Version)'
-			var messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType
-			messageToTesterGuiForwardChannels = whoIsSubscribingToTestCaseExecution(tempTestCaseExecutionUuidTestCaseExecutionVersion)
+		// Create object to be sent over channel
+		var testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage
+		testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage = &fenixExecutionServerGuiGrpcApi.TestCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage{
+			ProtoFileVersionUsedByClient:    fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			TestCaseExecutionsStatus:        nil,
+			TestInstructionExecutionsStatus: nil,
+		}
 
-			// If there aren't any subscribers then continue to next 'TestCaseExecutionUuid+TestCaseExecutionVersion'
-			if len(messageToTesterGuiForwardChannels) == 0 {
-				continue
-			}
+		// Loop the slice to extract if there are TestCaseExecutionsStatuses and/or TestInstructionExecutionsStatuses
+		var tempExecutionType string
+		for _, tempExecutionType = range tempTestCaseExecutionUuidTestCaseExecutionVersionSlice {
 
-			// extract info about there are TestCaseExecutions and/or TestInstructionExecutions
-			// map['TestCaseExecutionUuid' + 'TestCaseExecutionVersion'][]'TestCaseExecutionUuid' + 'TestCaseExecutionVersion' + indicator('TC' or 'TI')]'
-			var tempTestCaseExecutionUuidTestCaseExecutionVersionSlice []string
-			tempTestCaseExecutionUuidTestCaseExecutionVersionSlice, existInMap = mapKeysMap[tempTestCaseExecutionUuidTestCaseExecutionVersion]
+			// Extract if the execution is TestCaseExecution(TC) or a TestInstructionExecution(TI), the last 2 characters
+			executionType = tempExecutionType[len(tempExecutionType)-2:]
 
-			// Create object to be sent over channel
-			var testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage
-			testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage = &fenixExecutionServerGuiGrpcApi.TestCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage{
-				ProtoFileVersionUsedByClient:    fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
-				TestCaseExecutionsStatus:        nil,
-				TestInstructionExecutionsStatus: nil,
-			}
+			// Based on ExecutionType add correct data
+			switch executionType {
 
-			// Loop the slice to extract if there are TestCaseExecutionsStatuses and/or TestInstructionExecutionsStatuses
-			var tempExecutionType string
-			for _, tempExecutionType = range tempTestCaseExecutionUuidTestCaseExecutionVersionSlice {
+			case "TC":
+				// There are TestCaseExecutionStatus-data then add that data to object, to be sent over channel
+				var tempTestCaseExecutionsStatusForChannelMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
+				tempTestCaseExecutionsStatusForChannelMessage, existInMap = testCaseExecutionsStatusForChannelMessageMap[tempTestCaseExecutionUuidTestCaseExecutionVersion]
 
-				// Extract if the execution is TestCaseExecution(TC) or a TestInstructionExecution(TI), the last 2 characters
-				executionType = tempExecutionType[len(tempExecutionType)-2:]
-
-				// Based on ExecutionType add correct data
-				switch executionType {
-
-				case "TC":
-					// There are TestCaseExecutionStatus-data then add that data to object, to be sent over channel
-					var tempTestCaseExecutionsStatusForChannelMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
-					tempTestCaseExecutionsStatusForChannelMessage, existInMap = testCaseExecutionsStatusForChannelMessageMap[tempTestCaseExecutionUuidTestCaseExecutionVersion]
-
-					if existInMap == false {
-						common_config.Logger.WithFields(logrus.Fields{
-							"Id": "35818e92-5d81-4e7a-abfb-1b49cb87d97b",
-							"tempTestCaseExecutionUuidTestCaseExecutionVersion": tempTestCaseExecutionUuidTestCaseExecutionVersion,
-						}).Error("Couldn't find 'TestCaseExecutionUuid+TestCaseExecutionVersion' in 'testCaseExecutionsStatusForChannelMessageMap'. Key is missing")
-
-						break
-					}
-
-					testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage.TestCaseExecutionsStatus = tempTestCaseExecutionsStatusForChannelMessage
-
-				case "TI":
-					// There are TestInstructionExecutionStatus-data then add that data to object, to be sent over channel
-					var tempTestInstructionExecutionsStatusForChannelMessage []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
-					tempTestInstructionExecutionsStatusForChannelMessage, existInMap = testInstructionExecutionsStatusForChannelMessageMap[tempTestCaseExecutionUuidTestCaseExecutionVersion]
-					if existInMap == false {
-						common_config.Logger.WithFields(logrus.Fields{
-							"Id": "60fc7e82-35d1-448a-a04d-101a509e9183",
-							"tempTestCaseExecutionUuidTestCaseExecutionVersion": tempTestCaseExecutionUuidTestCaseExecutionVersion,
-						}).Error("Couldn't find 'TestCaseExecutionUuid+TestCaseExecutionVersion' in 'testInstructionExecutionsStatusForChannelMessageMap'. Key is missing")
-
-						break
-					}
-
-					testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage.TestInstructionExecutionsStatus = tempTestInstructionExecutionsStatusForChannelMessage
-
-				default:
+				if existInMap == false {
 					common_config.Logger.WithFields(logrus.Fields{
-						"Id":                "739809e1-f927-4500-9f79-be92416f0a3a",
-						"executionType":     executionType,
-						"tempExecutionType": tempExecutionType,
-					}).Error("Execution type isn't any of TestCaseExecution(TC) or TestInstructionExecution(TI)")
+						"Id": "35818e92-5d81-4e7a-abfb-1b49cb87d97b",
+						"tempTestCaseExecutionUuidTestCaseExecutionVersion": tempTestCaseExecutionUuidTestCaseExecutionVersion,
+					}).Error("Couldn't find 'TestCaseExecutionUuid+TestCaseExecutionVersion' in 'testCaseExecutionsStatusForChannelMessageMap'. Key is missing")
 
 					break
 				}
 
-			}
+				testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage.TestCaseExecutionsStatus = tempTestCaseExecutionsStatusForChannelMessage
 
-			// The 'subscribeToMessagesStreamResponse' that will be added into Channel message
-			var subscribeToMessagesStreamResponse *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
-			subscribeToMessagesStreamResponse = &fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse{
-				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
-				IsKeepAliveMessage:           false,
-				ExecutionsStatus:             testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage,
-			}
+			case "TI":
+				// There are TestInstructionExecutionStatus-data then add that data to object, to be sent over channel
+				var tempTestInstructionExecutionsStatusForChannelMessage []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
+				tempTestInstructionExecutionsStatusForChannelMessage, existInMap = testInstructionExecutionsStatusForChannelMessageMap[tempTestCaseExecutionUuidTestCaseExecutionVersion]
+				if existInMap == false {
+					common_config.Logger.WithFields(logrus.Fields{
+						"Id": "60fc7e82-35d1-448a-a04d-101a509e9183",
+						"tempTestCaseExecutionUuidTestCaseExecutionVersion": tempTestCaseExecutionUuidTestCaseExecutionVersion,
+					}).Error("Couldn't find 'TestCaseExecutionUuid+TestCaseExecutionVersion' in 'testInstructionExecutionsStatusForChannelMessageMap'. Key is missing")
 
-			// Create channel Message to be sent over channel, and later sent to TesterGui
-			var messageToTestGuiForwardChannel MessageToTestGuiForwardChannelStruct
-			messageToTestGuiForwardChannel = MessageToTestGuiForwardChannelStruct{
-				SubscribeToMessagesStreamResponse: subscribeToMessagesStreamResponse,
-				IsKeepAliveMessage:                false,
-			}
+					break
+				}
 
-			// Loop subscribers channels and put message on channels
-			var messageToTesterGuiForwardChannel *MessageToTesterGuiForwardChannelType
-			for _, messageToTesterGuiForwardChannel = range messageToTesterGuiForwardChannels {
-				// Send Message over 'MessageChannel'
-				*messageToTesterGuiForwardChannel <- messageToTestGuiForwardChannel
+				testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage.TestInstructionExecutionsStatus = tempTestInstructionExecutionsStatusForChannelMessage
+
+			default:
+				common_config.Logger.WithFields(logrus.Fields{
+					"Id":                "739809e1-f927-4500-9f79-be92416f0a3a",
+					"executionType":     executionType,
+					"tempExecutionType": tempExecutionType,
+				}).Error("Execution type isn't any of TestCaseExecution(TC) or TestInstructionExecution(TI)")
+
+				break
 			}
 
 		}
+
+		// The 'subscribeToMessagesStreamResponse' that will be added into Channel message
+		var subscribeToMessagesStreamResponse *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
+		subscribeToMessagesStreamResponse = &fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse{
+			ProtoFileVersionUsedByClient:     fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			IsKeepAliveMessage:               false,
+			ExecutionsStatus:                 testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage,
+			OriginalMessageCreationTimeStamp: broadcastTimeStampForGrpc,
+		}
+
+		// Create channel Message to be sent over channel, and later sent to TesterGui
+		var messageToTestGuiForwardChannel MessageToTestGuiForwardChannelStruct
+		messageToTestGuiForwardChannel = MessageToTestGuiForwardChannelStruct{
+			SubscribeToMessagesStreamResponse: subscribeToMessagesStreamResponse,
+			IsKeepAliveMessage:                false,
+		}
+
+		// Loop subscribers channels and put message on channels
+		var messageToTesterGuiForwardChannel *MessageToTesterGuiForwardChannelType
+		for _, messageToTesterGuiForwardChannel = range messageToTesterGuiForwardChannels {
+			// Send Message over 'MessageChannel'
+			*messageToTesterGuiForwardChannel <- messageToTestGuiForwardChannel
+
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                             "b248f8b4-e610-4986-8f7d-2688eaf282cf",
+				"messageToTestGuiForwardChannel": messageToTestGuiForwardChannel,
+			}).Debug("ExecutionStatusMessage was put on channel")
+
+		}
+
 	}
 }

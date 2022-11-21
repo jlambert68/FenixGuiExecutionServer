@@ -81,8 +81,13 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 			// Wait for ExecutionStatus-message
 			executionForwardChannelMessage := <-*testCaseExecutionsSubscriptionChannelInformation.MessageToTesterGuiForwardChannel
 
-			var executionsStatus *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
-			executionsStatus = executionForwardChannelMessage.SubscribeToMessagesStreamResponse
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                             "1c876526-9b96-41a4-b694-7e176ef46656",
+				"executionForwardChannelMessage": executionForwardChannelMessage,
+			}).Debug("Receive ExecutionStatusMessage from channel")
+
+			var executionsStatusMessage *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
+			executionsStatusMessage = executionForwardChannelMessage.SubscribeToMessagesStreamResponse
 
 			// If TesterGui stops responding then exit
 			if TesterGuiHasConnected == false {
@@ -91,16 +96,16 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 				return
 			}
 
-			err = streamServer.Send(executionsStatus)
+			err = streamServer.Send(executionsStatusMessage)
 			if err != nil {
 
 				// We don't have an active connection to TesterGui
 				TesterGuiHasConnected = false
 
 				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-					"id":               "70ab1dcb-0be3-49b6-b49a-694bab529ed4",
-					"err":              err,
-					"executionsStatus": executionsStatus,
+					"id":                      "70ab1dcb-0be3-49b6-b49a-694bab529ed4",
+					"err":                     err,
+					"executionsStatusMessage": executionsStatusMessage,
 				}).Error("Got some problem when doing reversed streaming of Messages to TesterGui. Stopping Reversed Streaming")
 
 				// Have the gRPC-call be continued, end stream server
@@ -115,16 +120,16 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 
 				// Is a standard TestInstructionExecution that was sent to TesterGui
 				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-					"id":               "6f5e6dc7-cef5-4008-a4ea-406be80ded4c",
-					"executionsStatus": executionsStatus,
+					"id":                      "6f5e6dc7-cef5-4008-a4ea-406be80ded4c",
+					"executionsStatusMessage": executionsStatusMessage,
 				}).Debug("Success in reversed streaming TestInstructionExecution to TesterGui")
 
 			} else {
 
 				// Is a keep alive message that was sent to TesterGui
 				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-					"id":               "c1d5a756-b7fa-48ae-953e-59dedd0671f4",
-					"executionsStatus": executionsStatus,
+					"id":                      "c1d5a756-b7fa-48ae-953e-59dedd0671f4",
+					"executionsStatusMessage": executionsStatusMessage,
 				}).Debug("Success in reversed streaming TestInstructionExecution to TesterGui")
 			}
 		}

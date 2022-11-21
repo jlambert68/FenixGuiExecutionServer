@@ -9,13 +9,21 @@ import (
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(userID string) (testCaseExecutionBasicInformationMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage, err error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(userID string, domainList []string) (testCaseExecutionBasicInformationMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage, err error) {
 
 	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
 	sqlToExecute := ""
 	sqlToExecute = sqlToExecute + "SELECT TCEQ.* "
 	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCaseExecutionQueue\" TCEQ "
+
+	// if domainList has domains then add that as Where-statement
+	if domainList != nil {
+		sqlToExecute = sqlToExecute + "WHERE TCEQ.\"DomainUuid\" IN " +
+			fenixGuiTestCaseBuilderServerObject.generateSQLINArray(domainList)
+		sqlToExecute = sqlToExecute + " "
+	}
+
 	sqlToExecute = sqlToExecute + "ORDER BY TCEQ.\"QueueTimeStamp\" ASC, TCEQ.\"DomainName\" ASC, TCEQ.\"TestSuiteName\" ASC, TCEQ.\"TestCaseName\" ASC; "
 
 	// Query DB
@@ -34,6 +42,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Variables to used when extract data from result set
 	var tempPlacedOnTestExecutionQueueTimeStamp time.Time
 	var tempExecutionPriority int
+	var tempUniqueCounter int
 
 	// Extract data from DB result set
 	for rows.Next() {
@@ -57,6 +66,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempPlacedOnTestExecutionQueueTimeStamp,
 			&testCaseExecutionBasicInformation.TestDataSetUuid,
 			&tempExecutionPriority,
+			&tempUniqueCounter,
 		)
 
 		if err != nil {

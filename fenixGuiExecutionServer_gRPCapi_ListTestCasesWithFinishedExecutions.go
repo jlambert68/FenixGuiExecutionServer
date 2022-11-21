@@ -7,8 +7,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// ListAllImmatureTestInstructionAttributes - *********************************************************************
-// The TestCase Builder asks for all TestInstructions Attributes that the user must add values to in TestCase
+// ListTestCasesWithFinishedExecutions - *********************************************************************
+// List all TestCaseExecutions that has finished their execution
 func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExecutions(ctx context.Context, listTestCasesWithFinishedExecutionsRequest *fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsRequest) (*fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsResponse, error) {
 
 	// Define the response message
@@ -45,7 +45,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExe
 	var listTestCasesWithFinishedExecutionsResponse []*fenixExecutionServerGuiGrpcApi.TestCaseWithFinishedExecutionMessage
 
 	// Get users ImmatureTestInstruction-data from CloudDB
-	listTestCasesWithFinishedExecutionsResponse, err := fenixGuiExecutionServerObject.listTestCasesWithFinishedExecutionsLoadFromCloudDB(userID)
+	listTestCasesWithFinishedExecutionsResponse, err := fenixGuiExecutionServerObject.listTestCasesWithFinishedExecutionsLoadFromCloudDB(userID, listTestCasesWithFinishedExecutionsRequest.DomainUuids)
 	if err != nil {
 		// Something went wrong so return an error to caller
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsResponse{

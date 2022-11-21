@@ -35,6 +35,11 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid Appli
 	// Nothing in subscription-map then initiate it and store it in Map
 	if allApplicationRunTimeUuids == nil {
 		var tempAllApplicationRunTimeUuids []ApplicationRunTimeUuidType
+
+		// Add new 'ApplicationRunTimeUuid' to slice
+		tempAllApplicationRunTimeUuids = append(tempAllApplicationRunTimeUuids, applicationRunTimeUuid)
+
+		// Add it to map
 		TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey] = &tempAllApplicationRunTimeUuids
 		allApplicationRunTimeUuids = &tempAllApplicationRunTimeUuids
 	} else {

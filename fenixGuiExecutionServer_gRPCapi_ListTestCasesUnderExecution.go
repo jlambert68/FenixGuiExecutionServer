@@ -44,7 +44,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesUnderExecution(
 	var testCaseUnderExecutionMessage []*fenixExecutionServerGuiGrpcApi.TestCaseUnderExecutionMessage
 
 	// Get users ImmatureTestInstruction-data from CloudDB
-	testCaseUnderExecutionMessage, err := fenixGuiExecutionServerObject.listTestCasesUnderExecutionLoadFromCloudDB(userID)
+	testCaseUnderExecutionMessage, err := fenixGuiExecutionServerObject.listTestCasesUnderExecutionLoadFromCloudDB(userID, listTestCasesUnderExecutionRequest.DomainUuids)
 	if err != nil {
 		// Something went wrong so return an error to caller
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse{

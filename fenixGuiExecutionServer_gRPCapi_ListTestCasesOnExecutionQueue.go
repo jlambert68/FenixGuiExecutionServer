@@ -45,7 +45,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesOnExecutionQueu
 	var testCaseExecutionBasicInformation []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage
 
 	// Get users ImmatureTestInstruction-data from CloudDB
-	testCaseExecutionBasicInformation, err := fenixGuiExecutionServerObject.listTestCasesOnExecutionQueueLoadFromCloudDB(userID)
+	testCaseExecutionBasicInformation, err := fenixGuiExecutionServerObject.listTestCasesOnExecutionQueueLoadFromCloudDB(userID, listTestCasesInExecutionQueueRequest.DomainUuids)
 	if err != nil {
 		// Something went wrong so return an error to caller
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesInExecutionQueueResponse{

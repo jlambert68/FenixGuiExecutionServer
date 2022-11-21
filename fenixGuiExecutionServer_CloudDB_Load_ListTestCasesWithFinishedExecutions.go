@@ -9,17 +9,33 @@ import (
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesWithFinishedExecutionsLoadFromCloudDB(userID string) (testCasesWithFinishedExecutions []*fenixExecutionServerGuiGrpcApi.TestCaseWithFinishedExecutionMessage, err error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesWithFinishedExecutionsLoadFromCloudDB(userID string, domainList []string) (testCasesWithFinishedExecutions []*fenixExecutionServerGuiGrpcApi.TestCaseWithFinishedExecutionMessage, err error) {
 
 	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
 	sqlToExecute := ""
 	sqlToExecute = sqlToExecute + "SELECT TCUE.* "
-	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCasesFinishedExecution\" TCUE "
+	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCasesUnderExecution\" TCUE "
 	sqlToExecute = sqlToExecute + "WHERE TCUE.\"ExecutionHasFinished\" = true "
+
+	// if domainList has domains then add that as Where-statement
+	if domainList != nil {
+		sqlToExecute = sqlToExecute + "AND TCUE.\"DomainUuid\" IN " +
+			fenixGuiTestCaseBuilderServerObject.generateSQLINArray(domainList)
+		sqlToExecute = sqlToExecute + " "
+	}
+
 	sqlToExecute = sqlToExecute + "UNION ALL "
 	sqlToExecute = sqlToExecute + "SELECT TCFE.* "
 	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCasesFinishedExecution\" TCFE "
+
+	// if domainList has domains then add that as Where-statement
+	if domainList != nil {
+		sqlToExecute = sqlToExecute + "WHERE TCFE.\"DomainUuid\" IN " +
+			fenixGuiTestCaseBuilderServerObject.generateSQLINArray(domainList)
+		sqlToExecute = sqlToExecute + " "
+	}
+
 	sqlToExecute = sqlToExecute + "ORDER BY \"ExecutionStartTimeStamp\" ASC, \"DomainName\" ASC, \"TestSuiteName\" ASC, \"TestCaseName\" ASC "
 
 	// Query DB
@@ -42,6 +58,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempExecutionStartTimeStamp time.Time
 	var tempExecutionStopTimeStamp time.Time
 	var tempTestCaseExecutionStatus int
+	var tempExecutionStatusUpdateTimeStamp time.Time
+
+	var tempUniqueCounter int
 
 	// Extract data from DB result set
 	for rows.Next() {
@@ -73,7 +92,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempExecutionStartTimeStamp,
 			&tempExecutionStopTimeStamp,
 			&tempTestCaseExecutionStatus,
-			testCaseExecutionDetails.ExecutionHasFinished,
+			&testCaseExecutionDetails.ExecutionHasFinished,
+			&tempUniqueCounter,
+			&tempExecutionStatusUpdateTimeStamp,
 		)
 
 		if err != nil {
@@ -93,6 +114,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		testCaseExecutionDetails.ExecutionStartTimeStamp = timestamppb.New(tempExecutionStartTimeStamp)
 		testCaseExecutionDetails.ExecutionStopTimeStamp = timestamppb.New(tempExecutionStopTimeStamp)
 		testCaseExecutionDetails.TestCaseExecutionStatus = fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum(tempTestCaseExecutionStatus)
+		testCaseExecutionDetails.ExecutionStatusUpdateTimeStamp = timestamppb.New(tempExecutionStatusUpdateTimeStamp)
 
 		// Build 'TestCaseWithFinishedExecutionMessage'
 		testCaseUnderExecution.TestCaseExecutionBasicInformation = &testCaseExecutionBasicInformation
