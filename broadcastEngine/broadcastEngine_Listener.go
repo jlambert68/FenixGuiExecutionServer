@@ -21,9 +21,13 @@ type BroadcastingMessageForExecutionsStruct struct {
 }
 
 type TestCaseExecutionStruct struct {
-	TestCaseExecutionUuid    string `json:"testcaseexecutionuuid"`
-	TestCaseExecutionVersion string `json:"testcaseexecutionversion"`
-	TestCaseExecutionStatus  string `json:"testcaseexecutionstatus"`
+	TestCaseExecutionUuid          string `json:"testcaseexecutionuuid"`
+	TestCaseExecutionVersion       string `json:"testcaseexecutionversion"`
+	TestCaseExecutionStatus        string `json:"testcaseexecutionstatus"`
+	ExecutionStartTimeStamp        string `json:"executionstarttimeStamp"`        // The timestamp when the execution was put for execution, not on queue for execution
+	ExecutionStopTimeStamp         string `json:"executionstoptimestamp"`         // The timestamp when the execution was ended, in anyway
+	ExecutionHasFinished           string `json:"executionhasfinished"`           // A simple status telling if the execution has ended or not
+	ExecutionStatusUpdateTimeStamp string `json:"executionstatusupdatetimestamp"` // The timestamp when the status was last updated
 }
 
 type TestInstructionExecutionStruct struct {
@@ -117,7 +121,19 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 
 	var broadcastTimeStamp time.Time
 	var err error
-	timeStampLayoutForParser := "2006-01-02 15:04:05.999999999 -0700 MST"
+	var timeStampLayoutForParser string //:= "2006-01-02 15:04:05.999999999 -0700 MST"
+
+	timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(broadcastingMessageForExecutions.BroadcastTimeStamp)
+	if err != nil {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":  "dcc1f424-f375-4700-9b4c-129932676b98",
+			"err": err,
+			"broadcastingMessageForExecutions.BroadcastTimeStamp": broadcastingMessageForExecutions.BroadcastTimeStamp,
+		}).Error("Couldn't generate parser layout from TimeStamp")
+
+		return
+	}
+
 	broadcastTimeStamp, err = time.Parse(timeStampLayoutForParser, broadcastingMessageForExecutions.BroadcastTimeStamp)
 	if err != nil {
 		common_config.Logger.WithFields(logrus.Fields{
@@ -139,10 +155,16 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 	var mapKey string
 	var testCaseExecutionVersionAsInteger int
 
+	var tempExecutionStartTimeStamp time.Time
+	var tempExecutionStopTimeStamp time.Time
+	var tempExecutionStatusUpdateTimeStamp time.Time
+	var tempExecutionHasFinished bool
+
 	// Create ChannelMessages for TestCaseExecutions
 	var testCaseExecutionFromBroadcastMessage TestCaseExecutionStruct
 	for _, testCaseExecutionFromBroadcastMessage = range broadcastingMessageForExecutions.TestCaseExecutions {
 
+		// Convert string-versions from BroadcastMessage
 		testCaseExecutionVersionAsInteger, err = strconv.Atoi(testCaseExecutionFromBroadcastMessage.TestCaseExecutionVersion)
 		if err != nil {
 			common_config.Logger.WithFields(logrus.Fields{
@@ -151,38 +173,136 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 				"testCaseExecutionFromBroadcastMessage.TestCaseExecutionVersion": testCaseExecutionFromBroadcastMessage.TestCaseExecutionVersion,
 			}).Error("Couldn't convert 'TestCaseExecutionVersion' from Broadcast-message into an integer")
 
-		} else {
+			return
 
-			var testCaseExecutionStatusForChannelMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
-			testCaseExecutionStatusForChannelMessage = &fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage{
-				TestCaseExecutionUuid:    testCaseExecutionFromBroadcastMessage.TestCaseExecutionUuid,
-				TestCaseExecutionVersion: int32(testCaseExecutionVersionAsInteger),
-				TestCaseExecutionStatus:  fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum(fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum_value[testCaseExecutionFromBroadcastMessage.TestCaseExecutionStatus]),
-			}
-
-			// Create mapKey consisting of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
-			mapKey = testCaseExecutionFromBroadcastMessage.TestCaseExecutionUuid + testCaseExecutionFromBroadcastMessage.TestCaseExecutionVersion
-
-			// Extract slice holding the status messages for TestCaseExecutions
-			var tempTestCaseExecutionsStatusForChannelMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
-			tempTestCaseExecutionsStatusForChannelMessage, existInMap = testCaseExecutionsStatusForChannelMessageMap[mapKey]
-
-			if existInMap == false {
-				// Add to 'mapKeyMap' that a new combination of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'  for TestCaseExecutions was found for
-				mapKeysMapKeyValue = mapKey + "TC"
-
-				var mapKeysMapKeyValues []string
-				mapKeysMapKeyValues, _ = mapKeysMap[mapKey]
-				mapKeysMapKeyValues = append(mapKeysMapKeyValues, mapKeysMapKeyValue)
-
-				mapKeysMap[mapKey] = mapKeysMapKeyValues
-
-			}
-
-			// Add new status message to slice and add slice back to map
-			tempTestCaseExecutionsStatusForChannelMessage = append(tempTestCaseExecutionsStatusForChannelMessage, testCaseExecutionStatusForChannelMessage)
-			testCaseExecutionsStatusForChannelMessageMap[mapKey] = tempTestCaseExecutionsStatusForChannelMessage
 		}
+
+		// Use fewer decimals for seconds in 'Layout' For TimeStamp-Parser
+		//timeStampLayoutForParser = "2006-01-02 15:04:05.99999 -0700 MST"
+		timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(testCaseExecutionFromBroadcastMessage.ExecutionStartTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "301a5e6c-b63e-4678-8d98-206570241fee",
+				"err": err,
+				"testCaseExecutionFromBroadcastMessage.ExecutionStartTimeStamp": testCaseExecutionFromBroadcastMessage.ExecutionStartTimeStamp,
+			}).Error("Couldn't generate parser layout from TimeStamp")
+
+			return
+		}
+
+		// Convert 'ExecutionStartTimeStamp'
+		tempExecutionStartTimeStamp, err = time.Parse(timeStampLayoutForParser, testCaseExecutionFromBroadcastMessage.ExecutionStartTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "99c61a6a-8caf-4557-a5eb-01d354f69e90",
+				"err": err,
+				"testCaseExecutionFromBroadcastMessage.ExecutionStartTimeStamp": testCaseExecutionFromBroadcastMessage.ExecutionStartTimeStamp,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		// Convert 'ExecutionHasFinished'
+		tempExecutionHasFinished, err = strconv.ParseBool(testCaseExecutionFromBroadcastMessage.ExecutionHasFinished)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "47dd1a78-316b-48be-a255-50a5818b8761",
+				"err": err,
+				"testCaseExecutionFromBroadcastMessage.ExecutionHasFinished": testCaseExecutionFromBroadcastMessage.ExecutionHasFinished,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		// Convert 'ExecutionStopTimeStamp' if 'ExecutionHasFinished'
+		if tempExecutionHasFinished == true {
+			timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(testCaseExecutionFromBroadcastMessage.ExecutionStopTimeStamp)
+			if err != nil {
+				common_config.Logger.WithFields(logrus.Fields{
+					"Id":  "3d916f23-5e25-46cc-9329-32c019713db9",
+					"err": err,
+					"testCaseExecutionFromBroadcastMessage.ExecutionStopTimeStamp": testCaseExecutionFromBroadcastMessage.ExecutionStopTimeStamp,
+				}).Error("Couldn't generate parser layout from TimeStamp")
+
+				return
+			}
+
+			tempExecutionStopTimeStamp, err = time.Parse(timeStampLayoutForParser, testCaseExecutionFromBroadcastMessage.ExecutionStopTimeStamp)
+			if err != nil {
+				common_config.Logger.WithFields(logrus.Fields{
+					"Id":  "820005de-6f98-4aa8-a202-95759fcc07e2",
+					"err": err,
+					"testCaseExecutionFromBroadcastMessage.ExecutionStopTimeStamp": testCaseExecutionFromBroadcastMessage.ExecutionStopTimeStamp,
+				}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+				return
+			}
+		}
+
+		// Convert 'ExecutionStatusUpdateTimeStamp'
+		timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(testCaseExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "e891bef9-1d83-4336-92d3-120d9b7594db",
+				"err": err,
+				"testCaseExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp": testCaseExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp,
+			}).Error("Couldn't generate parser layout from TimeStamp")
+
+			return
+		}
+
+		tempExecutionStatusUpdateTimeStamp, err = time.Parse(timeStampLayoutForParser, testCaseExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "8ffa06b0-7396-4859-9d7a-461d9da153ce",
+				"err": err,
+				"testCaseExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp": testCaseExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		var testCaseExecutionStatusForChannelMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
+		testCaseExecutionStatusForChannelMessage = &fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage{
+			TestCaseExecutionUuid:    testCaseExecutionFromBroadcastMessage.TestCaseExecutionUuid,
+			TestCaseExecutionVersion: int32(testCaseExecutionVersionAsInteger),
+			TestCaseExecutionDetails: &fenixExecutionServerGuiGrpcApi.TestCaseExecutionDetailsMessage{
+				ExecutionStartTimeStamp: timestamppb.New(tempExecutionStartTimeStamp),
+
+				TestCaseExecutionStatus:        fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum(fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum_value[testCaseExecutionFromBroadcastMessage.TestCaseExecutionStatus]),
+				ExecutionHasFinished:           tempExecutionHasFinished,
+				ExecutionStatusUpdateTimeStamp: timestamppb.New(tempExecutionStatusUpdateTimeStamp),
+			},
+		}
+
+		// Only add Stop time when TestCaseExecution is finished
+		if tempExecutionHasFinished == true {
+			testCaseExecutionStatusForChannelMessage.TestCaseExecutionDetails.ExecutionStopTimeStamp = timestamppb.New(tempExecutionStopTimeStamp)
+		}
+
+		// Create mapKey consisting of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+		mapKey = testCaseExecutionFromBroadcastMessage.TestCaseExecutionUuid + testCaseExecutionFromBroadcastMessage.TestCaseExecutionVersion
+
+		// Extract slice holding the status messages for TestCaseExecutions
+		var tempTestCaseExecutionsStatusForChannelMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
+		tempTestCaseExecutionsStatusForChannelMessage, existInMap = testCaseExecutionsStatusForChannelMessageMap[mapKey]
+
+		if existInMap == false {
+			// Add to 'mapKeyMap' that a new combination of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'  for TestCaseExecutions was found for
+			mapKeysMapKeyValue = mapKey + "TC"
+
+			var mapKeysMapKeyValues []string
+			mapKeysMapKeyValues, _ = mapKeysMap[mapKey]
+			mapKeysMapKeyValues = append(mapKeysMapKeyValues, mapKeysMapKeyValue)
+
+			mapKeysMap[mapKey] = mapKeysMapKeyValues
+
+		}
+
+		// Add new status message to slice and add slice back to map
+		tempTestCaseExecutionsStatusForChannelMessage = append(tempTestCaseExecutionsStatusForChannelMessage, testCaseExecutionStatusForChannelMessage)
+		testCaseExecutionsStatusForChannelMessageMap[mapKey] = tempTestCaseExecutionsStatusForChannelMessage
+
 	}
 
 	// Create map for messages, grouped by Subscription-parameter-key('TestInstructionExecutionUuid'+'TestInstructionExecutionVersion') to be sent over MessageChannel to be forwarded to TestGui

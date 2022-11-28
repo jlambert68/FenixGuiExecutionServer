@@ -48,7 +48,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		// Create Return message
 		initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
-			TestCaseExecutionUuid: "",
+			TestCasesInExecutionQueue: nil,
 			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 				AckNack:                      false,
 				Comments:                     "Problem when saving to database",
@@ -84,7 +84,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		// Create Return message
 		initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
-			TestCaseExecutionUuid: "",
+			TestCasesInExecutionQueue: nil,
 			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 				AckNack:                      false,
 				Comments:                     "Problem when Loading TestCase Basic Information from database",
@@ -137,7 +137,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		// Create Return message
 		initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
-			TestCaseExecutionUuid: "",
+			TestCasesInExecutionQueue: nil,
 			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 				AckNack:                      false,
 				Comments:                     "Problem when saving to database",
@@ -151,7 +151,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
-		TestCaseExecutionUuid: testCaseExecutionUuid,
+		TestCasesInExecutionQueue: &testCaseExecutionToBeSaved,
 		AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 			AckNack:                      true,
 			Comments:                     "",

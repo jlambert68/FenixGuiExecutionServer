@@ -30,8 +30,8 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		// Not correct proto-file version is used
 		// Exiting
 		initiateSingleTestCaseExecutionResponseMessage := fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
-			TestCaseExecutionUuid: "",
-			AckNackResponse:       ackNackRespons,
+			TestCasesInExecutionQueue: nil,
+			AckNackResponse:           ackNackRespons,
 		}
 
 		return &initiateSingleTestCaseExecutionResponseMessage, nil
@@ -51,7 +51,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 	var testCaseExecutionsToProcess []*fenixExecutionServerGrpcApi.TestCaseExecutionToProcess
 
 	testCaseExecutionToProcess = &fenixExecutionServerGrpcApi.TestCaseExecutionToProcess{
-		TestCaseExecutionsUuid:   initiateSingleTestCaseExecutionResponseMessage.TestCaseExecutionUuid,
+		TestCaseExecutionsUuid:   initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid,
 		TestCaseExecutionVersion: 1,
 	}
 	testCaseExecutionsToProcess = append(testCaseExecutionsToProcess, testCaseExecutionToProcess)
@@ -84,7 +84,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		broadcastEngine.ApplicationRunTimeUuidType(
 			initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
 		broadcastEngine.TestCaseExecutionUuidType(
-			initiateSingleTestCaseExecutionResponseMessage.TestCaseExecutionUuid),
+			initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
 		1)
 
 	return initiateSingleTestCaseExecutionResponseMessage, nil
