@@ -2,6 +2,7 @@ package messagesToExecutionServer
 
 import (
 	"FenixGuiExecutionServer/common_config"
+	"FenixGuiExecutionServer/gcp"
 	"context"
 	"fmt"
 	fenixExecutionServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGrpcApi/go_grpc_api"
@@ -25,8 +26,10 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 	var returnMessageAckNack bool
 	var returnMessageString string
 
+	ctx = context.Background()
+
 	// Set up connection to Server
-	err := messagesToExecutionServerObject.SetConnectionToExecutionServer()
+	ctx, err := messagesToExecutionServerObject.SetConnectionToExecutionServer(ctx)
 	if err != nil {
 
 		// Set Error codes to return message
@@ -61,7 +64,7 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 	if common_config.ExecutionLocationForFenixExecutionServer == common_config.GCP {
 
 		// Add Access token
-		ctx, returnMessageAckNack, returnMessageString = messagesToExecutionServerObject.generateGCPAccessToken(ctx)
+		ctx, returnMessageAckNack, returnMessageString = gcp.Gcp.GenerateGCPAccessToken(ctx) //messagesToExecutionServerObject.generateGCPAccessToken(ctx)
 		if returnMessageAckNack == false {
 
 			// Set Error codes to return message

@@ -5,10 +5,14 @@ go 1.18
 require (
 	github.com/go-gota/gota v0.12.0
 	github.com/google/uuid v1.3.0
+	github.com/gorilla/pat v1.0.1
+	github.com/gorilla/sessions v1.2.1
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/jlambert68/FenixGrpcApi v0.0.0-20221127064648-6b3be4f40b92
 	github.com/jlambert68/FenixSyncShared v0.0.0-20220309201741-aa2c115e0cc1
+	github.com/markbates/goth v1.75.2
 	github.com/sirupsen/logrus v1.9.0
+	github.com/toqueteos/webbrowser v1.2.0
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 	google.golang.org/api v0.95.0
@@ -21,6 +25,9 @@ require (
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
+	github.com/gorilla/context v1.1.1 // indirect
+	github.com/gorilla/mux v1.6.2 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.13.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect

@@ -2,7 +2,9 @@ package messagesToExecutionServer
 
 import (
 	"FenixGuiExecutionServer/common_config"
+	"FenixGuiExecutionServer/grpcurl"
 	"crypto/tls"
+	"encoding/base64"
 	fenixExecutionServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -10,17 +12,19 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	grpcMetadata "google.golang.org/grpc/metadata"
+	"log"
+	"strings"
 	"time"
 )
 
 // SetConnectionToExecutionServer - Set upp connection and Dial to  FenixExecutionServer
-func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) SetConnectionToExecutionServer() (err error) {
+func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) SetConnectionToExecutionServer(ctx context.Context) (_ context.Context, err error) {
 
 	// slice with sleep time, in milliseconds, between each attempt to Dial to ExecutionServer
 	var sleepTimeBetweenDialAttempts []int
 	sleepTimeBetweenDialAttempts = []int{100, 100, 200, 200, 300, 300, 500, 500, 600, 1000} // Total: 3.6 seconds
 
-	var opts []grpc.DialOption
+	//var opts []grpc.DialOption
 
 	// Do multiple attempts to do connection to ExecutionServer
 	var numberOfDialAttempts int
@@ -31,21 +35,27 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 	for {
 
 		//When target is running on GCP then use credential otherwise not
-		if common_config.ExecutionLocationForFenixExecutionServer == common_config.GCP {
-			creds := credentials.NewTLS(&tls.Config{
-				InsecureSkipVerify: true,
-			})
+		/*
+			if common_config.ExecutionLocationForFenixExecutionServer == common_config.GCP {
+				creds := credentials.NewTLS(&tls.Config{
+					InsecureSkipVerify: true,
+				})
 
-			opts = []grpc.DialOption{
-				grpc.WithTransportCredentials(creds),
+				opts = []grpc.DialOption{
+					grpc.WithTransportCredentials(creds),
+				}
 			}
-		}
+
+		*/
 
 		// Set up connection to Fenix ExecutionServer
 		// When target is running on GCP, use credentials
+		var newGrpcClientConnection *grpc.ClientConn
 		if common_config.ExecutionLocationForFenixExecutionServer == common_config.GCP {
 			// Run on GCP
-			RemoteFenixExecutionServerConnection, err = grpc.Dial(FenixExecutionServerAddressToDial, opts...)
+			ctx, newGrpcClientConnection = dialFromGrpcurl(ctx)
+			RemoteFenixExecutionServerConnection = newGrpcClientConnection
+			//RemoteFenixExecutionServerConnection, err = grpc.Dial(FenixExecutionServerAddressToDial, opts...)
 		} else {
 			// Run Local
 			RemoteFenixExecutionServerConnection, err = grpc.Dial(FenixExecutionServerAddressToDial, grpc.WithInsecure())
@@ -64,7 +74,7 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 
 			// Only return the error after last attempt
 			if dialAttemptCounter >= numberOfDialAttempts {
-				return err
+				return nil, err
 			}
 
 		} else {
@@ -76,7 +86,7 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 			// Creates a new Clients
 			FenixExecutionServerGrpcClient = fenixExecutionServerGrpcApi.NewFenixExecutionServerGrpcServicesClient(RemoteFenixExecutionServerConnection)
 
-			return err
+			return nil, err
 		}
 
 		// Sleep for some time before retrying to connect
@@ -84,7 +94,7 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 
 	}
 
-	return err
+	return ctx, err
 }
 
 // Generate Google access token. Used when running in GCP
@@ -159,4 +169,92 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Ge
 	highestFenixExecutionServerProtoFileVersion = maxValue
 
 	return highestFenixExecutionServerProtoFileVersion
+}
+
+var (
+	isUnixSocket func() bool
+)
+
+func dialFromGrpcurl(ctx context.Context) (context.Context, *grpc.ClientConn) {
+
+	target := FenixExecutionServerAddressToDial
+
+	dialTime := 10 * time.Second
+
+	ctx, cancel := context.WithTimeout(ctx, dialTime)
+	defer cancel()
+	var opts []grpc.DialOption
+
+	var creds credentials.TransportCredentials
+
+	var tlsConf *tls.Config
+
+	creds = credentials.NewTLS(tlsConf)
+
+	grpcurlUA := "FenixCAConnector"
+	//if grpcurl.version == grpcurl.no_version {
+	//	grpcurlUA = "grpcurl/dev-build (no version set)"
+	//}
+
+	opts = append(opts, grpc.WithUserAgent(grpcurlUA))
+	//opts = append(opts, grpc.WithNoProxy())
+
+	network := "tcp"
+	if isUnixSocket != nil && isUnixSocket() {
+		network = "unix"
+	}
+
+	cc, err := grpcurl.BlockingDial(ctx, network, target, creds, opts...)
+	if err != nil {
+		log.Panicln("Failed to Dial, ", target, err.Error())
+	}
+	return ctx, cc
+
+}
+
+// MetadataFromHeaders converts a list of header strings (each string in
+// "Header-Name: Header-Value" form) into metadata. If a string has a header
+// name without a value (e.g. does not contain a colon), the value is assumed
+// to be blank. Binary headers (those whose names end in "-bin") should be
+// base64-encoded. But if they cannot be base64-decoded, they will be assumed to
+// be in raw form and used as is.
+func MetadataFromHeaders(headers []string) grpcMetadata.MD {
+	md := make(grpcMetadata.MD)
+	for _, part := range headers {
+		if part != "" {
+			pieces := strings.SplitN(part, ":", 2)
+			if len(pieces) == 1 {
+				pieces = append(pieces, "") // if no value was specified, just make it "" (maybe the header value doesn't matter)
+			}
+			headerName := strings.ToLower(strings.TrimSpace(pieces[0]))
+			val := strings.TrimSpace(pieces[1])
+			if strings.HasSuffix(headerName, "-bin") {
+				if v, err := decode(val); err == nil {
+					val = v
+				}
+			}
+			md[headerName] = append(md[headerName], val)
+		}
+	}
+	return md
+}
+
+var base64Codecs = []*base64.Encoding{base64.StdEncoding, base64.URLEncoding, base64.RawStdEncoding, base64.RawURLEncoding}
+
+func decode(val string) (string, error) {
+	var firstErr error
+	var b []byte
+	// we are lenient and can accept any of the flavors of base64 encoding
+	for _, d := range base64Codecs {
+		var err error
+		b, err = d.DecodeString(val)
+		if err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+		return string(b), nil
+	}
+	return "", firstErr
 }

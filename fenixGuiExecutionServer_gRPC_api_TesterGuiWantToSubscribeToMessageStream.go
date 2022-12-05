@@ -15,6 +15,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "d986194e-ec8c-4198-8160-bd7eb9838aca",
+		"userAndApplicationRunTimeIdentificationMessage": userAndApplicationRunTimeIdentificationMessage,
 	}).Debug("Incoming 'gRPCServer - SubscribeToMessageStream'")
 
 	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
@@ -108,6 +109,15 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 					"executionsStatusMessage": executionsStatusMessage,
 				}).Error("Got some problem when doing reversed streaming of Messages to TesterGui. Stopping Reversed Streaming")
 
+				// If message is not a keep alive message, then Put message back on Subscription channel
+				if executionForwardChannelMessage.IsKeepAliveMessage == false {
+					fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
+						"id":                      "5210db0a-c91d-47da-954e-cb0a78667c76",
+						"executionsStatusMessage": executionsStatusMessage,
+					}).Debug("Put message back on channel")
+
+					*testCaseExecutionsSubscriptionChannelInformation.MessageToTesterGuiForwardChannel <- executionForwardChannelMessage
+				}
 				// Have the gRPC-call be continued, end stream server
 				done <- true //close(done)
 
@@ -130,7 +140,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 					"id":                      "c1d5a756-b7fa-48ae-953e-59dedd0671f4",
 					"executionsStatusMessage": executionsStatusMessage,
-				}).Debug("Success in reversed streaming TestInstructionExecution to TesterGui")
+				}).Debug("Success in reversed streaming Keep-alive-message to TesterGui")
 			}
 		}
 
