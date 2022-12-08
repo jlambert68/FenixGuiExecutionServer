@@ -128,7 +128,7 @@ func SendBroadCastMessageOverMessageChannel(ctx context.Context, processTestInst
 	processTestInstructionExecutionReversedResponseMapData = &processTestInstructionExecutionReversedResponseStruct{
 		testInstructionExecutionUuid:                                    processTestInstructionExecutionRequest.TestInstruction.TestInstructionUuid,
 		processTestInstructionExecutionReversedResponseChannelReference: &processTestInstructionExecutionReversedResponseChannel,
-		savedInMapTimeStamp:                                             time.Now(),
+		savedInMapTimeStamp:                                             time.Now().UTC(),
 	}
 
 	// Save 'processTestInstructionExecutionReversedResponseChannelData' in Map

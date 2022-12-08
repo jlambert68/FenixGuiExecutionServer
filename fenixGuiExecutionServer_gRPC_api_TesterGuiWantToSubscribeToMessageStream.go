@@ -60,7 +60,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 		testCaseExecutionsSubscriptionChannelInformation = &broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationStruct{
 			ApplicationRunTimeUuid: broadcastEngine.ApplicationRunTimeUuidType(
 				userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid),
-			LastConnectionFromTesterGui:      time.Now(),
+			LastConnectionFromTesterGui:      time.Now().UTC(),
 			MessageToTesterGuiForwardChannel: &tempMessageToTesterGuiForwardChannel,
 		}
 

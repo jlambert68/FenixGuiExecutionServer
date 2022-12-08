@@ -68,7 +68,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	testCaseExecutionUuid := uuidGenerator.New().String()
 
 	// Generate TimeStamp
-	placedOnTestExecutionQueueTimeStamp := time.Now()
+	placedOnTestExecutionQueueTimeStamp := time.Now().UTC()
 
 	// Extract TestCase-information to be added to TestCaseExecution-data
 	//testCaseToExecuteBasicInformation := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
