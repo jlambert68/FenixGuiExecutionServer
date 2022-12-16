@@ -85,6 +85,12 @@ func BroadcastListener() error {
 				"Id":  "78d8f31c-5323-4c73-8a6a-f6cfef66f649",
 				"err": err,
 			}).Error("Error waiting for notification")
+
+			// Restart broadcast engine when error occurs. Most probably because nothing is coming
+			defer func() {
+				_ = BroadcastListener()
+			}()
+			return err
 		}
 
 		common_config.Logger.WithFields(logrus.Fields{
