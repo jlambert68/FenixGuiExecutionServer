@@ -4,6 +4,7 @@ import (
 	"FenixGuiExecutionServer/common_config"
 	"context"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
+	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,11 +41,43 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesUnderExecution(
 		return responseMessage, nil
 	}
 
+	// Begin SQL Transaction
+	txn, err := fenixSyncShared.DbPool.Begin(context.Background())
+	if err != nil {
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
+			"id":    "6f4ebe57-9606-4977-918d-f9f278127049",
+			"error": err,
+		}).Error("Problem to do 'DbPool.Begin' in 'ListTestCasesUnderExecution'")
+
+		// Set Error codes to return message
+		var errorCodes []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+		var errorCode fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+
+		errorCode = fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM
+		errorCodes = append(errorCodes, errorCode)
+
+		// Create Return message
+		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse{
+			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+				AckNack:                      false,
+				Comments:                     "Problem to do 'DbPool.Begin' in 'ListTestCasesUnderExecution'",
+				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			},
+			TestCasesUnderExecution: nil,
+		}
+
+		return responseMessage, nil
+	}
+
+	// Close db-transaction when leaving this function
+	defer txn.Commit(context.Background())
+
 	// Define variables to store data from DB in
 	var testCaseUnderExecutionMessage []*fenixExecutionServerGuiGrpcApi.TestCaseUnderExecutionMessage
 
 	// Get users ImmatureTestInstruction-data from CloudDB
-	testCaseUnderExecutionMessage, err := fenixGuiExecutionServerObject.listTestCasesUnderExecutionLoadFromCloudDB(userID, listTestCasesUnderExecutionRequest.DomainUuids)
+	testCaseUnderExecutionMessage, err = fenixGuiExecutionServerObject.listTestCasesUnderExecutionLoadFromCloudDB(txn, userID, listTestCasesUnderExecutionRequest.DomainUuids)
 	if err != nil {
 		// Something went wrong so return an error to caller
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesUnderExecutionResponse{

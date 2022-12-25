@@ -31,6 +31,15 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 // Prepare for Saving the Initiation of a new TestCaseExecution in the CloudDB
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) prepareInitiateTestCaseExecutionSaveToCloudDB(initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (initiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage) {
 
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
+		"id": "2a2009f9-af78-4216-b1d8-b1a0519e7041",
+		"initiateSingleTestCaseExecutionRequestMessage": initiateSingleTestCaseExecutionRequestMessage,
+	}).Debug("Incoming 'prepareInitiateTestCaseExecutionSaveToCloudDB'")
+
+	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
+		"id": "1efe7107-888d-487b-8445-9f81fe1a2c62",
+	}).Debug("Outgoing 'prepareInitiateTestCaseExecutionSaveToCloudDB'")
+
 	// Begin SQL Transaction
 	txn, err := fenixSyncShared.DbPool.Begin(context.Background())
 	if err != nil {
@@ -72,7 +81,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Extract TestCase-information to be added to TestCaseExecution-data
 	//testCaseToExecuteBasicInformation := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
-	testCaseToExecuteBasicInformation, err := fenixGuiTestCaseBuilderServerObject.loadTestCaseBasicInformation(initiateSingleTestCaseExecutionRequestMessage.TestCaseUuid)
+	testCaseToExecuteBasicInformation, err := fenixGuiTestCaseBuilderServerObject.loadTestCaseBasicInformation(txn, initiateSingleTestCaseExecutionRequestMessage.TestCaseUuid)
 	if err != nil {
 
 		// Set Error codes to return message
@@ -281,7 +290,7 @@ type tempTestCaseBasicInformationStruct struct {
 }
 
 // Load BasicInformation for TestCase to be able to populate the TestCaseExecution
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseBasicInformation(testCaseUuid string) (testCaseBasicInformation tempTestCaseBasicInformationStruct, err error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseBasicInformation(dbTransaction pgx.Tx, testCaseUuid string) (testCaseBasicInformation tempTestCaseBasicInformationStruct, err error) {
 
 	usedDBSchema := "FenixGuiBuilder" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
@@ -294,7 +303,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	sqlToExecute = sqlToExecute + "WHERE TC2.\"TestCaseUuid\" = '" + testCaseUuid + "');"
 
 	// Query DB
-	rows, err := fenixSyncShared.DbPool.Query(context.Background(), sqlToExecute)
+	//rows, err := fenixSyncShared.DbPool.Query(context.Background(), sqlToExecute)
+	rows, err := dbTransaction.Query(context.Background(), sqlToExecute)
 
 	if err != nil {
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{

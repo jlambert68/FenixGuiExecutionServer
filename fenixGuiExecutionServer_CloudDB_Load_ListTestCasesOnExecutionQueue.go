@@ -2,14 +2,14 @@ package main
 
 import (
 	"context"
+	"github.com/jackc/pgx/v4"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
-	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(userID string, domainList []string) (testCaseExecutionBasicInformationMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage, err error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(dbTransaction pgx.Tx, userID string, domainList []string) (testCaseExecutionBasicInformationMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage, err error) {
 
 	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
@@ -27,7 +27,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	sqlToExecute = sqlToExecute + "ORDER BY TCEQ.\"QueueTimeStamp\" ASC, TCEQ.\"DomainName\" ASC, TCEQ.\"TestSuiteName\" ASC, TCEQ.\"TestCaseName\" ASC; "
 
 	// Query DB
-	rows, err := fenixSyncShared.DbPool.Query(context.Background(), sqlToExecute)
+	//rows, err := fenixSyncShared.DbPool.Query(context.Background(), sqlToExecute)
+	rows, err := dbTransaction.Query(context.Background(), sqlToExecute)
 
 	if err != nil {
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
