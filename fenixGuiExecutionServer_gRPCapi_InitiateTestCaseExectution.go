@@ -45,47 +45,50 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		return initiateSingleTestCaseExecutionResponseMessage, nil
 	}
 
-	// Prepare message to be sent to ExecutionServer
-	var testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage
-	var testCaseExecutionToProcess *fenixExecutionServerGrpcApi.TestCaseExecutionToProcess
-	var testCaseExecutionsToProcess []*fenixExecutionServerGrpcApi.TestCaseExecutionToProcess
+	go func() {
+		// Prepare message to be sent to ExecutionServer
+		var testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage
+		var testCaseExecutionToProcess *fenixExecutionServerGrpcApi.TestCaseExecutionToProcess
+		var testCaseExecutionsToProcess []*fenixExecutionServerGrpcApi.TestCaseExecutionToProcess
 
-	testCaseExecutionToProcess = &fenixExecutionServerGrpcApi.TestCaseExecutionToProcess{
-		TestCaseExecutionsUuid:   initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid,
-		TestCaseExecutionVersion: 1,
-	}
-	testCaseExecutionsToProcess = append(testCaseExecutionsToProcess, testCaseExecutionToProcess)
+		testCaseExecutionToProcess = &fenixExecutionServerGrpcApi.TestCaseExecutionToProcess{
+			TestCaseExecutionsUuid:   initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid,
+			TestCaseExecutionVersion: 1,
+		}
+		testCaseExecutionsToProcess = append(testCaseExecutionsToProcess, testCaseExecutionToProcess)
 
-	testCaseExecutionsToProcessMessage = &fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage{
-		TestCaseExecutionsToProcess: testCaseExecutionsToProcess,
-	}
-
-	// Trigger ExecutionEngine to start process TestCase from TestCaseExecution-queue
-	var sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse *fenixExecutionServerGrpcApi.AckNackResponse
-	sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse = messagesToExecutionServer.MessagesToExecutionServerObject.SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer(testCaseExecutionsToProcessMessage)
-
-	// If triggering ExecutionServer to read TestCaseExecutionQueue wasn't successful then change 'initiateSingleTestCaseExecutionResponseMessage'
-	if sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse.AckNack == false {
-		var ackNackResponseToRespond *fenixExecutionServerGuiGrpcApi.AckNackResponse
-		ackNackResponseToRespond = &fenixExecutionServerGuiGrpcApi.AckNackResponse{
-			AckNack:                      initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.AckNack,
-			Comments:                     fmt.Sprintf("Message from ExecutionServer is: '%s'", initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.Comments),
-			ErrorCodes:                   nil,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+		testCaseExecutionsToProcessMessage = &fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage{
+			TestCaseExecutionsToProcess: testCaseExecutionsToProcess,
 		}
 
-		initiateSingleTestCaseExecutionResponseMessage.AckNackResponse = ackNackResponseToRespond
+		// Trigger ExecutionEngine to start process TestCase from TestCaseExecution-queue
+		var sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse *fenixExecutionServerGrpcApi.AckNackResponse
+		sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse = messagesToExecutionServer.MessagesToExecutionServerObject.SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer(testCaseExecutionsToProcessMessage)
 
-		return initiateSingleTestCaseExecutionResponseMessage, nil
-	}
+		// If triggering ExecutionServer to read TestCaseExecutionQueue wasn't successful then change 'initiateSingleTestCaseExecutionResponseMessage'
+		if sendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServerResponse.AckNack == false {
+			var ackNackResponseToRespond *fenixExecutionServerGuiGrpcApi.AckNackResponse
+			ackNackResponseToRespond = &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+				AckNack:                      initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.AckNack,
+				Comments:                     fmt.Sprintf("Message from ExecutionServer is: '%s'", initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.Comments),
+				ErrorCodes:                   nil,
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			}
 
-	// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
-	broadcastEngine.AddSubscriptionForTestCaseExecutionToTesterGui(
-		broadcastEngine.ApplicationRunTimeUuidType(
-			initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
-		broadcastEngine.TestCaseExecutionUuidType(
-			initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
-		1)
+			initiateSingleTestCaseExecutionResponseMessage.AckNackResponse = ackNackResponseToRespond
+
+			return //initiateSingleTestCaseExecutionResponseMessage, nil
+		}
+
+		// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
+		broadcastEngine.AddSubscriptionForTestCaseExecutionToTesterGui(
+			broadcastEngine.ApplicationRunTimeUuidType(
+				initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
+			broadcastEngine.TestCaseExecutionUuidType(
+				initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
+			1)
+
+	}()
 
 	return initiateSingleTestCaseExecutionResponseMessage, nil
 

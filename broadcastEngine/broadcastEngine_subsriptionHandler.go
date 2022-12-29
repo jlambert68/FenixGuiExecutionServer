@@ -30,7 +30,8 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid Appli
 	testCaseExecutionsSubscriptionsMapKey = TestCaseExecutionsSubscriptionsMapKeyType(string(testCaseExecutionUuid) + strconv.Itoa(int(testCaseExecutionUuidVersion)))
 
 	// Check if TesterGui already exist in Subscription-map for incoming 'TestCaseExecutionUuid'
-	allApplicationRunTimeUuids, existInMap = TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey]
+	//allApplicationRunTimeUuids, existInMap = TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey]
+	allApplicationRunTimeUuids, existInMap = loadFromTestCaseExecutionsSubscriptionsMap(testCaseExecutionsSubscriptionsMapKey)
 
 	// Nothing in subscription-map then initiate it and store it in Map
 	if allApplicationRunTimeUuids == nil {
@@ -40,8 +41,11 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid Appli
 		tempAllApplicationRunTimeUuids = append(tempAllApplicationRunTimeUuids, applicationRunTimeUuid)
 
 		// Add it to map
-		TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey] = &tempAllApplicationRunTimeUuids
+		//TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey] = &tempAllApplicationRunTimeUuids
+		saveToTestCaseExecutionsSubscriptionsMap(testCaseExecutionsSubscriptionsMapKey, &tempAllApplicationRunTimeUuids)
+
 		allApplicationRunTimeUuids = &tempAllApplicationRunTimeUuids
+
 	} else {
 		// TestCaseExecution doesn't have any subscriptions yet, so just add it
 		if existInMap == false {
@@ -78,7 +82,9 @@ func whoIsSubscribingToTestCaseExecution(testCaseExecutionUuidTestCaseExecutionV
 	var existInMap bool
 
 	// Extract slice of Applications that subscribes to combination of ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion')
-	applicationsRunTimeUuid, existInMap = TestCaseExecutionsSubscriptionsMap[TestCaseExecutionsSubscriptionsMapKeyType(testCaseExecutionUuidTestCaseExecutionVersion)]
+	//applicationsRunTimeUuid, existInMap = TestCaseExecutionsSubscriptionsMap[TestCaseExecutionsSubscriptionsMapKeyType(testCaseExecutionUuidTestCaseExecutionVersion)]
+	applicationsRunTimeUuid, existInMap = loadFromTestCaseExecutionsSubscriptionsMap(TestCaseExecutionsSubscriptionsMapKeyType(testCaseExecutionUuidTestCaseExecutionVersion))
+
 	if existInMap == false {
 		common_config.Logger.WithFields(logrus.Fields{
 			"Id": "0ed78746-1ff8-4261-9657-023048d8db84",
