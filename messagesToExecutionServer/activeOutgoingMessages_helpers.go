@@ -52,12 +52,31 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 		// When target is running on GCP, use credentials
 		var newGrpcClientConnection *grpc.ClientConn
 		if common_config.ExecutionLocationForFenixExecutionServer == common_config.GCP {
-			// Run on GCP
-			ctx, newGrpcClientConnection = dialFromGrpcurl(ctx)
-			RemoteFenixExecutionServerConnection = newGrpcClientConnection
+			// FenixExecutionServer runs on GCP
+			// Where is GuiExecutionServer running
+			if common_config.ExecutionLocationForFenixGuiExecutionServer == common_config.LocalhostNoDocker {
+
+				// GuiExecutionServer runs Locally
+				ctx, newGrpcClientConnection = dialFromGrpcurl(ctx)
+				RemoteFenixExecutionServerConnection = newGrpcClientConnection
+			} else {
+
+				// GuiExecutionServer runs on GCP
+				creds := credentials.NewTLS(&tls.Config{
+					InsecureSkipVerify: true,
+				})
+
+				var opts []grpc.DialOption
+				opts = []grpc.DialOption{
+					grpc.WithTransportCredentials(creds),
+				}
+				RemoteFenixExecutionServerConnection, err = grpc.Dial(FenixExecutionServerAddressToDial, opts...)
+
+			}
+
 			//RemoteFenixExecutionServerConnection, err = grpc.Dial(FenixExecutionServerAddressToDial, opts...)
 		} else {
-			// Run Local
+			// FenixExecutionServer runs Locally
 			RemoteFenixExecutionServerConnection, err = grpc.Dial(FenixExecutionServerAddressToDial, grpc.WithInsecure())
 		}
 
