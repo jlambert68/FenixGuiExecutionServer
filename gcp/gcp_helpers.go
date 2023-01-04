@@ -2,7 +2,6 @@ package gcp
 
 import (
 	"FenixGuiExecutionServer/common_config"
-	"FenixGuiExecutionServer/notToBeSentToGithub"
 	"fmt"
 	"github.com/gorilla/pat"
 	"github.com/gorilla/sessions"
@@ -23,8 +22,20 @@ func (gcp *GcpObjectStruct) GenerateGCPAccessToken(ctx context.Context) (appende
 
 	// Chose correct method for authentication
 	if true { // common_config.UseServiceAccount == true {
-		// Use Service account
-		appendedCtx, returnAckNack, returnMessage = gcp.GenerateGCPAccessTokenForServiceAccount(ctx)
+
+		// Only use ServiceAccount when run locally and ExecutionServer is on GCP
+		if common_config.ExecutionLocationForFenixGuiExecutionServer == common_config.LocalhostNoDocker &&
+			common_config.ExecutionLocationForFenixExecutionServer == common_config.GCP {
+
+			// Use Service account
+			// When run GCP next row must be commented
+			//appendedCtx, returnAckNack, returnMessage = gcp.GenerateGCPAccessTokenForServiceAccount(ctx)
+
+		} else {
+			// Use Authorized user
+			appendedCtx, returnAckNack, returnMessage = gcp.generateGCPAccessToken(ctx)
+		}
+
 	} else {
 		// User log into GCP via web
 		appendedCtx, returnAckNack, returnMessage = gcp.GenerateGCPAccessTokenForAuthorizedUser(ctx)
@@ -34,8 +45,8 @@ func (gcp *GcpObjectStruct) GenerateGCPAccessToken(ctx context.Context) (appende
 
 }
 
-// GenerateGCPAccessTokenForServiceAccount Generate Google access token for a service account. Used when running in GCP
-func (gcp *GcpObjectStruct) GenerateGCPAccessTokenForServiceAccount(ctx context.Context) (appendedCtx context.Context, returnAckNack bool, returnMessage string) {
+// Generate Google access token. Used when running in GCP
+func (gcp *GcpObjectStruct) generateGCPAccessToken(ctx context.Context) (appendedCtx context.Context, returnAckNack bool, returnMessage string) {
 
 	// Only create the token if there is none, or it has expired
 	if gcp.gcpAccessTokenForServiceAccounts == nil || gcp.gcpAccessTokenForServiceAccounts.Expiry.Before(time.Now()) {
@@ -43,37 +54,56 @@ func (gcp *GcpObjectStruct) GenerateGCPAccessTokenForServiceAccount(ctx context.
 		// Create an identity token.
 		// With a global TokenSource tokens would be reused and auto-refreshed at need.
 		// A given TokenSource is specific to the audience.
-		/*
-			tokenSource, err := idtoken.NewTokenSource(ctx, "https://"+common_config.FenixGuiBuilderServerAddress)
-			if err != nil {
-				fenixGuiBuilderProxyServerObject.logger.WithFields(logrus.Fields{
-					"ID":  "8ba622d8-b4cd-46c7-9f81-d9ade2568eca",
-					"err": err,
-				}).Error("Couldn't generate access token")
+		tokenSource, err := idtoken.NewTokenSource(ctx, "https://"+common_config.FenixExecutionServerAddress)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"ID":  "94b5e4b6-ab37-4283-9ba5-1a2ab8ecdf5d",
+				"err": err,
+			}).Error("Couldn't generate access token")
 
-				return nil, false, "Couldn't generate access token"
-			}
+			return nil, false, "Couldn't generate access token"
+		}
 
-			token, err := tokenSource.Token()
-		*/
-		/*
-			var eMailAndPrivateKey = struct {
-				Email      string `json:"client_email"`
-				PrivateKey string `json:"private_key"`
-			}{}
-			json.Unmarshal(serviceAccountKeyJson, &eMailAndPrivateKey)
-			config := &jwt.Config{
-				Email:      eMailAndPrivateKey.Email,
-				PrivateKey: []byte(eMailAndPrivateKey.PrivateKey),
-				Scopes: []string{
-					gcp_scope,
-				},
-				TokenURL:   google.JWTTokenURL,
-				UseIDToken: false,
-			}
+		token, err := tokenSource.Token()
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"ID":  "6836d6c9-8e82-4bef-85da-76a1eb8ccaf0",
+				"err": err,
+			}).Error("Problem getting the token")
 
-		*/
+			return nil, false, "Problem getting the token"
+		} else {
+			common_config.Logger.WithFields(logrus.Fields{
+				"ID":    "7f499a17-9ebc-47e4-830a-2461594296e0",
+				"token": token,
+			}).Debug("Got Bearer Token")
+		}
 
+		gcp.gcpAccessTokenForServiceAccounts = token
+
+	}
+
+	common_config.Logger.WithFields(logrus.Fields{
+		"ID": "9bfd3d3a-7155-4f72-9cbc-e051f4544135",
+		"FenixExecutionWorkerObject.gcpAccessToken": gcp.gcpAccessTokenForServiceAccounts,
+	}).Debug("Will use Bearer Token")
+
+	// Add token to GrpcServer Request.
+	appendedCtx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+gcp.gcpAccessTokenForServiceAccounts.AccessToken)
+
+	return appendedCtx, true, ""
+
+}
+
+// GenerateGCPAccessTokenForServiceAccount Generate Google access token for a service account. Used when running in GCP
+// When Run on GCP the function below must be commented
+/*
+func (gcp *GcpObjectStruct) GenerateGCPAccessTokenForServiceAccount(ctx context.Context) (appendedCtx context.Context, returnAckNack bool, returnMessage string) {
+
+	// Only create the token if there is none, or it has expired
+	if gcp.gcpAccessTokenForServiceAccounts == nil || gcp.gcpAccessTokenForServiceAccounts.Expiry.Before(time.Now()) {
+
+		// Create an identity token.
 		tokenSource, err := idtoken.NewTokenSource(ctx, notToBeSentToGithub.Gcp_scope, idtoken.WithCredentialsJSON(notToBeSentToGithub.ServiceAccountKeyJson))
 
 		if err != nil {
@@ -117,6 +147,8 @@ func (gcp *GcpObjectStruct) GenerateGCPAccessTokenForServiceAccount(ctx context.
 	return appendedCtx, true, ""
 
 }
+
+*/
 
 // DoneChannel - channel used for to close down local web server
 var DoneChannel chan bool

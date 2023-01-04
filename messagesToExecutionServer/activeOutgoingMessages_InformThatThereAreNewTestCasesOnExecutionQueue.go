@@ -11,7 +11,9 @@ import (
 )
 
 // SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer - Fenix Gui Execution Server inform ExecutionServer that there is/are new TestCase(s) on TestCaseExecutionQueue
-func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer(testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage) (ackNackResponse *fenixExecutionServerGrpcApi.AckNackResponse) {
+func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) SendInformThatThereAreNewTestCasesOnExecutionQueueToExecutionServer(
+	testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage) (
+	ackNackResponse *fenixExecutionServerGrpcApi.AckNackResponse) {
 
 	messagesToExecutionServerObject.Logger.WithFields(logrus.Fields{
 		"id":                                 "3d3de917-77fe-4768-a5a5-7e107173d74f",
@@ -25,29 +27,33 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 	var ctx context.Context
 	var returnMessageAckNack bool
 	var returnMessageString string
+	var err error
 
 	ctx = context.Background()
 
-	// Set up connection to Server
-	ctx, err := messagesToExecutionServerObject.SetConnectionToExecutionServer(ctx)
-	if err != nil {
+	if FenixExecutionServerGrpcClient == nil {
 
-		// Set Error codes to return message
-		var errorCodes []fenixExecutionServerGrpcApi.ErrorCodesEnum
-		var errorCode fenixExecutionServerGrpcApi.ErrorCodesEnum
+		// Set up connection to Server
+		ctx, err = messagesToExecutionServerObject.SetConnectionToExecutionServer(ctx)
+		if err != nil {
 
-		errorCode = fenixExecutionServerGrpcApi.ErrorCodesEnum_ERROR_UNSPECIFIED
-		errorCodes = append(errorCodes, errorCode)
+			// Set Error codes to return message
+			var errorCodes []fenixExecutionServerGrpcApi.ErrorCodesEnum
+			var errorCode fenixExecutionServerGrpcApi.ErrorCodesEnum
 
-		// Create Return message
-		ackNackResponse = &fenixExecutionServerGrpcApi.AckNackResponse{
-			AckNack:                      false,
-			Comments:                     fmt.Sprintf("Couldn't set up connection to ExecutionServer"),
-			ErrorCodes:                   errorCodes,
-			ProtoFileVersionUsedByClient: fenixExecutionServerGrpcApi.CurrentFenixExecutionServerProtoFileVersionEnum(messagesToExecutionServerObject.GetHighestFenixExecutionServerProtoFileVersion()),
+			errorCode = fenixExecutionServerGrpcApi.ErrorCodesEnum_ERROR_UNSPECIFIED
+			errorCodes = append(errorCodes, errorCode)
+
+			// Create Return message
+			ackNackResponse = &fenixExecutionServerGrpcApi.AckNackResponse{
+				AckNack:                      false,
+				Comments:                     fmt.Sprintf("Couldn't set up connection to ExecutionServer"),
+				ErrorCodes:                   errorCodes,
+				ProtoFileVersionUsedByClient: fenixExecutionServerGrpcApi.CurrentFenixExecutionServerProtoFileVersionEnum(messagesToExecutionServerObject.GetHighestFenixExecutionServerProtoFileVersion()),
+			}
+
+			return ackNackResponse
 		}
-
-		return ackNackResponse
 	}
 
 	// Do gRPC-call
