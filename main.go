@@ -3,6 +3,7 @@ package main
 import (
 	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
+	"github.com/sirupsen/logrus"
 	"strconv"
 
 	//"flag"
@@ -97,5 +98,24 @@ func init() {
 
 	// Save the address to use for getting access token
 	messagesToExecutionServer.FenixExecutionServerAddressToUse = common_config.FenixExecutionServerAddress
+
+	// Extract Debug level
+	var loggingLevel = mustGetenv("LoggingLevel")
+
+	switch loggingLevel {
+
+	case "DebugLevel":
+		common_config.LoggingLevel = logrus.DebugLevel
+
+	case "InfoLevel":
+		common_config.LoggingLevel = logrus.InfoLevel
+
+	default:
+		fmt.Println("Unknown loggingLevel '" + loggingLevel + "'. Expected one of the following: 'DebugLevel', 'InfoLevel'")
+		os.Exit(0)
+
+	}
+
+	fmt.Printf("%s", common_config.LoggingLevel)
 
 }
