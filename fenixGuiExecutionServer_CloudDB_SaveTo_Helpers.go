@@ -6,6 +6,7 @@ import (
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strconv"
 )
 
 // Generates all "VALUES('xxx', 'yyy')..." for insert statements
@@ -90,6 +91,36 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		} else {
 
 			sqlInsertValuesString = sqlInsertValuesString + ", '" + value + "'"
+		}
+	}
+
+	sqlInsertValuesString = sqlInsertValuesString + ") "
+
+	return sqlInsertValuesString
+}
+
+// Generates incoming integer values,[3,55,12] in the following form:  "(3, 55, 12)"
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) generateSQLINArrayForIntegerSlice(testdata []int) (sqlInsertValuesString string) {
+
+	// Create a list with '' as only element if there are no elements in array
+	if len(testdata) == 0 {
+		sqlInsertValuesString = "()"
+
+		return sqlInsertValuesString
+	}
+
+	sqlInsertValuesString = "("
+
+	// Loop over both rows and values
+	for counter, value := range testdata {
+
+		if counter == 0 {
+			// Only used for first row
+			sqlInsertValuesString = sqlInsertValuesString + strconv.FormatUint(uint64(value), 10)
+
+		} else {
+
+			sqlInsertValuesString = sqlInsertValuesString + ", " + strconv.FormatUint(uint64(value), 10)
 		}
 	}
 

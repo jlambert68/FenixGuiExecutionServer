@@ -9,7 +9,12 @@ import (
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(dbTransaction pgx.Tx, userID string, domainList []string) (testCaseExecutionBasicInformationMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage, err error) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(
+	dbTransaction pgx.Tx,
+	userID string,
+	domainList []string) (
+	testCaseExecutionBasicInformationMessage []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage,
+	err error) {
 
 	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
@@ -84,7 +89,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		testCaseExecutionBasicInformation.PlacedOnTestExecutionQueueTimeStamp = timestamppb.New(tempPlacedOnTestExecutionQueueTimeStamp)
 		testCaseExecutionBasicInformation.ExecutionPriority = fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum(tempExecutionPriority)
 
-		// Add 'testCaseExecutionBasicInformation' to 'testCaseExecutionBasicInformationMessage'
+		// Add 'testCaseExecutionBasicInformation' to 'testCaseExecutionBasicInformationMessageFromOnQueue'
 		testCaseExecutionBasicInformationMessage = append(testCaseExecutionBasicInformationMessage, &testCaseExecutionBasicInformation)
 
 	}
