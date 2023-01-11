@@ -30,22 +30,76 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Close db-transaction when leaving this function
 	defer txn.Commit(context.Background())
 
-	// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCaseExecutionQueue'
-	var uniqueCountersForTableTestCaseExecutionQueue []int
-	uniqueCountersForTableTestCaseExecutionQueue, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
-		txn, testCaseExecutionKeys, "TestCaseExecutionQueue")
-
-	var temptestCaseExecutionResponseMessagesMap map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage // map[TestCaseExecutionKey]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
+	// Map for keep track of all response messages, but in Map-format instead of slice-format
+	// map[TestCaseExecutionKey]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
+	var temptestCaseExecutionResponseMessagesMap map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
 	temptestCaseExecutionResponseMessagesMap = make(map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage)
 
-	// Load TestCaseExecutions from table 'TestCaseExecutionQueue'
-	err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromOnExecutionQueue(
+	// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCasesUnderExecution'
+	var uniqueCountersForTableTTestCasesUnderExecution []int
+	uniqueCountersForTableTTestCasesUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
+		txn, testCaseExecutionKeys, "TestCasesUnderExecution")
+
+	// Keep track of number of rows found in database
+	var numberOfRowsFoundInTableTestCasesUnderExecution int
+
+	// Load TestCaseExecutions from table 'TestCasesUnderExecution'
+	numberOfRowsFoundInTableTestCasesUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromUnderExecutions(
 		txn,
-		uniqueCountersForTableTestCaseExecutionQueue,
+		uniqueCountersForTableTTestCasesUnderExecution,
 		&temptestCaseExecutionResponseMessagesMap)
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Only process TestCaseExecutions from table 'TestCaseExecutionQueue' of no rows were found in TestCasesUnderExecution
+	if numberOfRowsFoundInTableTestCasesUnderExecution == 0 {
+
+		// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCaseExecutionQueue'
+		var uniqueCountersForTableTestCaseExecutionQueue []int
+		uniqueCountersForTableTestCaseExecutionQueue, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
+			txn, testCaseExecutionKeys, "TestCaseExecutionQueue")
+
+		// Keep track of number of rows found in database
+		var numberOfRowsFoundInTableTestCaseExecutionQueue int
+
+		// Load TestCaseExecutions from table 'TestCaseExecutionQueue'
+		numberOfRowsFoundInTableTestCaseExecutionQueue, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromOnExecutionQueue(
+			txn,
+			uniqueCountersForTableTestCaseExecutionQueue,
+			&temptestCaseExecutionResponseMessagesMap)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Only Process TestInstructionExecutions when 'numberOfRowsFoundInTableTestCasesUnderExecution' > 0
+	if numberOfRowsFoundInTableTestCasesUnderExecution > 0 {
+
+		// Map for keep track of all TestInstructionExecution response messages, but in Map-format instead of slice-format
+		var temptestInstructionExecutionResponseMessagesMap map[string]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage // map[TestInstructionExecutionKey]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage
+		temptestInstructionExecutionResponseMessagesMap = make(map[string]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage)
+
+		// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCasesUnderExecution'
+		var uniqueCountersForTableTestInstructionsUnderExecution []int
+		uniqueCountersForTableTTestCasesUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
+			txn, testCaseExecutionKeys, "TestCasesUnderExecution")
+
+		// Keep track of number of rows found in database
+		var numberOfRowsFoundInTableTestCasesUnderExecution int
+
+		// Load TestCaseExecutions from table 'TestCasesUnderExecution'
+		numberOfRowsFoundInTableTestCasesUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromOnExecutionQueue(
+			txn,
+			uniqueCountersForTableTTestCasesUnderExecution,
+			&temptestCaseExecutionResponseMessagesMap)
+
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	return testCaseExecutionResponseMessages, err
@@ -131,6 +185,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	dbTransaction pgx.Tx,
 	uniqueCounters []int,
 	temptestCaseExecutionResponseMessagesMapReference *map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage) (
+	numberOfRows int,
 	err error) {
 
 	// Convert reference into variable to use
@@ -160,7 +215,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			"sqlToExecute": sqlToExecute,
 		}).Error("Something went wrong when executing SQL")
 
-		return err
+		return 0, err
 	}
 
 	// Variables used for 'temptestCaseExecutionResponseMessagesMap'
@@ -204,7 +259,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				"sqlToExecute": sqlToExecute,
 			}).Error("Something went wrong when processing result from database")
 
-			return err
+			return 0, err
 		}
 
 		// Convert temp-variables into gRPC-variables
@@ -272,25 +327,23 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			tempTestCaseExecutionResponseMessage.TestCaseExecutionBasicInformation = &testCaseExecutionBasicInformation
 		}
 
+		// Add to number of rows
+		numberOfRows = numberOfRows + 1
+
 	}
 
-	return err
-}
-
-// The pure TestCaseExecution-information
-type testCasesExecutionInformationMessageStruct struct {
-	testCaseExecutionBasicInformationMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage
-	testCaseExecutionDetailsMessage          *fenixExecutionServerGuiGrpcApi.TestCaseExecutionDetailsMessage
+	return numberOfRows, err
 }
 
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionsFromUnderExecutions(
 	dbTransaction pgx.Tx,
 	uniqueCounters []int,
 	temptestCaseExecutionResponseMessagesMapReference *map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage) (
+	numberOfRows int,
 	err error) {
 
 	// Convert reference into variable to use
-	temptestCaseExecutionResponseMessagesMap := *temptestCaseExecutionResponseMessagesMapReference
+	tempTestCaseExecutionResponseMessagesMap := *temptestCaseExecutionResponseMessagesMapReference
 
 	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
@@ -316,10 +369,10 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			"sqlToExecute": sqlToExecute,
 		}).Error("Something went wrong when executing SQL")
 
-		return err
+		return 0, err
 	}
 
-	// Variables used for 'temptestCaseExecutionResponseMessagesMap'
+	// Variables used for 'tempTestCaseExecutionResponseMessagesMap'
 	var testCaseExecutionMapKey string
 	var existsInMap bool
 
@@ -331,8 +384,6 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempExecutionStopTimeStamp time.Time
 	var tempTestCaseExecutionStatus int
 	var tempExecutionStatusUpdateTimeStamp time.Time
-
-	var tempUniqueCounter int
 
 	// Extract data from DB result set
 	for rows.Next() {
@@ -364,7 +415,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempExecutionStopTimeStamp,
 			&tempTestCaseExecutionStatus,
 			&tempTestCaseExecutionDetailsMessage.ExecutionHasFinished,
-			&tempUniqueCounter,
+			&tempTestCaseExecutionDetailsMessage.UniqueDatabaseRowCounter,
 			&tempExecutionStatusUpdateTimeStamp,
 		)
 
@@ -375,7 +426,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				"sqlToExecute": sqlToExecute,
 			}).Error("Something went wrong when processing result from database")
 
-			return err
+			return 0, err
 		}
 
 		// Convert temp-variables into gRPC-variables
@@ -392,24 +443,33 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		// Check if data exist for testCaseExecutionMapKey
 		var tempTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
-		tempTestCaseExecutionResponseMessage, existsInMap = temptestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey]
+		tempTestCaseExecutionResponseMessage, existsInMap = tempTestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey]
 
 		if existsInMap == false {
-			// Initiate object to be stored in 'temptestCaseExecutionResponseMessagesMap'
+			// Initiate object to be stored in 'tempTestCaseExecutionResponseMessagesMap'
+
+			var tempTestCaseExecutionDetailsMessageSlice []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionDetailsMessage
+			tempTestCaseExecutionDetailsMessageSlice = append(tempTestCaseExecutionDetailsMessageSlice, &tempTestCaseExecutionDetailsMessage)
+
 			tempTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage{
 				TestCaseExecutionBasicInformation: &tempTestCaseExecutionBasicInformationMessage,
-				TestCaseExecutionDetails:          &tempTestCaseExecutionDetailsMessage,
+				TestCaseExecutionDetails:          tempTestCaseExecutionDetailsMessageSlice,
 				TestInstructionExecutions:         nil}
 
-			// Add 'tempTestCaseExecutionResponseMessage' to 'temptestCaseExecutionResponseMessagesMap'
-			temptestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey] = tempTestCaseExecutionResponseMessage
+			// Add 'tempTestCaseExecutionResponseMessage' to 'tempTestCaseExecutionResponseMessagesMap'
+			tempTestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey] = tempTestCaseExecutionResponseMessage
 
 		} else {
-			// Add to existing 'tempTestCaseExecutionResponseMessage'
-			tempTestCaseExecutionResponseMessage.TestCaseExecutionBasicInformation = &tempTestCaseExecutionBasicInformationMessage
-			tempTestCaseExecutionResponseMessage.TestCaseExecutionDetails = &tempTestCaseExecutionDetailsMessage
+			// Append to existing 'tempTestCaseExecutionResponseMessage'
+			tempTestCaseExecutionResponseMessage.TestCaseExecutionDetails = append(
+				tempTestCaseExecutionResponseMessage.TestCaseExecutionDetails, &tempTestCaseExecutionDetailsMessage)
+
 		}
+
+		// Add to number of rows
+		numberOfRows = numberOfRows + 1
+
 	}
 
-	return err
+	return numberOfRows, err
 }
