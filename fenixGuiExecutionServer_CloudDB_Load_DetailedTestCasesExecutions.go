@@ -11,6 +11,20 @@ import (
 	"time"
 )
 
+// Temporary structure for handling TestInstructionExecutions and their LogPosts and expected and found values
+type workObjectForTestInstructionExecutionsMessageStruct struct {
+	TestInstructionExecutionBasicInformation *fenixExecutionServerGuiGrpcApi.TestInstructionExecutionBasicInformationMessage
+	TestInstructionExecutionsInformation     []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsInformationMessage
+	ExecutionLogPostsAndValues               []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+}
+
+// Temporary structure for handling TestCaseExecutions and references to TestInstructionExecutions
+type workObjectForTestCaseExecutionResponseMessageStruct struct {
+	TestCaseExecutionBasicInformation *fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage
+	TestCaseExecutionDetails          []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionDetailsMessage
+	TestInstructionExecutionsMap      map[string]*workObjectForTestInstructionExecutionsMessageStruct // map[TestInstructionExecutionKey]*workObjectForTestInstructionExecutionsMessageStruct
+}
+
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadFullTestCasesExecutionInformation(
 	testCaseExecutionKeys []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionKeyMessage) (
 	testCaseExecutionResponseMessages []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage,
@@ -32,8 +46,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Map for keep track of all response messages, but in Map-format instead of slice-format
 	// map[TestCaseExecutionKey]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
-	var temptestCaseExecutionResponseMessagesMap map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
-	temptestCaseExecutionResponseMessagesMap = make(map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage)
+	var tempTestCaseExecutionResponseMessagesMap map[string]*workObjectForTestCaseExecutionResponseMessageStruct
+	tempTestCaseExecutionResponseMessagesMap = make(map[string]*workObjectForTestCaseExecutionResponseMessageStruct)
 
 	// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCasesUnderExecution'
 	var uniqueCountersForTableTTestCasesUnderExecution []int
@@ -47,7 +61,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	numberOfRowsFoundInTableTestCasesUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromUnderExecutions(
 		txn,
 		uniqueCountersForTableTTestCasesUnderExecution,
-		&temptestCaseExecutionResponseMessagesMap)
+		&tempTestCaseExecutionResponseMessagesMap)
 
 	if err != nil {
 		return nil, err
@@ -61,14 +75,11 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		uniqueCountersForTableTestCaseExecutionQueue, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
 			txn, testCaseExecutionKeys, "TestCaseExecutionQueue")
 
-		// Keep track of number of rows found in database
-		var numberOfRowsFoundInTableTestCaseExecutionQueue int
-
 		// Load TestCaseExecutions from table 'TestCaseExecutionQueue'
-		numberOfRowsFoundInTableTestCaseExecutionQueue, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromOnExecutionQueue(
+		_, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromOnExecutionQueue(
 			txn,
 			uniqueCountersForTableTestCaseExecutionQueue,
-			&temptestCaseExecutionResponseMessagesMap)
+			&tempTestCaseExecutionResponseMessagesMap)
 
 		if err != nil {
 			return nil, err
@@ -78,23 +89,16 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Only Process TestInstructionExecutions when 'numberOfRowsFoundInTableTestCasesUnderExecution' > 0
 	if numberOfRowsFoundInTableTestCasesUnderExecution > 0 {
 
-		// Map for keep track of all TestInstructionExecution response messages, but in Map-format instead of slice-format
-		var temptestInstructionExecutionResponseMessagesMap map[string]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage // map[TestInstructionExecutionKey]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage
-		temptestInstructionExecutionResponseMessagesMap = make(map[string]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage)
+		// Convert 'TestInstructionExecutionKeys' into slice with 'UniqueCounter' for table 'TestInstructionExecutionQueue'
+		var uniqueCountersForTableTestInstructionExecutionQueue []int
+		uniqueCountersForTableTestInstructionExecutionQueue, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
+			txn, testCaseExecutionKeys, "TestInstructionExecutionQueue")
 
-		// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCasesUnderExecution'
-		var uniqueCountersForTableTestInstructionsUnderExecution []int
-		uniqueCountersForTableTTestCasesUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
-			txn, testCaseExecutionKeys, "TestCasesUnderExecution")
-
-		// Keep track of number of rows found in database
-		var numberOfRowsFoundInTableTestCasesUnderExecution int
-
-		// Load TestCaseExecutions from table 'TestCasesUnderExecution'
-		numberOfRowsFoundInTableTestCasesUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromOnExecutionQueue(
+		// Load TestCaseExecutions from table 'TestInstructionExecutionQueue'
+		_, err = fenixGuiTestCaseBuilderServerObject.loadTestInstructionsExecutionsFromOnExecutionQueue(
 			txn,
-			uniqueCountersForTableTTestCasesUnderExecution,
-			&temptestCaseExecutionResponseMessagesMap)
+			uniqueCountersForTableTestInstructionExecutionQueue,
+			&tempTestCaseExecutionResponseMessagesMap)
 
 		if err != nil {
 			return nil, err
@@ -126,7 +130,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				// Add 'Where' for the first TestCaseExecutionKey, otherwise add an 'ADD'
 				sqlToExecute = sqlToExecute + "WHERE "
 			} else {
-				sqlToExecute = sqlToExecute + "AND "
+				sqlToExecute = sqlToExecute + "OR "
 			}
 
 			sqlToExecute = sqlToExecute + "\"TestCaseExecutionUuid\" = '" + TestCaseExecutionKey.TestCaseExecutionUuid + "' "
@@ -184,12 +188,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionsFromOnExecutionQueue(
 	dbTransaction pgx.Tx,
 	uniqueCounters []int,
-	temptestCaseExecutionResponseMessagesMapReference *map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage) (
+	temptestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
 	numberOfRows int,
 	err error) {
 
 	// Convert reference into variable to use
-	temptestCaseExecutionResponseMessagesMap := *temptestCaseExecutionResponseMessagesMapReference
+	tempTestCaseExecutionResponseMessagesMap := *temptestCaseExecutionResponseMessagesMapReference
 
 	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
@@ -218,7 +222,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		return 0, err
 	}
 
-	// Variables used for 'temptestCaseExecutionResponseMessagesMap'
+	// Variables used for 'tempTestCaseExecutionResponseMessagesMap'
 	var testCaseExecutionMapKey string
 	var existsInMap bool
 
@@ -270,8 +274,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		testCaseExecutionMapKey = testCaseExecutionBasicInformation.TestCaseExecutionUuid + strconv.FormatUint(uint64(testCaseExecutionBasicInformation.TestCaseExecutionVersion), 10)
 
 		// Check if data exist for testCaseExecutionMapKey
-		var tempTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
-		tempTestCaseExecutionResponseMessage, existsInMap = temptestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey]
+		var tempWorkObjectForTestCaseExecutionResponseMessage *workObjectForTestCaseExecutionResponseMessageStruct
+		tempWorkObjectForTestCaseExecutionResponseMessage, existsInMap = tempTestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey]
 
 		if existsInMap == false {
 			// Initiate all variables
@@ -313,18 +317,20 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 			*/
 
-			// Initiate object to be stored in 'temptestCaseExecutionResponseMessagesMap'
-			tempTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage{
+			// Initiate object to be stored in 'tempTestCaseExecutionResponseMessagesMap'
+			tempWorkObjectForTestCaseExecutionResponseMessage = &workObjectForTestCaseExecutionResponseMessageStruct{
 				TestCaseExecutionBasicInformation: &testCaseExecutionBasicInformation,
 				TestCaseExecutionDetails:          nil,
-				TestInstructionExecutions:         nil}
+				TestInstructionExecutionsMap:      nil,
+			}
 
-			// Add 'tempTestCaseExecutionResponseMessage' to 'temptestCaseExecutionResponseMessagesMap'
-			temptestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey] = tempTestCaseExecutionResponseMessage
+			// Add 'tempWorkObjectForTestCaseExecutionResponseMessage' to 'tempTestCaseExecutionResponseMessagesMap'
+			tempTestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey] = tempWorkObjectForTestCaseExecutionResponseMessage
 
 		} else {
+
 			// Add to existing 'tempTestCaseExecutionResponseMessage'
-			tempTestCaseExecutionResponseMessage.TestCaseExecutionBasicInformation = &testCaseExecutionBasicInformation
+			tempWorkObjectForTestCaseExecutionResponseMessage.TestCaseExecutionBasicInformation = &testCaseExecutionBasicInformation
 		}
 
 		// Add to number of rows
@@ -338,7 +344,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionsFromUnderExecutions(
 	dbTransaction pgx.Tx,
 	uniqueCounters []int,
-	temptestCaseExecutionResponseMessagesMapReference *map[string]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage) (
+	temptestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
 	numberOfRows int,
 	err error) {
 
@@ -442,7 +448,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		testCaseExecutionMapKey = tempTestCaseExecutionBasicInformationMessage.TestCaseExecutionUuid + strconv.FormatUint(uint64(tempTestCaseExecutionBasicInformationMessage.TestCaseExecutionVersion), 10)
 
 		// Check if data exist for testCaseExecutionMapKey
-		var tempTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
+		var tempTestCaseExecutionResponseMessage *workObjectForTestCaseExecutionResponseMessageStruct
 		tempTestCaseExecutionResponseMessage, existsInMap = tempTestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey]
 
 		if existsInMap == false {
@@ -451,10 +457,10 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			var tempTestCaseExecutionDetailsMessageSlice []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionDetailsMessage
 			tempTestCaseExecutionDetailsMessageSlice = append(tempTestCaseExecutionDetailsMessageSlice, &tempTestCaseExecutionDetailsMessage)
 
-			tempTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage{
+			tempTestCaseExecutionResponseMessage = &workObjectForTestCaseExecutionResponseMessageStruct{
 				TestCaseExecutionBasicInformation: &tempTestCaseExecutionBasicInformationMessage,
 				TestCaseExecutionDetails:          tempTestCaseExecutionDetailsMessageSlice,
-				TestInstructionExecutions:         nil}
+				TestInstructionExecutionsMap:      make(map[string]*workObjectForTestInstructionExecutionsMessageStruct)}
 
 			// Add 'tempTestCaseExecutionResponseMessage' to 'tempTestCaseExecutionResponseMessagesMap'
 			tempTestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey] = tempTestCaseExecutionResponseMessage
@@ -470,6 +476,176 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		numberOfRows = numberOfRows + 1
 
 	}
+
+	return numberOfRows, err
+}
+
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionsFromOnExecutionQueue(
+	dbTransaction pgx.Tx,
+	uniqueCounters []int,
+	temptestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
+	numberOfRows int,
+	err error) {
+
+	// Convert reference into variable to use
+	tempTestCaseExecutionResponseMessagesMap := *temptestCaseExecutionResponseMessagesMapReference
+
+	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
+
+	sqlToExecute := ""
+	sqlToExecute = sqlToExecute + "SELECT TCEQ.* "
+	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestInstructionExecutionQueue\" TCEQ "
+
+	// if uniqueCounters has values then add that as Where-statement
+	if uniqueCounters != nil {
+		sqlToExecute = sqlToExecute + "WHERE TCEQ.\"UniqueCounter\" IN " +
+			fenixGuiTestCaseBuilderServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
+
+	}
+	sqlToExecute = sqlToExecute + "; "
+
+	// Query DB
+	rows, err := dbTransaction.Query(context.Background(), sqlToExecute)
+
+	if err != nil {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "4ac2c057-1a37-47d1-88ad-a37aa7b1153b",
+			"Error":        err,
+			"sqlToExecute": sqlToExecute,
+		}).Error("Something went wrong when executing SQL")
+
+		return 0, err
+	}
+
+	// Variables used for 'tempTestCaseExecutionResponseMessagesMap'
+	var testInstructionExecutionMapKey string
+	var existsInMap bool
+
+	// Variables to used when extract data from result set
+	var tempPlacedOnTestInstructionExecutionQueueTimeStamp time.Time
+	var tempExecutionPriority int
+	var tempUniqueCounter int
+
+	// Extract data from DB result set
+	for rows.Next() {
+
+		// Initiate a new variable to store the data
+		testInstructionExecutionBasicInformation := fenixExecutionServerGuiGrpcApi.TestInstructionExecutionBasicInformationMessage{}
+
+		err = rows.Scan(
+			&testInstructionExecutionBasicInformation.DomainUuid,
+			&testInstructionExecutionBasicInformation.DomainName,
+			&testInstructionExecutionBasicInformation.TestInstructionExecutionUuid,
+			&testInstructionExecutionBasicInformation.TestInstructionUuid,
+			&testInstructionExecutionBasicInformation.TestInstructionName,
+			&testInstructionExecutionBasicInformation.TestInstructionMajorVersionNumber,
+			&testInstructionExecutionBasicInformation.TestInstructionMinorVersionNumber,
+			&tempPlacedOnTestInstructionExecutionQueueTimeStamp,
+			&tempExecutionPriority,
+			&testInstructionExecutionBasicInformation.TestCaseExecutionUuid,
+			&testInstructionExecutionBasicInformation.TestDataSetUuid,
+			&testInstructionExecutionBasicInformation.TestCaseExecutionVersion,
+			&testInstructionExecutionBasicInformation.TestInstructionExecutionVersion,
+			&tempUniqueCounter,
+			&testInstructionExecutionBasicInformation.TestInstructionOriginalUuid,
+		)
+
+		if err != nil {
+			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+				"Id":           "dc06a877-53d6-4ef1-bffd-af17f27137e7",
+				"Error":        err,
+				"sqlToExecute": sqlToExecute,
+			}).Error("Something went wrong when processing result from database")
+
+			return 0, err
+		}
+
+		// Convert temp-variables into gRPC-variables
+		testInstructionExecutionBasicInformation.QueueTimeStamp = timestamppb.New(tempPlacedOnTestInstructionExecutionQueueTimeStamp)
+		testInstructionExecutionBasicInformation.ExecutionPriority = fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum(tempExecutionPriority)
+
+		// Create 'testInstructionExecutionMapKey'
+		testInstructionExecutionMapKey = testInstructionExecutionBasicInformation.TestInstructionExecutionUuid + strconv.FormatUint(uint64(testInstructionExecutionBasicInformation.TestInstructionExecutionVersion), 10)
+
+		// Check if data exist for 'testInstructionExecutionMapKey'
+		var tempWorkObjectForTestCaseExecutionResponseMessage *workObjectForTestCaseExecutionResponseMessageStruct
+		tempWorkObjectForTestCaseExecutionResponseMessage, existsInMap = tempTestCaseExecutionResponseMessagesMap[testInstructionExecutionMapKey]
+
+		if existsInMap == false {
+				fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+					"Id":                             "6ea5ed57-b015-4fca-bee4-26355b2df789",
+					"testInstructionExecutionMapKey": testInstructionExecutionMapKey,
+					"sqlToExecute":                   sqlToExecute,
+				}).Error("Couldn't find 'testCaseExecutionMapKey' in 'tempTestCaseExecutionResponseMessagesMap'")
+
+				return 0, err
+			}
+			// Initiate all variables
+			/*
+				var tempFoundVersusExpectedValue *fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage_FoundVersusExpectedValueMessage
+				tempFoundVersusExpectedValue = &fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage_FoundVersusExpectedValueMessage{
+					FoundValue:    "",
+					ExpectedValue: "",
+				}
+
+				var  tempLogPostAndValuesMessage  *fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+				tempLogPostAndValuesMessage  = &fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage{
+					TestInstructionExecutionUuid:    "",
+					TestInstructionExecutionVersion: 0,
+					LogPostTimeStamp:                nil,
+					LogPostStatus:                   0,
+					FoundVersusExpectedValue:        tempFoundVersusExpectedValue,
+				}
+
+				var tempExecutionLogPostsAndValues *fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+				tempExecutionLogPostsAndValues = &fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage{
+					TestInstructionExecutionUuid:    "",
+					TestInstructionExecutionVersion: 0,
+					LogPostTimeStamp:                nil,
+					LogPostStatus:                   0,
+					FoundVersusExpectedValue:        nil,
+				}
+
+
+
+				var tempTestInstructionExecution *fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage
+				tempTestInstructionExecution = &fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage{
+					TestInstructionExecutionBasicInformation: nil,
+					TestInstructionExecutionsInformation:     nil,
+					ExecutionLogPostsAndValues:               nil,
+				}
+				var tempTestInstructionExecutions []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage
+				tempTestInstructionExecutions = append()
+
+			*/
+
+			// Initiate object to be stored in 'TestInstructionExecutionsMap'
+			var tempWorkObjectForTestInstructionExecutionsMessage *workObjectForTestInstructionExecutionsMessageStruct
+			tempWorkObjectForTestInstructionExecutionsMessage, existsInMap = tempWorkObjectForTestCaseExecutionResponseMessage.TestInstructionExecutionsMap[testInstructionExecutionMapKey]
+
+			// If 'testInstructionExecutionMapKey' doesn't exist then create the object
+			if existsInMap == false {
+				tempWorkObjectForTestInstructionExecutionsMessage = &workObjectForTestInstructionExecutionsMessageStruct{
+					TestInstructionExecutionBasicInformation: &testInstructionExecutionBasicInformation,
+					TestInstructionExecutionsInformation:     nil,
+					ExecutionLogPostsAndValues:               nil,
+				}
+
+				// Add 'tempWorkObjectForTestInstructionExecutionsMessage' to 'TestInstructionExecutionsMap'
+				tempWorkObjectForTestCaseExecutionResponseMessage.TestInstructionExecutionsMap[testInstructionExecutionMapKey] = tempWorkObjectForTestInstructionExecutionsMessage
+			} else {
+
+					fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+						"Id":                             "1f02fa15-200e-4cb9-8248-3a57f27242dc",
+						"testInstructionExecutionMapKey": testInstructionExecutionMapKey,
+						"tempWorkObjectForTestCaseExecutionResponseMessage.TestInstructionExecutionsMap": tempWorkObjectForTestCaseExecutionResponseMessage.TestInstructionExecutionsMap
+					}).Fatalln("We shouldn't come here")
+			}
+
+		// Add to number of rows
+		numberOfRows = numberOfRows + 1
+
+		}
 
 	return numberOfRows, err
 }
