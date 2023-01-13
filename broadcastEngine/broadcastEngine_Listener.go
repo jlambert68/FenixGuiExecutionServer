@@ -15,12 +15,12 @@ import (
 )
 
 type BroadcastingMessageForExecutionsStruct struct {
-	BroadcastTimeStamp        string                           `json:"timestamp"`
-	TestCaseExecutions        []TestCaseExecutionStruct        `json:"testcaseexecutions"`
-	TestInstructionExecutions []TestInstructionExecutionStruct `json:"testinstructionexecutions"`
+	BroadcastTimeStamp        string                                           `json:"timestamp"`
+	TestCaseExecutions        []TestCaseExecutionBroadcastMessageStruct        `json:"testcaseexecutions"`
+	TestInstructionExecutions []TestInstructionExecutionBroadcastMessageStruct `json:"testinstructionexecutions"`
 }
 
-type TestCaseExecutionStruct struct {
+type TestCaseExecutionBroadcastMessageStruct struct {
 	TestCaseExecutionUuid          string `json:"testcaseexecutionuuid"`
 	TestCaseExecutionVersion       string `json:"testcaseexecutionversion"`
 	TestCaseExecutionStatus        string `json:"testcaseexecutionstatus"`
@@ -30,12 +30,20 @@ type TestCaseExecutionStruct struct {
 	ExecutionStatusUpdateTimeStamp string `json:"executionstatusupdatetimestamp"` // The timestamp when the status was last updated
 }
 
-type TestInstructionExecutionStruct struct {
-	TestCaseExecutionUuid           string `json:"testcaseexecutionuuid"`
-	TestCaseExecutionVersion        string `json:"testcaseexecutionversion"`
-	TestInstructionExecutionUuid    string `json:"testinstructionexecutionuuid"`
-	TestInstructionExecutionVersion string `json:"testinstructionexecutionversion"`
-	TestInstructionExecutionStatus  string `json:"testinstructionexecutionstatus"`
+type TestInstructionExecutionBroadcastMessageStruct struct {
+	TestCaseExecutionUuid                string `json:"testcaseexecutionuuid"`
+	TestCaseExecutionVersion             string `json:"testcaseexecutionversion"`
+	TestInstructionExecutionUuid         string `json:"testinstructionexecutionuuid"`
+	TestInstructionExecutionVersion      string `json:"testinstructionexecutionversion"`
+	SentTimeStamp                        string `json:"senttimestamp"`
+	ExpectedExecutionEndTimeStamp        string `json:"expectedexecutionendtimestamp"`
+	TestInstructionExecutionStatusName   string `json:"testinstructionexecutionstatusname"`
+	TestInstructionExecutionStatusValue  string `json:"testinstructionexecutionstatusvalue"`
+	TestInstructionExecutionEndTimeStamp string `json:"testinstructionexecutionendtimestamp"`
+	TestInstructionExecutionHasFinished  string `json:"testinstructionexecutionhasfinished"`
+	UniqueDatabaseRowCounter             string `json:"uniquedatabaserowcounter"`
+	TestInstructionCanBeReExecuted       string `json:"testinstructioncanbereexecuted"`
+	ExecutionStatusUpdateTimeStamp       string `json:"executionstatusupdatetimestamp"`
 }
 
 // InitiateAndStartBroadcastNotifyEngine
@@ -167,7 +175,7 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 	var tempExecutionHasFinished bool
 
 	// Create ChannelMessages for TestCaseExecutions
-	var testCaseExecutionFromBroadcastMessage TestCaseExecutionStruct
+	var testCaseExecutionFromBroadcastMessage TestCaseExecutionBroadcastMessageStruct
 	for _, testCaseExecutionFromBroadcastMessage = range broadcastingMessageForExecutions.TestCaseExecutions {
 
 		// Convert string-versions from BroadcastMessage
@@ -315,13 +323,22 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 	var testInstructionExecutionsStatusForChannelMessageMap map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
 	testInstructionExecutionsStatusForChannelMessageMap = make(map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage)
 	var testCaseExecutionVersionError error
-	var testInstructionExecutionFromBroadcastMessage TestInstructionExecutionStruct
+	var testInstructionExecutionFromBroadcastMessage TestInstructionExecutionBroadcastMessageStruct
 	var testInstructionExecutionVersionError error
 	var testInstructionExecutionVersionAsInteger int
+	var sentTimeStampAsTime time.Time
+	var expectedExecutionEndTimeStampAsTime time.Time
+	var testInstructionExecutionStatusAsInteger int
+	var testInstructionExecutionEndTimeStampAsTime time.Time
+	var testInstructionExecutionHasFinishedAsBool bool
+	var uniqueDatabaseRowCounterAsInteger int
+	var testInstructionCanBeReExecutedAsBool bool
+	var executionStatusUpdateTimeStampAsTime time.Time
 
 	// Create ChannelMessages for TestInstructionExecutions
 	for _, testInstructionExecutionFromBroadcastMessage = range broadcastingMessageForExecutions.TestInstructionExecutions {
 
+		// Parse 'TestCaseExecutionVersion' from Broadcast-message
 		testCaseExecutionVersionAsInteger, testCaseExecutionVersionError = strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion)
 		if testCaseExecutionVersionError != nil {
 			common_config.Logger.WithFields(logrus.Fields{
@@ -330,8 +347,10 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 				"testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion": testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion,
 			}).Error("Couldn't convert 'TestCaseExecutionVersion' from Broadcast-message into an integer")
 
+			return
 		}
 
+		// Parse 'TestInstructionExecutionVersion' from Broadcast-message
 		testInstructionExecutionVersionAsInteger, testInstructionExecutionVersionError = strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionVersion)
 		if testInstructionExecutionVersionError != nil {
 			common_config.Logger.WithFields(logrus.Fields{
@@ -340,44 +359,150 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 				"testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion": testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionVersion,
 			}).Error("Couldn't convert 'TestInstructionExecutionVersion' from Broadcast-message into an integer")
 
+			return
 		}
 
-		// Both integer conversions needs to be OK, 'TestCaseExecutionVersion' and 'TestInstructionExecutionVersion'
-		if testCaseExecutionVersionError == nil &&
-			testInstructionExecutionVersionError == nil {
+		// Parse 'SentTimeStamp' from Broadcast-message
+		sentTimeStampAsTime, err = time.Parse(timeStampLayoutForParser, testInstructionExecutionFromBroadcastMessage.SentTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "93f3bedb-dc41-45ad-b523-bb0214f823ec",
+				"err": err,
+				"testInstructionExecutionFromBroadcastMessage.SentTimeStamp": testInstructionExecutionFromBroadcastMessage.SentTimeStamp,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
 
-			var testInstructionExecutionStatusForChannelMessage *fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
-			testInstructionExecutionStatusForChannelMessage = &fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage{
-				TestCaseExecutionUuid:           testInstructionExecutionFromBroadcastMessage.TestCaseExecutionUuid,
-				TestCaseExecutionVersion:        int32(testCaseExecutionVersionAsInteger),
-				TestInstructionExecutionUuid:    testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionUuid,
-				TestInstructionExecutionVersion: int32(testInstructionExecutionVersionAsInteger),
-				TestInstructionExecutionStatus:  fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum(fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum_value[testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionStatus]),
-			}
-
-			// Create mapKey consisting of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
-			mapKey = testInstructionExecutionFromBroadcastMessage.TestCaseExecutionUuid + testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion
-
-			// Extract slice holding the status messages for TestInstructionExecutions
-			var tempTestInstructionExecutionsStatusForChannelMessage []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
-			tempTestInstructionExecutionsStatusForChannelMessage, existInMap = testInstructionExecutionsStatusForChannelMessageMap[mapKey]
-
-			if existInMap == false {
-				// Add to 'mapKeyMap' that a new combination of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'  for TestInstructionExecutions was found for
-				mapKeysMapKeyValue = mapKey + "TI"
-
-				var mapKeysMapKeyValues []string
-				mapKeysMapKeyValues, _ = mapKeysMap[mapKey]
-				mapKeysMapKeyValues = append(mapKeysMapKeyValues, mapKeysMapKeyValue)
-
-				mapKeysMap[mapKey] = mapKeysMapKeyValues
-
-			}
-
-			// Add new status message to slice and add slice back to map
-			tempTestInstructionExecutionsStatusForChannelMessage = append(tempTestInstructionExecutionsStatusForChannelMessage, testInstructionExecutionStatusForChannelMessage)
-			testInstructionExecutionsStatusForChannelMessageMap[mapKey] = tempTestInstructionExecutionsStatusForChannelMessage
+			return
 		}
+
+		// Parse 'ExpectedExecutionEndTimeStamp' from Broadcast-message
+		expectedExecutionEndTimeStampAsTime, err = time.Parse(timeStampLayoutForParser, testInstructionExecutionFromBroadcastMessage.ExpectedExecutionEndTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "a67badc1-14a8-4c91-9c15-b0636f9ff374",
+				"err": err,
+				"testInstructionExecutionFromBroadcastMessage.ExpectedExecutionEndTimeStamp": testInstructionExecutionFromBroadcastMessage.ExpectedExecutionEndTimeStamp,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		// Parse 'TestInstructionExecutionStatusValue' from Broadcast-message
+		testInstructionExecutionStatusAsInteger, testCaseExecutionVersionError = strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionStatusValue)
+		if testCaseExecutionVersionError != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                            "db59ef02-8113-42f6-94e7-a4119eaa3e52",
+				"testCaseExecutionVersionError": testCaseExecutionVersionError,
+				"testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionStatusValue": testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionStatusValue,
+			}).Error("Couldn't convert 'TestInstructionExecutionStatusValue' from Broadcast-message into an integer")
+
+			return
+
+		}
+
+		// Parse 'TestInstructionExecutionEndTimeStamp' from Broadcast-message
+		testInstructionExecutionEndTimeStampAsTime, err = time.Parse(timeStampLayoutForParser, testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionEndTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "a6673e3d-9dc2-4d36-bf7e-a604c0a86a4c",
+				"err": err,
+				"testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionEndTimeStamp": testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionEndTimeStamp,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		// Parse 'TestInstructionExecutionHasFinished' from Broadcast-message
+		testInstructionExecutionHasFinishedAsBool, err = strconv.ParseBool(testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionHasFinished)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "70878467-53d7-4ea1-b27b-703ab50c80d0",
+				"err": err,
+				"testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionHasFinished": testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionHasFinished,
+			}).Error("Couldn't parse Boolean in Broadcast-message")
+
+			return
+		}
+
+		// Parse 'UniqueDatabaseRowCounter' from Broadcast-message
+		uniqueDatabaseRowCounterAsInteger, testCaseExecutionVersionError = strconv.Atoi(testInstructionExecutionFromBroadcastMessage.UniqueDatabaseRowCounter)
+		if testCaseExecutionVersionError != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                            "e4cd8f5d-2acc-430a-8034-35e1fee1a1dc",
+				"testCaseExecutionVersionError": testCaseExecutionVersionError,
+				"testInstructionExecutionFromBroadcastMessage.UniqueDatabaseRowCounter": testInstructionExecutionFromBroadcastMessage.UniqueDatabaseRowCounter,
+			}).Error("Couldn't convert 'UniqueDatabaseRowCounter' from Broadcast-message into an integer")
+
+			return
+		}
+
+		// Parse 'TestInstructionCanBeReExecuted' from Broadcast-message
+		testInstructionCanBeReExecutedAsBool, err = strconv.ParseBool(testInstructionExecutionFromBroadcastMessage.TestInstructionCanBeReExecuted)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "f2d35949-acca-49af-80e7-66be68ae42fb",
+				"err": err,
+				"testInstructionExecutionFromBroadcastMessage.TestInstructionCanBeReExecuted": testInstructionExecutionFromBroadcastMessage.TestInstructionCanBeReExecuted,
+			}).Error("Couldn't parse Boolean in Broadcast-message")
+
+			return
+		}
+
+		// Parse 'ExecutionStatusUpdateTimeStamp' from Broadcast-message
+		executionStatusUpdateTimeStampAsTime, err = time.Parse(timeStampLayoutForParser, testInstructionExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "7f398611-d998-4733-8e57-d203b10437d9",
+				"err": err,
+				"testInstructionExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp": testInstructionExecutionFromBroadcastMessage.ExecutionStatusUpdateTimeStamp,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		// Build TestInstructionExecution-part of status update message
+		var testInstructionExecutionStatusForChannelMessage *fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
+		testInstructionExecutionStatusForChannelMessage = &fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage{
+			TestCaseExecutionUuid:           testInstructionExecutionFromBroadcastMessage.TestCaseExecutionUuid,
+			TestCaseExecutionVersion:        int32(testCaseExecutionVersionAsInteger),
+			TestInstructionExecutionUuid:    testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionUuid,
+			TestInstructionExecutionVersion: int32(testInstructionExecutionVersionAsInteger),
+			TestInstructionExecutionStatus: fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum(
+				fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum_value[testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionStatusValue]),
+			TestInstructionExecutionsStatusInformation: &fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsInformationMessage{
+				SentTimeStamp:                        timestamppb.New(sentTimeStampAsTime),
+				ExpectedExecutionEndTimeStamp:        timestamppb.New(expectedExecutionEndTimeStampAsTime),
+				TestInstructionExecutionStatus:       fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum(testInstructionExecutionStatusAsInteger),
+				TestInstructionExecutionEndTimeStamp: timestamppb.New(testInstructionExecutionEndTimeStampAsTime),
+				TestInstructionExecutionHasFinished:  testInstructionExecutionHasFinishedAsBool,
+				UniqueDatabaseRowCounter:             uint64(uniqueDatabaseRowCounterAsInteger),
+				TestInstructionCanBeReExecuted:       testInstructionCanBeReExecutedAsBool,
+				ExecutionStatusUpdateTimeStamp:       timestamppb.New(executionStatusUpdateTimeStampAsTime),
+			},
+		}
+
+		// Create mapKey consisting of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+		mapKey = testInstructionExecutionFromBroadcastMessage.TestCaseExecutionUuid + testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion
+
+		// Extract slice holding the status messages for TestInstructionExecutions
+		var tempTestInstructionExecutionsStatusForChannelMessage []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
+		tempTestInstructionExecutionsStatusForChannelMessage, existInMap = testInstructionExecutionsStatusForChannelMessageMap[mapKey]
+
+		if existInMap == false {
+			// Add to 'mapKeyMap' that a new combination of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'  for TestInstructionExecutions was found for
+			mapKeysMapKeyValue = mapKey + "TI"
+
+			var mapKeysMapKeyValues []string
+			mapKeysMapKeyValues, _ = mapKeysMap[mapKey]
+			mapKeysMapKeyValues = append(mapKeysMapKeyValues, mapKeysMapKeyValue)
+
+			mapKeysMap[mapKey] = mapKeysMapKeyValues
+
+		}
+
+		// Add new status message to slice and add slice back to map
+		tempTestInstructionExecutionsStatusForChannelMessage = append(tempTestInstructionExecutionsStatusForChannelMessage, testInstructionExecutionStatusForChannelMessage)
+		testInstructionExecutionsStatusForChannelMessageMap[mapKey] = tempTestInstructionExecutionsStatusForChannelMessage
+
 	}
 
 	// Get all keys from 'mapKeysMap' to find all combinations of 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
