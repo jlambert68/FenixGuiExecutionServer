@@ -692,12 +692,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Variables to used when extract data from result set
 	var (
-		tempSentTimeStamp                        time.Time
+		tempSentTimeStamp                        *time.Time
 		tempExpectedExecutionDuration            *time.Time
-		tempExpectedExecutionEndTimeStamp        time.Time
+		tempExpectedExecutionEndTimeStamp        *time.Time
 		tempTestInstructionExecutionStatus       int
-		tempExecutionStatusUpdateTimeStamp       time.Time
-		tempTestInstructionExecutionEndTimeStamp time.Time
+		tempExecutionStatusUpdateTimeStamp       *time.Time
+		tempTestInstructionExecutionEndTimeStamp *time.Time
 		tempQueueTimeStamp                       *time.Time
 		tempExecutionPriority                    *int
 	)
@@ -747,16 +747,24 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		}
 
 		// Convert temp-variables into gRPC-variables
-		tempTestInstructionExecutionsInformationMessage.SentTimeStamp =
-			timestamppb.New(tempSentTimeStamp)
-		tempTestInstructionExecutionsInformationMessage.ExpectedExecutionEndTimeStamp =
-			timestamppb.New(tempExpectedExecutionEndTimeStamp)
+		if tempSentTimeStamp != nil {
+			tempTestInstructionExecutionsInformationMessage.SentTimeStamp =
+				timestamppb.New(*tempSentTimeStamp)
+		}
+		if tempExpectedExecutionEndTimeStamp != nil {
+			tempTestInstructionExecutionsInformationMessage.ExpectedExecutionEndTimeStamp =
+				timestamppb.New(*tempExpectedExecutionEndTimeStamp)
+		}
 		tempTestInstructionExecutionsInformationMessage.TestInstructionExecutionStatus =
 			fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum(tempTestInstructionExecutionStatus)
-		tempTestInstructionExecutionsInformationMessage.ExecutionStatusUpdateTimeStamp =
-			timestamppb.New(tempExecutionStatusUpdateTimeStamp)
-		tempTestInstructionExecutionsInformationMessage.TestInstructionExecutionEndTimeStamp =
-			timestamppb.New(tempTestInstructionExecutionEndTimeStamp)
+		if tempExecutionStatusUpdateTimeStamp != nil {
+			tempTestInstructionExecutionsInformationMessage.ExecutionStatusUpdateTimeStamp =
+				timestamppb.New(*tempExecutionStatusUpdateTimeStamp)
+		}
+		if tempTestInstructionExecutionEndTimeStamp != nil {
+			tempTestInstructionExecutionsInformationMessage.TestInstructionExecutionEndTimeStamp =
+				timestamppb.New(*tempTestInstructionExecutionEndTimeStamp)
+		}
 		if tempQueueTimeStamp != nil {
 			tempTestInstructionExecutionBasicInformation.QueueTimeStamp =
 				timestamppb.New(*tempQueueTimeStamp)
