@@ -16,8 +16,6 @@ import (
 
 type BroadcastingMessageForExecutionsStruct struct {
 	OriginalMessageCreationTimeStamp string                                           `json:"originalmessagecreationtimestamp"`
-	BroadcastTimeStamp               string                                           `json:"broadcasttimestamp"`
-	PreviousBroadcastTimeStamp       string                                           `json:"previousbroadcasttimestamp"`
 	TestCaseExecutions               []TestCaseExecutionBroadcastMessageStruct        `json:"testcaseexecutions"`
 	TestInstructionExecutions        []TestInstructionExecutionBroadcastMessageStruct `json:"testinstructionexecutions"`
 }
@@ -30,6 +28,8 @@ type TestCaseExecutionBroadcastMessageStruct struct {
 	ExecutionStopTimeStamp         string `json:"executionstoptimestamp"`         // The timestamp when the execution was ended, in anyway
 	ExecutionHasFinished           string `json:"executionhasfinished"`           // A simple status telling if the execution has ended or not
 	ExecutionStatusUpdateTimeStamp string `json:"executionstatusupdatetimestamp"` // The timestamp when the status was last updated
+	BroadcastTimeStamp             string `json:"broadcasttimestamp"`
+	PreviousBroadcastTimeStamp     string `json:"previousbroadcasttimestamp"`
 }
 
 type TestInstructionExecutionBroadcastMessageStruct struct {
@@ -46,6 +46,8 @@ type TestInstructionExecutionBroadcastMessageStruct struct {
 	UniqueDatabaseRowCounter             string `json:"uniquedatabaserowcounter"`
 	TestInstructionCanBeReExecuted       string `json:"testinstructioncanbereexecuted"`
 	ExecutionStatusUpdateTimeStamp       string `json:"executionstatusupdatetimestamp"`
+	BroadcastTimeStamp                   string `json:"broadcasttimestamp"`
+	PreviousBroadcastTimeStamp           string `json:"previousbroadcasttimestamp"`
 }
 
 // InitiateAndStartBroadcastNotifyEngine
@@ -136,8 +138,6 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 	var existInMap bool
 
 	var originalMessageCreationTimeStamp time.Time
-	var broadcastTimeStamp time.Time
-	var previousBroadcastTimeStamp time.Time
 	var err error
 	var timeStampLayoutForParser string //:= "2006-01-02 15:04:05.999999999 -0700 MST"
 
@@ -164,63 +164,9 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 		return
 	}
 
-	// Convert Broadcast Timestamp into time-variable
-	timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(broadcastingMessageForExecutions.BroadcastTimeStamp)
-	if err != nil {
-		common_config.Logger.WithFields(logrus.Fields{
-			"Id":  "dcc1f424-f375-4700-9b4c-129932676b98",
-			"err": err,
-			"broadcastingMessageForExecutions.BroadcastTimeStamp": broadcastingMessageForExecutions.BroadcastTimeStamp,
-		}).Error("Couldn't generate parser layout from TimeStamp")
-
-		return
-	}
-
-	broadcastTimeStamp, err = time.Parse(timeStampLayoutForParser, broadcastingMessageForExecutions.BroadcastTimeStamp)
-	if err != nil {
-		common_config.Logger.WithFields(logrus.Fields{
-			"Id":                               "60b77ba4-3c99-4e39-b35a-33bed1c7155b",
-			"err":                              err,
-			"broadcastingMessageForExecutions": broadcastingMessageForExecutions,
-		}).Error("Couldn't parse TimeStamp in Broadcast-message")
-
-		return
-	}
-
-	// Convert Previous Broadcast Timestamp into time-variable
-	timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(broadcastingMessageForExecutions.PreviousBroadcastTimeStamp)
-	if err != nil {
-		common_config.Logger.WithFields(logrus.Fields{
-			"Id":  "8b929496-cc27-4858-95f9-49e9012a28f6",
-			"err": err,
-			"broadcastingMessageForExecutions.PreviousBroadcastTimeStamp": broadcastingMessageForExecutions.PreviousBroadcastTimeStamp,
-		}).Error("Couldn't generate parser layout from TimeStamp")
-
-		return
-	}
-
-	previousBroadcastTimeStamp, err = time.Parse(timeStampLayoutForParser, broadcastingMessageForExecutions.PreviousBroadcastTimeStamp)
-	if err != nil {
-		common_config.Logger.WithFields(logrus.Fields{
-			"Id":                               "acfac042-c396-4bd8-a12e-df35076e7ad8",
-			"err":                              err,
-			"broadcastingMessageForExecutions": broadcastingMessageForExecutions,
-		}).Error("Couldn't parse Previous TimeStamp in Broadcast-message")
-
-		return
-	}
-
 	// Convert Original message creation Timestamp into gRPC-version
 	var originalMessageCreationTimeStampForGrpc *timestamppb.Timestamp
 	originalMessageCreationTimeStampForGrpc = timestamppb.New(originalMessageCreationTimeStamp)
-
-	// Convert Broadcast Timestamps into gRPC-version
-	var broadcastTimeStampForGrpc *timestamppb.Timestamp
-	broadcastTimeStampForGrpc = timestamppb.New(broadcastTimeStamp)
-
-	// Convert Previous Broadcast Timestamp into gRPC-version
-	var previousBroadcastTimeStampForGrpc *timestamppb.Timestamp
-	previousBroadcastTimeStampForGrpc = timestamppb.New(previousBroadcastTimeStamp)
 
 	// Create map for messages, grouped by Subscription-parameter-key('TestCaseExecutionUuid'+'TestCaseExecutionVersion') to be sent over MessageChannel to be forwarded to TestGui
 	var testCaseExecutionsStatusForChannelMessageMap map[string][]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
@@ -233,9 +179,58 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 	var tempExecutionStatusUpdateTimeStamp time.Time
 	var tempExecutionHasFinished bool
 
+	var broadcastTimeStamp time.Time
+	var previousBroadcastTimeStamp time.Time
+
 	// Create ChannelMessages for TestCaseExecutions
 	var testCaseExecutionFromBroadcastMessage TestCaseExecutionBroadcastMessageStruct
 	for _, testCaseExecutionFromBroadcastMessage = range broadcastingMessageForExecutions.TestCaseExecutions {
+
+		// Convert Broadcast Timestamp into time-variable
+		timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(testCaseExecutionFromBroadcastMessage.BroadcastTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "dcc1f424-f375-4700-9b4c-129932676b98",
+				"err": err,
+				"testCaseExecutionFromBroadcastMessage.BroadcastTimeStamp": testCaseExecutionFromBroadcastMessage.BroadcastTimeStamp,
+			}).Error("Couldn't generate parser layout from TimeStamp")
+
+			return
+		}
+
+		broadcastTimeStamp, err = time.Parse(timeStampLayoutForParser, testCaseExecutionFromBroadcastMessage.BroadcastTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                               "60b77ba4-3c99-4e39-b35a-33bed1c7155b",
+				"err":                              err,
+				"broadcastingMessageForExecutions": broadcastingMessageForExecutions,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		// Convert Previous Broadcast Timestamp into time-variable
+		timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(testCaseExecutionFromBroadcastMessage.PreviousBroadcastTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "8b929496-cc27-4858-95f9-49e9012a28f6",
+				"err": err,
+				"testCaseExecutionFromBroadcastMessage.PreviousBroadcastTimeStamp": testCaseExecutionFromBroadcastMessage.PreviousBroadcastTimeStamp,
+			}).Error("Couldn't generate parser layout from TimeStamp")
+
+			return
+		}
+
+		previousBroadcastTimeStamp, err = time.Parse(timeStampLayoutForParser, testCaseExecutionFromBroadcastMessage.PreviousBroadcastTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                               "acfac042-c396-4bd8-a12e-df35076e7ad8",
+				"err":                              err,
+				"broadcastingMessageForExecutions": broadcastingMessageForExecutions,
+			}).Error("Couldn't parse Previous TimeStamp in Broadcast-message")
+
+			return
+		}
 
 		// Convert string-versions from BroadcastMessage
 		testCaseExecutionVersionAsInteger, err = strconv.Atoi(testCaseExecutionFromBroadcastMessage.TestCaseExecutionVersion)
@@ -335,10 +330,20 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 			return
 		}
 
+		// Convert Broadcast Timestamps into gRPC-version
+		var broadcastTimeStampForGrpc *timestamppb.Timestamp
+		broadcastTimeStampForGrpc = timestamppb.New(broadcastTimeStamp)
+
+		// Convert Previous Broadcast Timestamp into gRPC-version
+		var previousBroadcastTimeStampForGrpc *timestamppb.Timestamp
+		previousBroadcastTimeStampForGrpc = timestamppb.New(previousBroadcastTimeStamp)
+
 		var testCaseExecutionStatusForChannelMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage
 		testCaseExecutionStatusForChannelMessage = &fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusMessage{
-			TestCaseExecutionUuid:    testCaseExecutionFromBroadcastMessage.TestCaseExecutionUuid,
-			TestCaseExecutionVersion: int32(testCaseExecutionVersionAsInteger),
+			TestCaseExecutionUuid:      testCaseExecutionFromBroadcastMessage.TestCaseExecutionUuid,
+			TestCaseExecutionVersion:   int32(testCaseExecutionVersionAsInteger),
+			BroadcastTimeStamp:         broadcastTimeStampForGrpc,
+			PreviousBroadcastTimeStamp: previousBroadcastTimeStampForGrpc,
 			TestCaseExecutionDetails: &fenixExecutionServerGuiGrpcApi.TestCaseExecutionDetailsMessage{
 				ExecutionStartTimeStamp: timestamppb.New(tempExecutionStartTimeStamp),
 
@@ -396,6 +401,53 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 
 	// Create ChannelMessages for TestInstructionExecutions
 	for _, testInstructionExecutionFromBroadcastMessage = range broadcastingMessageForExecutions.TestInstructionExecutions {
+
+		// Convert Broadcast Timestamp into time-variable
+		timeStampLayoutForParser, err = common_config.GenerateTimeStampParserLayout(testInstructionExecutionFromBroadcastMessage.BroadcastTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "c72a7a03-54fb-4ae6-bd8c-79aca9d60390",
+				"err": err,
+				"testInstructionExecutionFromBroadcastMessage.BroadcastTimeStamp": testInstructionExecutionFromBroadcastMessage.BroadcastTimeStamp,
+			}).Error("Couldn't generate parser layout from TimeStamp")
+
+			return
+		}
+
+		broadcastTimeStamp, err = time.Parse(timeStampLayoutForParser, testInstructionExecutionFromBroadcastMessage.BroadcastTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                               "556f2893-eced-436c-b2df-f517a08398c0",
+				"err":                              err,
+				"broadcastingMessageForExecutions": broadcastingMessageForExecutions,
+			}).Error("Couldn't parse TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		previousBroadcastTimeStamp, err = time.Parse(timeStampLayoutForParser, testInstructionExecutionFromBroadcastMessage.PreviousBroadcastTimeStamp)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                               "a7b5932c-ebc6-4f34-a846-a2c5224a7e3c",
+				"err":                              err,
+				"broadcastingMessageForExecutions": broadcastingMessageForExecutions,
+			}).Error("Couldn't parse Previous TimeStamp in Broadcast-message")
+
+			return
+		}
+
+		// Convert string-versions from BroadcastMessage
+		testCaseExecutionVersionAsInteger, err = strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion)
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":  "d1500b59-b38e-4e0b-b01a-a07d2ade1de6",
+				"err": err,
+				"testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion": testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion,
+			}).Error("Couldn't convert 'TestCaseExecutionVersion' from Broadcast-message into an integer")
+
+			return
+
+		}
 
 		// Parse 'TestCaseExecutionVersion' from Broadcast-message
 		testCaseExecutionVersionAsInteger, testCaseExecutionVersionError = strconv.Atoi(testInstructionExecutionFromBroadcastMessage.TestCaseExecutionVersion)
@@ -570,6 +622,14 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 			}
 		}
 
+		// Convert Broadcast Timestamps into gRPC-version
+		var broadcastTimeStampForGrpc *timestamppb.Timestamp
+		broadcastTimeStampForGrpc = timestamppb.New(broadcastTimeStamp)
+
+		// Convert Previous Broadcast Timestamp into gRPC-version
+		var previousBroadcastTimeStampForGrpc *timestamppb.Timestamp
+		previousBroadcastTimeStampForGrpc = timestamppb.New(previousBroadcastTimeStamp)
+
 		// Build TestInstructionExecution-part of status update message
 		var testInstructionExecutionStatusForChannelMessage *fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage
 		testInstructionExecutionStatusForChannelMessage = &fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusMessage{
@@ -579,6 +639,8 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 			TestInstructionExecutionVersion: int32(testInstructionExecutionVersionAsInteger),
 			TestInstructionExecutionStatus: fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum(
 				fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum_value[testInstructionExecutionFromBroadcastMessage.TestInstructionExecutionStatusValue]),
+			BroadcastTimeStamp:         broadcastTimeStampForGrpc,
+			PreviousBroadcastTimeStamp: previousBroadcastTimeStampForGrpc,
 			TestInstructionExecutionsStatusInformation: &fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsInformationMessage{
 				SentTimeStamp:                        timestamppb.New(sentTimeStampAsTime),
 				ExpectedExecutionEndTimeStamp:        timestamppb.New(expectedExecutionEndTimeStampAsTime),
@@ -711,8 +773,6 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 			IsKeepAliveMessage:               false,
 			ExecutionsStatus:                 testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage,
 			OriginalMessageCreationTimeStamp: originalMessageCreationTimeStampForGrpc,
-			BroadcastTimeStamp:               broadcastTimeStampForGrpc,
-			PreviousBroadcastTimeStamp:       previousBroadcastTimeStampForGrpc,
 		}
 
 		// Create channel Message to be sent over channel, and later sent to TesterGui
