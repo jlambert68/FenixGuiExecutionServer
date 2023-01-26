@@ -54,7 +54,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) GetSingleTestCaseExecution(
 		getSingleTestCaseExecutionResponse = &fenixExecutionServerGuiGrpcApi.GetSingleTestCaseExecutionResponse{
 			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 				AckNack:                      false,
-				Comments:                     "Got some Error when retrieving TestCaseExecutionInformatio from database",
+				Comments:                     "Got some Error when retrieving TestCaseExecutionInformation from database",
 				ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
 				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 			},
