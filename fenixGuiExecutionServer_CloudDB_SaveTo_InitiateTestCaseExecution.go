@@ -292,7 +292,7 @@ type tempTestCaseBasicInformationStruct struct {
 // Load BasicInformation for TestCase to be able to populate the TestCaseExecution
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseBasicInformation(dbTransaction pgx.Tx, testCaseUuid string) (testCaseBasicInformation tempTestCaseBasicInformationStruct, err error) {
 
-	usedDBSchema := "FenixGuiBuilder" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
+	usedDBSchema := "FenixBuilder" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
 	sqlToExecute := ""
 	sqlToExecute = sqlToExecute + "SELECT TC.\"DomainUuid\", TC.\"DomainName\", TC.\"TestCaseUuid\", TC.\"TestCaseName\", TC.\"TestCaseVersion\""
