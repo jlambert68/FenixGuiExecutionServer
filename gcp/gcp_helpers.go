@@ -74,8 +74,8 @@ func (gcp *GcpObjectStruct) generateGCPAccessToken(ctx context.Context) (appende
 			return nil, false, "Problem getting the token"
 		} else {
 			common_config.Logger.WithFields(logrus.Fields{
-				"ID":    "7f499a17-9ebc-47e4-830a-2461594296e0",
-				"token": token,
+				"ID": "7f499a17-9ebc-47e4-830a-2461594296e0",
+				//"token": token,
 			}).Debug("Got Bearer Token")
 		}
 
@@ -85,7 +85,7 @@ func (gcp *GcpObjectStruct) generateGCPAccessToken(ctx context.Context) (appende
 
 	common_config.Logger.WithFields(logrus.Fields{
 		"ID": "9bfd3d3a-7155-4f72-9cbc-e051f4544135",
-		"FenixExecutionWorkerObject.gcpAccessToken": gcp.gcpAccessTokenForServiceAccounts,
+		//"FenixExecutionWorkerObject.gcpAccessToken": gcp.gcpAccessTokenForServiceAccounts,
 	}).Debug("Will use Bearer Token")
 
 	// Add token to GrpcServer Request.
