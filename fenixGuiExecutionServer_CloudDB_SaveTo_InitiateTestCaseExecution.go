@@ -356,6 +356,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "91bf8bf6-9c03-433c-8125-e08efe8ccb2d",
 			"testCaseUuid": testCaseUuid,
+			"sqlToExecute": sqlToExecute,
 		}).Error("Expected 1 row but got zero rows")
 
 		return tempTestCaseBasicInformationStruct{}, err
@@ -367,6 +368,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "f91489e5-78fe-4cca-95b4-f1a102eaf6cc",
 			"testCaseUuid": testCaseUuid,
+			"sqlToExecute": sqlToExecute,
 		}).Error("Expected 1 row but got more then 1 rows")
 
 		return tempTestCaseBasicInformationStruct{}, err
