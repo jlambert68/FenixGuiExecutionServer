@@ -299,7 +299,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	sqlToExecute = sqlToExecute + "FROM \"" + usedDBSchema + "\".\"TestCases\" TC "
 	sqlToExecute = sqlToExecute + "WHERE TC.\"TestCaseUuid\" = '" + testCaseUuid + "' AND "
 	sqlToExecute = sqlToExecute + "TC.\"TestCaseVersion\" = (SELECT MAX(TC2.\"TestCaseVersion\") "
-	sqlToExecute = sqlToExecute + "FROM \"FenixGuiBuilder\".\"TestCases\" TC2 "
+	sqlToExecute = sqlToExecute + "FROM \"FenixBuilder\".\"TestCases\" TC2 "
 	sqlToExecute = sqlToExecute + "WHERE TC2.\"TestCaseUuid\" = '" + testCaseUuid + "');"
 
 	// Query DB
