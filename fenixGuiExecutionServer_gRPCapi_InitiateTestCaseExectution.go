@@ -77,6 +77,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 
 			initiateSingleTestCaseExecutionResponseMessage.AckNackResponse = ackNackResponseToRespond
 
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
+				"id": "f847771c-7947-4bc8-8902-5aa7ac2c7f88",
+				"initiateSingleTestCaseExecutionRequestMessage": initiateSingleTestCaseExecutionRequestMessage,
+			}).Error("Problem when doing gRPC-call to FenixExecutionServer")
+
 			return //initiateSingleTestCaseExecutionResponseMessage, nil
 		}
 

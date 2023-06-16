@@ -19,21 +19,24 @@ func InitiateSubscriptionHandler() {
 
 // AddSubscriptionForTestCaseExecutionToTesterGui
 // Create Subscription on this TestCaseExecution for this TestGui
-func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid ApplicationRunTimeUuidType, testCaseExecutionUuid TestCaseExecutionUuidType, testCaseExecutionUuidVersion TestCaseExecutionUuidVersionType) {
+func AddSubscriptionForTestCaseExecutionToTesterGui(
+	applicationRunTimeUuid ApplicationRunTimeUuidType,
+	testCaseExecutionUuid TestCaseExecutionUuidType,
+	testCaseExecutionUuidVersion TestCaseExecutionUuidVersionType) {
 
 	//var allApplicationRunTimeUuidsReference *[]ApplicationRunTimeUuidType
 	var allApplicationRunTimeUuids *[]ApplicationRunTimeUuidType
-	var existInMap bool
 
 	// Create Key used for 'TestCaseExecutionsSubscriptionsMap'
 	var testCaseExecutionsSubscriptionsMapKey TestCaseExecutionsSubscriptionsMapKeyType
-	testCaseExecutionsSubscriptionsMapKey = TestCaseExecutionsSubscriptionsMapKeyType(string(testCaseExecutionUuid) + strconv.Itoa(int(testCaseExecutionUuidVersion)))
+	testCaseExecutionsSubscriptionsMapKey = TestCaseExecutionsSubscriptionsMapKeyType(string(testCaseExecutionUuid) +
+		strconv.Itoa(int(testCaseExecutionUuidVersion)))
 
 	// Check if TesterGui already exist in Subscription-map for incoming 'TestCaseExecutionUuid'
 	//allApplicationRunTimeUuids, existInMap = TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey]
-	allApplicationRunTimeUuids, existInMap = loadFromTestCaseExecutionsSubscriptionsMap(testCaseExecutionsSubscriptionsMapKey)
+	allApplicationRunTimeUuids, _ = loadFromTestCaseExecutionsSubscriptionsMap(testCaseExecutionsSubscriptionsMapKey)
 
-	// Nothing in subscription-map then initiate it and store it in Map
+	// Nothing in subscription-map then initiate slice and store it in Map
 	if allApplicationRunTimeUuids == nil {
 		var tempAllApplicationRunTimeUuids []ApplicationRunTimeUuidType
 
@@ -44,46 +47,37 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(applicationRunTimeUuid Appli
 		//TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey] = &tempAllApplicationRunTimeUuids
 		saveToTestCaseExecutionsSubscriptionsMap(testCaseExecutionsSubscriptionsMapKey, &tempAllApplicationRunTimeUuids)
 
-		allApplicationRunTimeUuids = &tempAllApplicationRunTimeUuids
+		//allApplicationRunTimeUuids = &tempAllApplicationRunTimeUuids
 
 	} else {
-		// TestCaseExecution doesn't have any subscriptions yet, so just add it
-		if existInMap == false {
-			tempAllApplicationRunTimeUuids := *allApplicationRunTimeUuids
-			tempAllApplicationRunTimeUuids = append(tempAllApplicationRunTimeUuids, applicationRunTimeUuid)
-			*allApplicationRunTimeUuids = tempAllApplicationRunTimeUuids
 
-		} else {
-
-			// Loop all 'ApplicationRunTimeUuid' to verify if incoming 'applicationRunTimeUuid' exists in slice
-			var foundApplicationRunTimeUuidInSlice bool
-			for _, tempApplicationRunTimeUuid := range *allApplicationRunTimeUuids {
-				if tempApplicationRunTimeUuid == applicationRunTimeUuid {
-					// 'applicationRunTimeUuid' existed in slice
-					foundApplicationRunTimeUuidInSlice = true
-					break
-				}
-			}
-
-			// if 'applicationRunTimeUuid' didn't exist in slice then add it to the slice
-			if foundApplicationRunTimeUuidInSlice == false {
-				*allApplicationRunTimeUuids = append(*allApplicationRunTimeUuids, applicationRunTimeUuid)
+		// Loop all 'ApplicationRunTimeUuid' to verify if incoming 'applicationRunTimeUuid' exists in slice
+		var foundApplicationRunTimeUuidInSlice bool
+		for _, tempApplicationRunTimeUuid := range *allApplicationRunTimeUuids {
+			if tempApplicationRunTimeUuid == applicationRunTimeUuid {
+				// 'applicationRunTimeUuid' existed in slice
+				foundApplicationRunTimeUuidInSlice = true
+				break
 			}
 		}
-	}
 
+		// if 'applicationRunTimeUuid' didn't exist in slice then add it to the slice
+		if foundApplicationRunTimeUuidInSlice == false {
+			*allApplicationRunTimeUuids = append(*allApplicationRunTimeUuids, applicationRunTimeUuid)
+		}
+	}
 }
 
-// Generates a slice with pointers to qll 'MessageToTesterGuiForwardChannel' for
+// Generates a slice with pointers to all 'MessageToTesterGuiForwardChannel' for
 // 'TestCaseExecutionUuidTestCaseExecutionVersion' contains  ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion')
 func whoIsSubscribingToTestCaseExecution(testCaseExecutionUuidTestCaseExecutionVersion string) (messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType) {
 
-	var applicationsRunTimeUuid *[]ApplicationRunTimeUuidType
+	var applicationsRunTimeUuidSlice *[]ApplicationRunTimeUuidType
 	var existInMap bool
 
 	// Extract slice of Applications that subscribes to combination of ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion')
-	//applicationsRunTimeUuid, existInMap = TestCaseExecutionsSubscriptionsMap[TestCaseExecutionsSubscriptionsMapKeyType(testCaseExecutionUuidTestCaseExecutionVersion)]
-	applicationsRunTimeUuid, existInMap = loadFromTestCaseExecutionsSubscriptionsMap(TestCaseExecutionsSubscriptionsMapKeyType(testCaseExecutionUuidTestCaseExecutionVersion))
+	//applicationsRunTimeUuidSlice, existInMap = TestCaseExecutionsSubscriptionsMap[TestCaseExecutionsSubscriptionsMapKeyType(testCaseExecutionUuidTestCaseExecutionVersion)]
+	applicationsRunTimeUuidSlice, existInMap = loadFromTestCaseExecutionsSubscriptionsMap(TestCaseExecutionsSubscriptionsMapKeyType(testCaseExecutionUuidTestCaseExecutionVersion))
 
 	if existInMap == false {
 		common_config.Logger.WithFields(logrus.Fields{
@@ -94,9 +88,9 @@ func whoIsSubscribingToTestCaseExecution(testCaseExecutionUuidTestCaseExecutionV
 		return messageToTesterGuiForwardChannels
 	}
 
-	// Loop Subscribing 'applicationsRunTimeUuid' to get their channel-reference
+	// Loop Subscribing 'applicationsRunTimeUuidSlice' to get their channel-reference
 	var tempApplicationRunTimeUuid ApplicationRunTimeUuidType
-	for _, tempApplicationRunTimeUuid = range *applicationsRunTimeUuid {
+	for _, tempApplicationRunTimeUuid = range *applicationsRunTimeUuidSlice {
 
 		// Get Channel-reference based on 'tempApplicationRunTimeUuid'
 		var tempTestCaseExecutionsSubscriptionChannelInformation *TestCaseExecutionsSubscriptionChannelInformationStruct
