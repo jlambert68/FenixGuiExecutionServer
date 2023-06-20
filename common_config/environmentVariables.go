@@ -29,3 +29,6 @@ var FenixGuiExecutionServerPort int
 var ExecutionLocationForFenixExecutionServer ExecutionLocationTypeType
 var FenixExecutionServerAddress string
 var FenixExecutionServerPort int
+
+var AuthClientId string
+var AuthClientSecret string
