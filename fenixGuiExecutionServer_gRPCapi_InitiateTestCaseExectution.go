@@ -45,6 +45,14 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		return initiateSingleTestCaseExecutionResponseMessage, nil
 	}
 
+	// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
+	broadcastEngine.AddSubscriptionForTestCaseExecutionToTesterGui(
+		broadcastEngine.ApplicationRunTimeUuidType(
+			initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
+		broadcastEngine.TestCaseExecutionUuidType(
+			initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
+		1)
+
 	go func() {
 		// Prepare message to be sent to ExecutionServer
 		var testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage
@@ -84,14 +92,6 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 
 			return //initiateSingleTestCaseExecutionResponseMessage, nil
 		}
-
-		// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
-		broadcastEngine.AddSubscriptionForTestCaseExecutionToTesterGui(
-			broadcastEngine.ApplicationRunTimeUuidType(
-				initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
-			broadcastEngine.TestCaseExecutionUuidType(
-				initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
-			1)
 
 	}()
 
