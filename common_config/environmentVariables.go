@@ -32,3 +32,5 @@ var FenixExecutionServerPort int
 
 var AuthClientId string
 var AuthClientSecret string
+
+var LogAllSQLs bool

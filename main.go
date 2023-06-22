@@ -124,4 +124,15 @@ func init() {
 	// Extract OAuth 2.0 Client Secret
 	common_config.AuthClientSecret = mustGetenv("AuthClientSecret")
 
+	// Should all SQL-queries be logged before executed
+	var tempBoolAsString string
+	var tempBool bool
+	tempBoolAsString = mustGetenv("LogAllSQLs")
+	tempBool, err = strconv.ParseBool(tempBoolAsString)
+	if err != nil {
+		fmt.Println("Couldn't convert environment variable 'LogAllSQLs' to a boolean, error: ", err)
+		os.Exit(0)
+	}
+	common_config.LogAllSQLs = tempBool
+
 }

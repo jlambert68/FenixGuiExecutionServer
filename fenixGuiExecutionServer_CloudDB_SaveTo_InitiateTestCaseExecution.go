@@ -251,6 +251,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	sqlToExecute = sqlToExecute + fenixGuiTestCaseBuilderServerObject.generateSQLInsertValues(dataRowsToBeInsertedMultiType)
 	sqlToExecute = sqlToExecute + ";"
 
+	// Log SQL to be executed if Environment variable is true
+	if common_config.LogAllSQLs == true {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "374c7116-2c1b-4ec8-9318-105d25c08aab",
+			"sqlToExecute": sqlToExecute,
+		}).Debug("SQL to be executed within 'saveInitiateTestCaseExecutionSaveToCloudDB'")
+	}
+
 	// Execute Query CloudDB
 	comandTag, err := dbTransaction.Exec(context.Background(), sqlToExecute)
 
@@ -301,6 +309,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	sqlToExecute = sqlToExecute + "TC.\"TestCaseVersion\" = (SELECT MAX(TC2.\"TestCaseVersion\") "
 	sqlToExecute = sqlToExecute + "FROM \"FenixBuilder\".\"TestCases\" TC2 "
 	sqlToExecute = sqlToExecute + "WHERE TC2.\"TestCaseUuid\" = '" + testCaseUuid + "');"
+
+	// Log SQL to be executed if Environment variable is true
+	if common_config.LogAllSQLs == true {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "e1955234-00ce-4cfd-a1de-cfae9bf46792",
+			"sqlToExecute": sqlToExecute,
+		}).Debug("SQL to be executed within 'loadTestCaseBasicInformation'")
+	}
 
 	// Query DB
 	//rows, err := fenixSyncShared.DbPool.Query(context.Background(), sqlToExecute)
