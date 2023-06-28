@@ -24,6 +24,17 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(
 	testCaseExecutionUuid TestCaseExecutionUuidType,
 	testCaseExecutionUuidVersion TestCaseExecutionUuidVersionType) {
 
+	common_config.Logger.WithFields(logrus.Fields{
+		"Id":                           "e1520a90-5f8b-4eb3-a128-ec57d6269658",
+		"applicationRunTimeUuid":       applicationRunTimeUuid,
+		"testCaseExecutionUuid":        testCaseExecutionUuid,
+		"testCaseExecutionUuidVersion": testCaseExecutionUuidVersion,
+	}).Debug("Incoming 'AddSubscriptionForTestCaseExecutionToTesterGui'")
+
+	common_config.Logger.WithFields(logrus.Fields{
+		"Id": "0d5708c3-3107-4487-a0b7-11b7e021a02d",
+	}).Debug("Outgoing 'AddSubscriptionForTestCaseExecutionToTesterGui'")
+
 	//var allApplicationRunTimeUuidsReference *[]ApplicationRunTimeUuidType
 	var allApplicationRunTimeUuids *[]ApplicationRunTimeUuidType
 
@@ -71,6 +82,15 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(
 // Generates a slice with pointers to all 'MessageToTesterGuiForwardChannel' for
 // 'TestCaseExecutionUuidTestCaseExecutionVersion' contains  ('TestCaseExecutionUuid' + 'TestCaseExecutionVersion')
 func whoIsSubscribingToTestCaseExecution(testCaseExecutionUuidTestCaseExecutionVersion string) (messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType) {
+
+	common_config.Logger.WithFields(logrus.Fields{
+		"Id": "4654a72b-2c23-4bd5-abd9-11af3897e6e4",
+		"testCaseExecutionUuidTestCaseExecutionVersion": testCaseExecutionUuidTestCaseExecutionVersion,
+	}).Debug("Incoming 'whoIsSubscribingToTestCaseExecution'")
+
+	common_config.Logger.WithFields(logrus.Fields{
+		"Id": "40a89c82-517d-4d60-8747-dbc41d228d63",
+	}).Debug("Outgoing 'whoIsSubscribingToTestCaseExecution'")
 
 	var applicationsRunTimeUuidSlice *[]ApplicationRunTimeUuidType
 	var existInMap bool
