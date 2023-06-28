@@ -719,6 +719,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var testCaseExecutionMapKey string
 	var testInstructionExecutionMapKey string
 	var existsInMap bool
+	var tempTestInstructionSendCounter int
 
 	// Variables to used when extract data from result set
 	var (
@@ -764,6 +765,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempTestInstructionExecutionsInformationMessage.TestInstructionExecutionHasFinished,
 			&tempQueueTimeStamp,
 			&tempExecutionPriority,
+			&tempTestInstructionSendCounter,
 		)
 
 		if err != nil {
