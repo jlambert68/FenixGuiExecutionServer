@@ -46,6 +46,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer timeOutCancel()
 
 	rows, err := dbTransaction.Query(ctx, sqlToExecute)
+	defer rows.Close()
 
 	if err != nil {
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
