@@ -1,7 +1,7 @@
 package main
 
 import (
-	"FenixGuiExecutionServer/broadcastEngine"
+	"FenixGuiExecutionServer/broadcastEngine_ExecutionStatusUpdate"
 	"FenixGuiExecutionServer/common_config"
 	"errors"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
@@ -35,37 +35,37 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 	}
 
 	// Check if TesterGui:s 'ApplicationRunTimeUuid' already exits
-	var testCaseExecutionsSubscriptionChannelInformation *broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationStruct
+	var testCaseExecutionsSubscriptionChannelInformation *broadcastEngine_ExecutionStatusUpdate.TestCaseExecutionsSubscriptionChannelInformationStruct
 	var existInMap bool
 
 	testCaseExecutionsSubscriptionChannelInformation, existInMap =
-		broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationMap[broadcastEngine.ApplicationRunTimeUuidType(
+		broadcastEngine_ExecutionStatusUpdate.TestCaseExecutionsSubscriptionChannelInformationMap[broadcastEngine_ExecutionStatusUpdate.ApplicationRunTimeUuidType(
 			userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid)]
 
 	if existInMap == true {
 		// Just recreate channel for incoming TestInstructionExecution from Execution Server for this TesterGui
-		var tempMessageToTesterGuiForwardChannel broadcastEngine.MessageToTesterGuiForwardChannelType
+		var tempMessageToTesterGuiForwardChannel broadcastEngine_ExecutionStatusUpdate.MessageToTesterGuiForwardChannelType
 		tempMessageToTesterGuiForwardChannel = make(
-			chan broadcastEngine.MessageToTestGuiForwardChannelStruct,
-			broadcastEngine.MessageToTesterGuiForwardChannelMaxSize)
+			chan broadcastEngine_ExecutionStatusUpdate.MessageToTestGuiForwardChannelStruct,
+			broadcastEngine_ExecutionStatusUpdate.MessageToTesterGuiForwardChannelMaxSize)
 		testCaseExecutionsSubscriptionChannelInformation.MessageToTesterGuiForwardChannel = &tempMessageToTesterGuiForwardChannel
 
 	} else {
 		// Create the full ChannelObject from scratch
-		var tempMessageToTesterGuiForwardChannel broadcastEngine.MessageToTesterGuiForwardChannelType
+		var tempMessageToTesterGuiForwardChannel broadcastEngine_ExecutionStatusUpdate.MessageToTesterGuiForwardChannelType
 		tempMessageToTesterGuiForwardChannel = make(
-			chan broadcastEngine.MessageToTestGuiForwardChannelStruct,
-			broadcastEngine.MessageToTesterGuiForwardChannelMaxSize)
+			chan broadcastEngine_ExecutionStatusUpdate.MessageToTestGuiForwardChannelStruct,
+			broadcastEngine_ExecutionStatusUpdate.MessageToTesterGuiForwardChannelMaxSize)
 
-		testCaseExecutionsSubscriptionChannelInformation = &broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationStruct{
-			ApplicationRunTimeUuid: broadcastEngine.ApplicationRunTimeUuidType(
+		testCaseExecutionsSubscriptionChannelInformation = &broadcastEngine_ExecutionStatusUpdate.TestCaseExecutionsSubscriptionChannelInformationStruct{
+			ApplicationRunTimeUuid: broadcastEngine_ExecutionStatusUpdate.ApplicationRunTimeUuidType(
 				userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid),
 			LastConnectionFromTesterGui:      time.Now().UTC(),
 			MessageToTesterGuiForwardChannel: &tempMessageToTesterGuiForwardChannel,
 		}
 
 		// Save ChannelObject in 'TestCaseExecutionsSubscriptionChannelInformationMap'
-		broadcastEngine.TestCaseExecutionsSubscriptionChannelInformationMap[broadcastEngine.ApplicationRunTimeUuidType(
+		broadcastEngine_ExecutionStatusUpdate.TestCaseExecutionsSubscriptionChannelInformationMap[broadcastEngine_ExecutionStatusUpdate.ApplicationRunTimeUuidType(
 			userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid)] = testCaseExecutionsSubscriptionChannelInformation
 
 	}
@@ -156,8 +156,8 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 			IsKeepAliveMessage:           true,
 			ExecutionsStatus:             nil,
 		}
-		var keepAliveMessageToTesterGui broadcastEngine.MessageToTestGuiForwardChannelStruct
-		keepAliveMessageToTesterGui = broadcastEngine.MessageToTestGuiForwardChannelStruct{
+		var keepAliveMessageToTesterGui broadcastEngine_ExecutionStatusUpdate.MessageToTestGuiForwardChannelStruct
+		keepAliveMessageToTesterGui = broadcastEngine_ExecutionStatusUpdate.MessageToTestGuiForwardChannelStruct{
 			SubscribeToMessagesStreamResponse: subscribeToMessagesStreamResponse,
 			IsKeepAliveMessage:                true,
 		}

@@ -1,4 +1,4 @@
-package broadcastEngine
+package broadcastEngine_ExecutionStatusUpdate
 
 import (
 	"FenixGuiExecutionServer/common_config"
@@ -58,6 +58,12 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(
 		//TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey] = &tempAllApplicationRunTimeUuids
 		saveToTestCaseExecutionsSubscriptionsMap(testCaseExecutionsSubscriptionsMapKey, &tempAllApplicationRunTimeUuids)
 
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":                                    "83afb447-fabf-492e-9464-967d2b3efc8f",
+			"testCaseExecutionsSubscriptionsMapKey": testCaseExecutionsSubscriptionsMapKey,
+			"tempAllApplicationRunTimeUuids":        tempAllApplicationRunTimeUuids,
+		}).Debug("No GUI is subscribing to TestInstructionExecution, adding Subscription")
+
 		//allApplicationRunTimeUuids = &tempAllApplicationRunTimeUuids
 
 	} else {
@@ -75,6 +81,12 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(
 		// if 'applicationRunTimeUuid' didn't exist in slice then add it to the slice
 		if foundApplicationRunTimeUuidInSlice == false {
 			*allApplicationRunTimeUuids = append(*allApplicationRunTimeUuids, applicationRunTimeUuid)
+
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                                    "15c12838-69bc-4d88-a473-4e4617de89c5",
+				"testCaseExecutionsSubscriptionsMapKey": testCaseExecutionsSubscriptionsMapKey,
+				"allApplicationRunTimeUuids":            *allApplicationRunTimeUuids,
+			}).Debug("No GUI is subscribing to TestInstructionExecution, adding Subscription")
 		}
 	}
 }

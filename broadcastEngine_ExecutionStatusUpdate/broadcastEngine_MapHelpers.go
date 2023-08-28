@@ -1,6 +1,9 @@
-package broadcastEngine
+package broadcastEngine_ExecutionStatusUpdate
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 var subscriptionsMapMutex = &sync.RWMutex{}
 
@@ -15,6 +18,13 @@ func loadFromTestCaseExecutionsSubscriptionsMap(
 
 	// Read Map
 	applicationsRunTimeUuid, existInMap = TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey]
+
+	if existInMap == false {
+		for x, y := range TestCaseExecutionsSubscriptionsMap {
+			yy := *y
+			fmt.Println(x, yy)
+		}
+	}
 
 	//UnLock Map
 	subscriptionsMapMutex.RUnlock()

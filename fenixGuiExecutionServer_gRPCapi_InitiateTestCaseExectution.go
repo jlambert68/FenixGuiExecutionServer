@@ -1,7 +1,7 @@
 package main
 
 import (
-	"FenixGuiExecutionServer/broadcastEngine"
+	"FenixGuiExecutionServer/broadcastEngine_ExecutionStatusUpdate"
 	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
 	"context"
@@ -46,10 +46,10 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 	}
 
 	// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
-	broadcastEngine.AddSubscriptionForTestCaseExecutionToTesterGui(
-		broadcastEngine.ApplicationRunTimeUuidType(
+	broadcastEngine_ExecutionStatusUpdate.AddSubscriptionForTestCaseExecutionToTesterGui(
+		broadcastEngine_ExecutionStatusUpdate.ApplicationRunTimeUuidType(
 			initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
-		broadcastEngine.TestCaseExecutionUuidType(
+		broadcastEngine_ExecutionStatusUpdate.TestCaseExecutionUuidType(
 			initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
 		1)
 

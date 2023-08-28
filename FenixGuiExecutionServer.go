@@ -1,7 +1,7 @@
 package main
 
 import (
-	"FenixGuiExecutionServer/broadcastEngine"
+	"FenixGuiExecutionServer/broadcastEngine_ExecutionStatusUpdate"
 	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/gcp"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
@@ -62,10 +62,10 @@ func fenixGuiExecutionServerMain() {
 	}
 
 	// Initiate the handler that 'knows' who is subscribing to which TestCaseExecutions, regarding status updates
-	broadcastEngine.InitiateSubscriptionHandler()
+	broadcastEngine_ExecutionStatusUpdate.InitiateSubscriptionHandler()
 
 	// Start listen for Broadcasts regarding change in status TestCaseExecutions and TestInstructionExecutions
-	broadcastEngine.InitiateAndStartBroadcastNotifyEngine()
+	broadcastEngine_ExecutionStatusUpdate.InitiateAndStartBroadcastNotifyEngine()
 
 	// When ExecutionServer runs on GCP, then set up access
 	if common_config.ExecutionLocationForFenixExecutionServer == common_config.GCP { //&&
