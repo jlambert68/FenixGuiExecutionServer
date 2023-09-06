@@ -111,7 +111,8 @@ func (messagesToExecutionServerObject *MessagesToExecutionServerObjectStruct) Se
 	for {
 
 		// Do gRPC-call to ExecutionServer
-		informThatThereAreNewTestCasesOnExecutionQueueResponse, err = FenixExecutionServerGrpcClient.InformThatThereAreNewTestCasesOnExecutionQueue(ctx, testCaseExecutionsToProcessMessage)
+		informThatThereAreNewTestCasesOnExecutionQueueResponse, err = FenixExecutionServerGrpcClient.
+			InformThatThereAreNewTestCasesOnExecutionQueue(ctx, testCaseExecutionsToProcessMessage)
 
 		// Exit when there was a success call
 		if err == nil && informThatThereAreNewTestCasesOnExecutionQueueResponse.AckNack == true {

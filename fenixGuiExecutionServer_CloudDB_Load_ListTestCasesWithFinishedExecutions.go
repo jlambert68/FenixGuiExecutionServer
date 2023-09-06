@@ -75,6 +75,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempExecutionStatusUpdateTimeStamp time.Time
 
 	var tempUniqueCounter int
+	var tempExecutionStatusReportLevelEnum int
 
 	// Extract data from DB result set
 	for rows.Next() {
@@ -109,6 +110,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&testCaseExecutionDetails.ExecutionHasFinished,
 			&tempUniqueCounter,
 			&tempExecutionStatusUpdateTimeStamp,
+
+			// ReportLevel
+			&tempExecutionStatusReportLevelEnum,
 		)
 
 		if err != nil {
