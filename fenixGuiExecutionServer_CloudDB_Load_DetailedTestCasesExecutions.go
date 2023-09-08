@@ -594,6 +594,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempPlacedOnTestInstructionExecutionQueueTimeStamp time.Time
 	var tempExecutionPriority int
 	var tempUniqueCounter int
+	var tempExecutionStatusReportLevel fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum
 
 	// Extract data from DB result set
 	for rows.Next() {
@@ -618,6 +619,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&testInstructionExecutionBasicInformation.TestInstructionExecutionOrder,
 			&tempUniqueCounter,
 			&testInstructionExecutionBasicInformation.TestInstructionOriginalUuid,
+			&tempExecutionStatusReportLevel,
 		)
 
 		if err != nil {
@@ -761,6 +763,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		tempTestInstructionExecutionEndTimeStamp *time.Time
 		tempQueueTimeStamp                       *time.Time
 		tempExecutionPriority                    *int
+		tempExecutionStatusReportLevel           fenixExecutionServerGuiGrpcApi.ExecutionStatusReportLevelEnum
 	)
 
 	// Extract data from DB result set
@@ -796,6 +799,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempQueueTimeStamp,
 			&tempExecutionPriority,
 			&tempTestInstructionSendCounter,
+			&tempExecutionStatusReportLevel,
 		)
 
 		if err != nil {

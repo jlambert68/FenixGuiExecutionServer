@@ -167,7 +167,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 		for {
 
 			// Sleep for 15 seconds before continue
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * 60)
 
 			// If we haven't got an answer from TesterGui in 30 seconds then it must be down.
 			// We can get in this state if 'MessageToTesterGuiForwardChannel' is full and nobody picks the message from queue
