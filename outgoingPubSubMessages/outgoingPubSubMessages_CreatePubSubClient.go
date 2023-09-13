@@ -5,6 +5,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"crypto/tls"
+	"errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -13,7 +14,17 @@ import (
 
 func creatNewPubSubClient(ctx context.Context, pubSubClient *pubsub.Client) (err error) {
 
-	projectID := common_config.GcpProject
+	// Check that some type of initialization has been done
+	if len(gcpProject) == 0 {
+		common_config.Logger.WithFields(logrus.Fields{
+			"ID":         "6f2e61ea-e768-446c-a8e2-f5d810b37271",
+			"gcpProject": gcpProject,
+		}).Error("The variable 'gcpProject' is not initialized")
+
+		return errors.New("the variable 'gcpProject' is not initialized")
+	}
+
+	projectID := gcpProject
 
 	var opts []grpc.DialOption
 
