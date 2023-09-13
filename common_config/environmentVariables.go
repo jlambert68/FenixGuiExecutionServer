@@ -34,3 +34,19 @@ var AuthClientId string
 var AuthClientSecret string
 
 var LogAllSQLs bool
+
+// GcpProject
+// The GCP-project
+var GcpProject string
+
+// UsePubSubWhenSendingExecutionStatus
+// Should PubSub be used for sending 'TestExecutionsStatus' to TesterGui
+var UsePubSubWhenSendingExecutionStatus bool
+
+// TestExecutionStatusPubSubTopicBase
+// Extract PubSub-Topic-base for where to send the 'TestExecutionsStatus'
+var TestExecutionStatusPubSubTopicBase string
+
+// LocalServiceAccountPath
+// Extract local path to Service-Account file
+var LocalServiceAccountPath string
