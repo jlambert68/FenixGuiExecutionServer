@@ -5,18 +5,19 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 // Creates a Topic
-func createTopicSubscription(topicID string) (err error) {
+func createTopicSubscription(topicID string, deadLetterinTopicID string) (err error) {
 
-	topicSubscriptionId := "topicID" + "-sub"
+	topicSubscriptionId := topicID + "-sub"
 
 	ctx := context.Background()
 
 	// Create a new PubSub-client
 	var pubSubClient *pubsub.Client
-	err = creatNewPubSubClient(ctx, pubSubClient)
+	pubSubClient, err = creatNewPubSubClient(ctx)
 
 	if err != nil {
 
@@ -34,25 +35,35 @@ func createTopicSubscription(topicID string) (err error) {
 	var topic *pubsub.Topic
 	topic = pubSubClient.Topic(topicID)
 
+	// Get the DeadLettering-Topic object
+	var deadLetteringTopic *pubsub.Topic
+	deadLetteringTopic = pubSubClient.Topic(deadLetterinTopicID)
+
 	// Set up Subscription parameters
 	var subscriptionConfig pubsub.SubscriptionConfig
 	subscriptionConfig = pubsub.SubscriptionConfig{
-		Topic:                         topic,
-		PushConfig:                    pubsub.PushConfig{},
-		BigQueryConfig:                pubsub.BigQueryConfig{},
-		CloudStorageConfig:            pubsub.CloudStorageConfig{},
-		AckDeadline:                   0,
-		RetainAckedMessages:           false,
-		RetentionDuration:             0,
-		ExpirationPolicy:              nil,
-		Labels:                        nil,
-		EnableMessageOrdering:         false,
-		DeadLetterPolicy:              nil,
-		Filter:                        "",
-		RetryPolicy:                   nil,
+		Topic:                 topic,
+		PushConfig:            pubsub.PushConfig{},
+		BigQueryConfig:        pubsub.BigQueryConfig{},
+		CloudStorageConfig:    pubsub.CloudStorageConfig{},
+		AckDeadline:           time.Duration(time.Second * 60),
+		RetainAckedMessages:   false,
+		RetentionDuration:     0,
+		ExpirationPolicy:      nil,
+		Labels:                nil,
+		EnableMessageOrdering: false,
+		DeadLetterPolicy: &pubsub.DeadLetterPolicy{
+			DeadLetterTopic:     deadLetteringTopic.String(),
+			MaxDeliveryAttempts: 5,
+		},
+		Filter: "",
+		RetryPolicy: &pubsub.RetryPolicy{
+			MinimumBackoff: nil,
+			MaximumBackoff: nil,
+		},
 		Detached:                      false,
 		TopicMessageRetentionDuration: 0,
-		EnableExactlyOnceDelivery:     false,
+		EnableExactlyOnceDelivery:     true,
 		State:                         0,
 	}
 

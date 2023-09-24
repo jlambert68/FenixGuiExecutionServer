@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func creatNewPubSubClient(ctx context.Context, pubSubClient *pubsub.Client) (err error) {
+func creatNewPubSubClient(ctx context.Context) (pubSubClient *pubsub.Client, err error) {
 
 	// Check that some type of initialization has been done
 	if len(gcpProject) == 0 {
@@ -21,7 +21,7 @@ func creatNewPubSubClient(ctx context.Context, pubSubClient *pubsub.Client) (err
 			"gcpProject": gcpProject,
 		}).Error("The variable 'gcpProject' is not initialized")
 
-		return errors.New("the variable 'gcpProject' is not initialized")
+		return nil, errors.New("the variable 'gcpProject' is not initialized")
 	}
 
 	projectID := gcpProject
@@ -47,8 +47,8 @@ func creatNewPubSubClient(ctx context.Context, pubSubClient *pubsub.Client) (err
 			"err": err,
 		}).Error("Got some problem when creating 'pubsub.NewClient'")
 
-		return err
+		return nil, err
 	}
 
-	return err
+	return pubSubClient, err
 }

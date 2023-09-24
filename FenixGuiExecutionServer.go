@@ -5,6 +5,7 @@ import (
 	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/gcp"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
+	pubsub "FenixGuiExecutionServer/outgoingPubSubMessages"
 	"context"
 	"fmt"
 	uuidGenerator "github.com/google/uuid"
@@ -56,7 +57,9 @@ func fenixGuiExecutionServerMain() {
 	// Clean up when leaving. Is placed after logger because shutdown logs information
 	defer cleanup()
 
-	// Initiate 'MessagesToExecutionServerObject' tfor messages to be sent to ExecutionServer
+	pubsub.MyTestPubSubFunctions()
+
+	// Initiate 'MessagesToExecutionServerObject' for messages to be sent to ExecutionServer
 	messagesToExecutionServer.MessagesToExecutionServerObject = messagesToExecutionServer.MessagesToExecutionServerObjectStruct{
 		Logger: fenixGuiExecutionServerObject.logger,
 	}

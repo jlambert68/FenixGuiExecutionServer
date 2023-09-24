@@ -15,7 +15,7 @@ func deleteTopic(topicID string) (err error) {
 
 	// Create a new PubSub-client
 	var pubSubClient *pubsub.Client
-	err = creatNewPubSubClient(ctx, pubSubClient)
+	pubSubClient, err = creatNewPubSubClient(ctx)
 
 	if err != nil {
 

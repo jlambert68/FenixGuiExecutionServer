@@ -16,7 +16,7 @@ func listSubscriptions(topicID string) (pubSubTopicSubscriptions []*pubsub.Subsc
 
 	// Create a new PubSub-client
 	var pubSubClient *pubsub.Client
-	err = creatNewPubSubClient(ctx, pubSubClient)
+	pubSubClient, err = creatNewPubSubClient(ctx)
 
 	if err != nil {
 

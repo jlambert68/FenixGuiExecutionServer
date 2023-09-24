@@ -4,6 +4,7 @@ import (
 	"FenixGuiExecutionServer/common_config"
 	"cloud.google.com/go/pubsub"
 	"context"
+	"errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,16 +15,27 @@ func createTopic(topicID string) (err error) {
 
 	// Create a new PubSub-client
 	var pubSubClient *pubsub.Client
-	err = creatNewPubSubClient(ctx, pubSubClient)
+	pubSubClient, err = creatNewPubSubClient(ctx)
 
 	if err != nil {
 
 		common_config.Logger.WithFields(logrus.Fields{
-			"ID":  "b5c955cb-2b2b-47e0-a908-1294da40c930",
-			"err": err,
+			"ID":           "b5c955cb-2b2b-47e0-a908-1294da40c930",
+			"err":          err,
+			"pubSubClient": pubSubClient,
 		}).Error("Got some problem when creating 'pubsub.NewClient'")
 
 		return err
+	}
+
+	if pubSubClient == nil {
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"ID":           "50b55582-70ce-4864-9709-b8bc79fd2382",
+			"pubSubClient": pubSubClient,
+		}).Error("Got some problem when creating 'pubsub.NewClient'")
+
+		return errors.New("got some problem when creating 'pubsub.NewClient'")
 	}
 
 	defer pubSubClient.Close()
