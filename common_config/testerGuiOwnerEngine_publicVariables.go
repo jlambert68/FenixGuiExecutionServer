@@ -1,4 +1,4 @@
-package testerGuiOwnerEngine
+package common_config
 
 import "time"
 

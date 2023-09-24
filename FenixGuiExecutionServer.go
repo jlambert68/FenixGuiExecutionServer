@@ -6,6 +6,7 @@ import (
 	"FenixGuiExecutionServer/gcp"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
 	pubsub "FenixGuiExecutionServer/outgoingPubSubMessages"
+	"FenixGuiExecutionServer/testerGuiOwnerEngine"
 	"context"
 	"fmt"
 	uuidGenerator "github.com/google/uuid"
@@ -58,6 +59,9 @@ func fenixGuiExecutionServerMain() {
 	defer cleanup()
 
 	pubsub.MyTestPubSubFunctions()
+
+	// Start TesterGuiOwnerEngine
+	testerGuiOwnerEngine.InitiateTesterGuiOwnerEngine()
 
 	// Initiate 'MessagesToExecutionServerObject' for messages to be sent to ExecutionServer
 	messagesToExecutionServer.MessagesToExecutionServerObject = messagesToExecutionServer.MessagesToExecutionServerObjectStruct{
