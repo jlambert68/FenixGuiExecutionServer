@@ -2,6 +2,7 @@ package common_config
 
 import "time"
 
+/*
 // TestInstructionTesterGuiOwnerEngineEngineObjectStruct
 // The struct for the object that hold all functions together within the TesterGuiOwnerEngineEngine
 type TestInstructionTesterGuiOwnerEngineEngineObjectStruct struct {
@@ -10,10 +11,10 @@ type TestInstructionTesterGuiOwnerEngineEngineObjectStruct struct {
 // TestInstructionExecutionTesterGuiOwnerEngineEngineObject
 // The object that hold all functions together within the TesterGuiOwnerEngineEngine
 var TestInstructionExecutionTesterGuiOwnerEngineEngineObject TestInstructionTesterGuiOwnerEngineEngineObjectStruct
+*/
 
-// TesterGuiOwnerEngineChannelEngineCommandChannelReferenceSlice
-// A slice with references to  channels for the TestInstructionExecutionEngine
-// Each position in slice represents one execution track
+// TesterGuiOwnerEngineChannelEngineCommandChannel
+// The channels for the TestInstructionExecutionEngine
 var TesterGuiOwnerEngineChannelEngineCommandChannel TesterGuiOwnerEngineChannelEngineType
 
 // TesterGuiOwnerEngineChannelEngineType

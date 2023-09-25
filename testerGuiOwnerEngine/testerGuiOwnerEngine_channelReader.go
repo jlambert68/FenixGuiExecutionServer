@@ -6,10 +6,16 @@ import (
 )
 
 // Channel reader which is used for reading out commands to TesterGuiOwnerEngine
-func (testInstructionExecutionTesterGuiOwnerEngineEngineObject *common_config.TestInstructionTesterGuiOwnerEngineEngineObjectStruct) startTesterGuiOwnerEngineChannelReader() {
+func startTesterGuiOwnerEngineChannelReader() {
 
 	var incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct
 	var channelSize int
+
+	// If the channel is not initialized then do that
+	if common_config.TesterGuiOwnerEngineChannelEngineCommandChannel == nil {
+		common_config.TesterGuiOwnerEngineChannelEngineCommandChannel = make(
+			common_config.TesterGuiOwnerEngineChannelEngineType, common_config.TesterGuiOwnerEngineChannelSize)
+	}
 
 	for {
 		// Wait for incoming command over channel
