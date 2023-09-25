@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-// InitiateAndStartBroadcastNotifyEngine
+// InitiateAndStartBroadcastChannel1ListenerEngine
 // Start listen for Broadcasts regarding Channel 1
-// MessageForSomeoneIsClosingDown
+// 'MessageForSomeoneIsClosingDown'
 func InitiateAndStartBroadcastChannel1ListenerEngine() {
 
 	go func() {
 		for {
-			err := BroadcastListener()
+			err := broadcastListenerChannel1()
 			if err != nil {
 
 				common_config.Logger.WithFields(logrus.Fields{
@@ -30,7 +30,8 @@ func InitiateAndStartBroadcastChannel1ListenerEngine() {
 	}()
 }
 
-func BroadcastListener() error {
+// Listener for Channel 1
+func broadcastListenerChannel1() error {
 
 	var err error
 	var broadcastMessageForSomeoneIsClosingDown BroadcastMessageForSomeoneIsClosingDownStruct
@@ -66,7 +67,7 @@ func BroadcastListener() error {
 			"accepted message from pid": notification.PID,
 			"channel":                   notification.Channel,
 			"payload":                   notification.Payload,
-		}).Debug("Got Broadcast message from Postgres Database")
+		}).Debug("Got Broadcast message from Postgres Database, on Channel 1")
 
 		err = json.Unmarshal([]byte(notification.Payload), &broadcastMessageForSomeoneIsClosingDown)
 		if err != nil {

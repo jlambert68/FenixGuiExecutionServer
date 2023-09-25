@@ -13,7 +13,7 @@ const (
 )
 
 // // The following message is sent over Postgres Broadcast system, TesterGuiOwner-Channel 2
-type BroadcastMesageForPostgresChannel2Message struct {
+type BroadcastMesageForPostgresChannel2MessageStruct struct {
 	PostgresChannel2MessageMessageType                                 PostgresChannel2MessageMessageTypeType                                   `json:"postgreschannel2messagemessagetype"`
 	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct `json:"thisguiexecutionservertakesthisuserandtestcaseexecutioncombination"`
 	UserUnsubscribesToUserAndTestCaseExecutionCombination              UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct              `json:"userunsubscribestouserandtestcaseexecutioncombination"`
