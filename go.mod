@@ -9,15 +9,15 @@ require (
 	github.com/gorilla/pat v1.0.1
 	github.com/gorilla/sessions v1.2.1
 	github.com/jackc/pgx/v4 v4.18.1
-	github.com/jlambert68/FenixGrpcApi v0.0.0-20230911114029-614faa616708
+	github.com/jlambert68/FenixGrpcApi v0.0.0-20230925141324-2f6ec9901c20
 	github.com/jlambert68/FenixSyncShared v0.0.0-20230703094150-8d1c9829298f
 	github.com/markbates/goth v1.78.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/toqueteos/webbrowser v1.2.0
 	golang.org/x/net v0.15.0
 	golang.org/x/oauth2 v0.12.0
-	google.golang.org/api v0.140.0
-	google.golang.org/grpc v1.58.0
+	google.golang.org/api v0.142.0
+	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -52,5 +52,5 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230911183012-2d3300fd4832 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230913181813-007df8e322eb // indirect
 )
