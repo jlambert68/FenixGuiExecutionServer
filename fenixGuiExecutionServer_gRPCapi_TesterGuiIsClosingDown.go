@@ -5,6 +5,7 @@ import (
 	"context"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 // TesterGuiIsClosingDown
@@ -34,6 +35,26 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsClosingDown(
 		// Exiting
 		return returnMessage, nil
 	}
+
+	// Put message on 'testGuiExecutionEngineChannel' to be processed
+	var tempSomeoneIsClosingDown common_config.SomeoneIsClosingDownStruct
+	tempSomeoneIsClosingDown = common_config.SomeoneIsClosingDownStruct{
+		WhoISClosingDown: common_config.TesterGui,
+		ApplicationId:    userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid,
+		UserId:           userID,
+		MessageTimeStamp: time.Time{},
+	}
+
+	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
+	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
+		TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_UserIsClosingDown,
+		SomeoneIsClosingDown:               &tempSomeoneIsClosingDown,
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+	}
+
+	// Put on EngineChannel
+	common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
 
 	// Create Return message
 	returnMessage = &fenixExecutionServerGuiGrpcApi.AckNackResponse{

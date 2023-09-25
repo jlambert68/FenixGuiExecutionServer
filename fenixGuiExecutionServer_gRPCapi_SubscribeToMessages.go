@@ -5,6 +5,7 @@ import (
 	"context"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 // SubscribeToMessages
@@ -33,6 +34,34 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessages(
 	if returnMessage != nil {
 		// Exiting
 		return returnMessage, nil
+	}
+
+	// Loop all TestCaseExecutions, to subscribe to, and put them 'testGuiExecutionEngineChannel' to be processed
+	for _, tempTestCaseExecutionsStatusSubscriptions := range subscribeToMessagesRequest.TestCaseExecutionsStatusSubscriptions {
+
+		var tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.
+			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
+		tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = common_config.
+			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{
+			TesterGuiApplicationId:          subscribeToMessagesRequest.ApplicationRunTimeIdentification.ApplicationRunTimeUuid,
+			UserId:                          userID,
+			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
+			TestCaseExecutionUuid:           tempTestCaseExecutionsStatusSubscriptions.GetTestCaseExecutionUuid(),
+			TestCaseExecutionVersion:        string(tempTestCaseExecutionsStatusSubscriptions.GetTestCaseExecutionVersion()),
+			MessageTimeStamp:                time.Now(),
+		}
+
+		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
+		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
+			TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination,
+			SomeoneIsClosingDown:               nil,
+			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: &tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
+			UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+		}
+
+		// Put on EngineChannel
+		common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
+
 	}
 
 	// Create Return message
