@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-// SomeoneIsClosingDownStruct
+// BroadcastMessageForSomeoneIsClosingDownStruct
 // The following message is sent over Postgres Broadcast system, TesterGuiOwner-Channel 1
 // Used to specify an GuiExecutionServer or a TesterGui that is Closing Down
-type SomeoneIsClosingDownStruct struct {
+type BroadcastMessageForSomeoneIsClosingDownStruct struct {
 	WhoISClosingDown common_config.WhoISClosingDownType `json:"whoisclosingdown"`
 	ApplicationId    string                             `json:"applicationid"`
 	UserId           string                             `json:"userid"`

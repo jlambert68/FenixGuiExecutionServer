@@ -81,6 +81,9 @@ func startTesterGuiOwnerEngineChannelReader() {
 				"incomingTesterGuiOwnerEngineChannelCommand": incomingTesterGuiOwnerEngineChannelCommand,
 			}).Fatalln("Unknown command in TesterGuiOwnerEngineChannel for TesterGuiOwnerEngine")
 		}
+
+		// Clear memory for Message
+		incomingTesterGuiOwnerEngineChannelCommand = nil
 	}
 }
 
