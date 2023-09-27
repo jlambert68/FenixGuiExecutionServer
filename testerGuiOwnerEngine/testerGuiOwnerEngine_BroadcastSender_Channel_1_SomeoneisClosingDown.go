@@ -8,21 +8,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func broadcastSenderForChannel1(tempSomeoneIsClosingDown *common_config.SomeoneIsClosingDownStruct) (err error) {
+// Sends a message over Postgres Broadcast system to other running GuiExecutionServers that a specific TesterGui is Closing down
+func broadcastSenderForChannel1_TesterGuiIsClosingDown(tempTesterGuiIsClosingDown *common_config.TesterGuiIsClosingDownStruct) (err error) {
 
 	// Convert into Broadcast message type
-	var broadcastMessageForSomeoneIsClosingDown BroadcastMessageForSomeoneIsClosingDownStruct
-	broadcastMessageForSomeoneIsClosingDown = BroadcastMessageForSomeoneIsClosingDownStruct{
-		WhoISClosingDown: tempSomeoneIsClosingDown.WhoISClosingDown,
-		ApplicationId:    tempSomeoneIsClosingDown.ApplicationId,
-		UserId:           tempSomeoneIsClosingDown.UserId,
-		MessageTimeStamp: tempSomeoneIsClosingDown.MessageTimeStamp,
+	var broadcastMessageForTesterGuiIsClosingDown BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForTesterGuiIsClosingDown = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType: 0,
+		TesterGuiIsClosingDown:                              TesterGuiIsClosingDownStruct{},
+		GuiExecutionServerIsClosingDown:                     GuiExecutionServerIsClosingDownStruct{},
 	}
 
 	// Create json as string
 	var broadcastMessageForSomeoneIsClosingDownAsByteSlice []byte
 	var broadcastMessageForSomeoneIsClosingDownAsByteSliceAsString string
-	broadcastMessageForSomeoneIsClosingDownAsByteSlice, err = json.Marshal(broadcastMessageForSomeoneIsClosingDown)
+	broadcastMessageForSomeoneIsClosingDownAsByteSlice, err = json.Marshal(broadcastMessageForTesterGuiIsClosingDown)
 	if err != nil {
 
 		common_config.Logger.WithFields(logrus.Fields{

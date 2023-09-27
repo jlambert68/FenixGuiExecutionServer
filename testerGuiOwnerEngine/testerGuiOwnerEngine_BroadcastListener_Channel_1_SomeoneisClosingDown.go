@@ -34,7 +34,7 @@ func InitiateAndStartBroadcastChannel1ListenerEngine() {
 func broadcastListenerChannel1() error {
 
 	var err error
-	var broadcastMessageForSomeoneIsClosingDown BroadcastMessageForSomeoneIsClosingDownStruct
+	var broadcastMessageForSomeoneIsClosingDown BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
 
 	if fenixSyncShared.DbPool == nil {
 		return errors.New("empty pool reference")
@@ -97,6 +97,7 @@ func broadcastListenerChannel1() error {
 						ApplicationId:    broadcastMessageForSomeoneIsClosingDown.ApplicationId,
 						UserId:           broadcastMessageForSomeoneIsClosingDown.UserId,
 						MessageTimeStamp: broadcastMessageForSomeoneIsClosingDown.MessageTimeStamp,
+						CurrentGuiExecutionServerIsClosingDownReturnChannel: nil,
 					}
 
 					// Put message on 'testGuiExecutionEngineChannel' to be processed
@@ -132,6 +133,7 @@ func broadcastListenerChannel1() error {
 						ApplicationId:    broadcastMessageForSomeoneIsClosingDown.ApplicationId,
 						UserId:           broadcastMessageForSomeoneIsClosingDown.UserId,
 						MessageTimeStamp: broadcastMessageForSomeoneIsClosingDown.MessageTimeStamp,
+						CurrentGuiExecutionServerIsClosingDownReturnChannel: nil,
 					}
 
 					// Put message on 'testGuiExecutionEngineChannel' to be processed

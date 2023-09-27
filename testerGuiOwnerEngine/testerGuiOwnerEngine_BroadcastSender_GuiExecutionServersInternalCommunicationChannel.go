@@ -10,14 +10,29 @@ import (
 
 // Broadcast message to all other GuiExecutionServers that 'ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
 func broadcastSenderForChannel2_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
-	tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct) (
+	tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct) (
 	err error) {
 
 	// Convert into Broadcast message type
-	var broadcastMessageForSomeoneIsClosingDown BroadcastMesageForPostgresChannel2MessageStruct
-	broadcastMessageForSomeoneIsClosingDown = BroadcastMesageForPostgresChannel2MessageStruct{
+	var tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
+	tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{
+		TesterGuiApplicationId:          tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.TesterGuiApplicationId,
+		UserId:                          tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.UserId,
+		GuiExecutionServerApplicationId: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.GuiExecutionServerApplicationId,
+		TestCaseExecutionUuid:           tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.TestCaseExecutionUuid,
+		TestCaseExecutionVersion:        tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.TestCaseExecutionVersion,
+		MessageTimeStamp:                tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.MessageTimeStamp,
+	}
+	var broadcastMessageForSomeoneIsClosingDown Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct
+	broadcastMessageForSomeoneIsClosingDown = Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct{
 		PostgresChannel2MessageMessageType:                                 ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage,
 		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+	}
+
+	broadcastMessageForSomeoneIsClosingDown = Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct{
+		PostgresChannel2MessageMessageType:                                 0,
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
 	}
 
@@ -29,12 +44,22 @@ func broadcastSenderForChannel2_ThisGuiExecutionServerTakesThisUserAndTestCaseEx
 
 // Broadcast message to all other GuiExecutionServers that 'UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage'
 func broadcastSenderForChannel2_UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage(
-	tempUserUnsubscribesToUserAndTestCaseExecutionCombination UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct) (
+	userUnsubscribesToUserAndTestCaseExecutionCombination common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct) (
 	err error) {
 
 	// Convert into Broadcast message type
-	var broadcastMessageForUnsubscribesToUserAndTestCaseExecutionCombination BroadcastMesageForPostgresChannel2MessageStruct
-	broadcastMessageForUnsubscribesToUserAndTestCaseExecutionCombination = BroadcastMesageForPostgresChannel2MessageStruct{
+	var tempUserUnsubscribesToUserAndTestCaseExecutionCombination UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
+	tempUserUnsubscribesToUserAndTestCaseExecutionCombination = UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{
+		TesterGuiApplicationId:          userUnsubscribesToUserAndTestCaseExecutionCombination.TesterGuiApplicationId,
+		UserId:                          userUnsubscribesToUserAndTestCaseExecutionCombination.UserId,
+		GuiExecutionServerApplicationId: userUnsubscribesToUserAndTestCaseExecutionCombination.GuiExecutionServerApplicationId,
+		TestCaseExecutionUuid:           userUnsubscribesToUserAndTestCaseExecutionCombination.TestCaseExecutionUuid,
+		TestCaseExecutionVersion:        userUnsubscribesToUserAndTestCaseExecutionCombination.TestCaseExecutionVersion,
+		MessageTimeStamp:                userUnsubscribesToUserAndTestCaseExecutionCombination.MessageTimeStamp,
+	}
+
+	var broadcastMessageForUnsubscribesToUserAndTestCaseExecutionCombination Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct
+	broadcastMessageForUnsubscribesToUserAndTestCaseExecutionCombination = Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct{
 		PostgresChannel2MessageMessageType:                                 UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage,
 		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              tempUserUnsubscribesToUserAndTestCaseExecutionCombination,
@@ -47,7 +72,9 @@ func broadcastSenderForChannel2_UserUnsubscribesToUserAndTestCaseExecutionCombin
 }
 
 // Broadcast message on Channel 2
-func broadcastSenderForChannel2(broadcastMesageForPostgresChannel2Message *BroadcastMesageForPostgresChannel2MessageStruct) (err error) {
+func broadcastSenderForChannel2(
+	broadcastMesageForPostgresChannel2Message *Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct) (
+	err error) {
 
 	// Create json as string
 	var broadcastMessageForPostgresChannel2AsByteSlice []byte

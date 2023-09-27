@@ -42,7 +42,8 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsClosingDown(
 		WhoISClosingDown: common_config.TesterGui,
 		ApplicationId:    userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid,
 		UserId:           userID,
-		MessageTimeStamp: time.Time{},
+		MessageTimeStamp: time.Now(),
+		CurrentGuiExecutionServerIsClosingDownReturnChannel: nil,
 	}
 
 	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct

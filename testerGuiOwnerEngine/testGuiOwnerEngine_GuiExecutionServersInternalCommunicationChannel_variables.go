@@ -1,50 +1,33 @@
-package common_config
+package testerGuiOwnerEngine
 
-import "time"
-
-/*
-// TestInstructionTesterGuiOwnerEngineEngineObjectStruct
-// The struct for the object that hold all functions together within the TesterGuiOwnerEngineEngine
-type TestInstructionTesterGuiOwnerEngineEngineObjectStruct struct {
-}
-
-// TestInstructionExecutionTesterGuiOwnerEngineEngineObject
-// The object that hold all functions together within the TesterGuiOwnerEngineEngine
-var TestInstructionExecutionTesterGuiOwnerEngineEngineObject TestInstructionTesterGuiOwnerEngineEngineObjectStruct
-*/
-
-// TesterGuiOwnerEngineChannelEngineCommandChannel
-// The channels for the TestInstructionExecutionEngine
-var TesterGuiOwnerEngineChannelEngineCommandChannel TesterGuiOwnerEngineChannelEngineType
-
-// TesterGuiOwnerEngineChannelEngineType
-// The channel type
-type TesterGuiOwnerEngineChannelEngineType chan *TesterGuiOwnerEngineChannelCommandStruct
-
-// TesterGuiOwnerEngineChannelCommandType
-// The type for the constants used within the message sent in the TesterGuiOwnerEngineChannel
-type TesterGuiOwnerEngineChannelCommandType uint8
-
-const (
-	ChannelCommand_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination TesterGuiOwnerEngineChannelCommandType = iota
-	ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination
-	ChannelCommand_ThisGuiExecutionServerIsClosingDown
-	ChannelCommand_AnotherGuiExecutionServerIsClosingDown
-	ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination
-	ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination
-	ChannelCommand_UserIsClosingDown
+import (
+	"FenixGuiExecutionServer/common_config"
 )
 
-// TesterGuiOwnerEngineChannelCommandStruct
-// The struct for the message that are sent over the channel to the TesterGuiOwnerEngineEngine
-type TesterGuiOwnerEngineChannelCommandStruct struct {
-	TesterGuiOwnerEngineChannelCommand                                 TesterGuiOwnerEngineChannelCommandType
-	TesterGuiIsClosingDown                                             *TesterGuiIsClosingDownStruct
-	GuiExecutionServerIsClosingDown                                    *GuiExecutionServerIsClosingDownStruct
-	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination *ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
-	UserUnsubscribesToUserAndTestCaseExecutionCombination              *UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
+// GuiExecutionServersInternalCommunicationChannelTypeType
+// The type for the constants used within the message sent in the 'BroadcastMessageForSomeoneIsClosingDownMessage'
+type GuiExecutionServersInternalCommunicationChannelTypeType uint8
+
+// The specified of application that is closing down
+const (
+	TesterGuiIsClosingDownMessage GuiExecutionServersInternalCommunicationChannelTypeType = iota
+	GuiExecutionServerIsClosingDownMessage
+	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage
+	UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage
+)
+
+// BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+// The following message is sent over Postgres Broadcast system, 'Channel 1'
+// Used to specify that a TesterGui or GuiExecutionServer is Closing Down
+type BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct struct {
+	GuiExecutionServersInternalCommunicationChannelType                GuiExecutionServersInternalCommunicationChannelTypeType                                `json:"guiexecutionserversinternalcommunicationchanneltype"`
+	TesterGuiIsClosingDown                                             common_config.TesterGuiIsClosingDownStruct                                             `json:"testerguiisclosingdown"`
+	GuiExecutionServerIsClosingDown                                    common_config.GuiExecutionServerIsClosingDownStruct                                    `json:"guiexecutionserverisclosingdown"`
+	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct `json:"thisguiexecutionservertakesthisuserandtestcaseexecutioncombination"`
+	UserUnsubscribesToUserAndTestCaseExecutionCombination              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct              `json:"userunsubscribestouserandtestcaseexecutioncombination"`
 }
 
+/*
 // TesterGuiIsClosingDownStruct
 // The following message is sent over Postgres Broadcast system and over TesterGuiOwnerEngine-channel
 // Used to specify that a TesterGui is Closing Down
@@ -95,10 +78,5 @@ type UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct struct {
 	MessageTimeStamp                time.Time `json:"messagetimestamp"`
 }
 
-// TesterGuiOwnerEngineChannelSize
-// The size of the channel
-const TesterGuiOwnerEngineChannelSize = 100
 
-// TesterGuiOwnerEngineChannelWarningLevel
-// The size of warning level for the channel
-const TesterGuiOwnerEngineChannelWarningLevel = 90
+*/

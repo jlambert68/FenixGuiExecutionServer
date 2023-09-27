@@ -63,6 +63,39 @@ func fenixGuiExecutionServerMain() {
 	// Start TesterGuiOwnerEngine
 	testerGuiOwnerEngine.InitiateTesterGuiOwnerEngine()
 
+	// Send that this 'GuiExecutionServer' is closing down, over Broadcast system
+	defer func() {
+
+		// Create response channel
+		var responseChannel chan bool
+		responseChannel = make(chan bool)
+
+		// Put message on 'testGuiExecutionEngineChannel' to be processed
+		var tempGuiExecutionServerIsClosingDown common_config.GuiExecutionServerIsClosingDownStruct
+		tempGuiExecutionServerIsClosingDown = common_config.GuiExecutionServerIsClosingDownStruct{
+			ApplicationId:    common_config.ApplicationRunTimeUuid,
+			MessageTimeStamp: time.Now(),
+			CurrentGuiExecutionServerIsClosingDownReturnChannel: &responseChannel,
+			GuiExecutionServerResponsibilities:                  nil,
+		}
+
+		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
+		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
+			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
+			TesterGuiIsClosingDown:                                             nil,
+			GuiExecutionServerIsClosingDown:                                    &tempGuiExecutionServerIsClosingDown,
+			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
+			UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+		}
+
+		// Put on GuiOwnerEngineChannel
+		common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
+
+		// Wait until command has been processed by 'GuiOwnerEngine'
+		<-responseChannel
+
+	}()
+
 	// Initiate 'MessagesToExecutionServerObject' for messages to be sent to ExecutionServer
 	messagesToExecutionServer.MessagesToExecutionServerObject = messagesToExecutionServer.MessagesToExecutionServerObjectStruct{
 		Logger: fenixGuiExecutionServerObject.logger,
