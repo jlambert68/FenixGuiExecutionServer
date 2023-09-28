@@ -47,14 +47,15 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessages(
 			UserId:                          userID,
 			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
 			TestCaseExecutionUuid:           tempTestCaseExecutionsStatusSubscriptions.GetTestCaseExecutionUuid(),
-			TestCaseExecutionVersion:        string(tempTestCaseExecutionsStatusSubscriptions.GetTestCaseExecutionVersion()),
+			TestCaseExecutionVersion:        tempTestCaseExecutionsStatusSubscriptions.GetTestCaseExecutionVersion(),
 			MessageTimeStamp:                time.Now(),
 		}
 
 		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination,
-			SomeoneIsClosingDown:               nil,
+			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination,
+			TesterGuiIsClosingDown:                                             nil,
+			GuiExecutionServerIsClosingDown:                                    nil,
 			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: &tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
 			UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
 		}

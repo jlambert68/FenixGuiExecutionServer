@@ -71,7 +71,7 @@ type GuiExecutionServerResponsibilityStruct struct {
 	TesterGuiApplicationId   string `json:"testguiapplicationid"`
 	UserId                   string `json:"userid"`
 	TestCaseExecutionUuid    string `json:"testcaseexecutionuuid"`
-	TestCaseExecutionVersion int    `json:"testcaseexecutionversion"`
+	TestCaseExecutionVersion int32  `json:"testcaseexecutionversion"`
 }
 
 // ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
@@ -81,7 +81,7 @@ type ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct st
 	UserId                          string    `json:"userid"`
 	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
 	TestCaseExecutionUuid           string    `json:"testcaseexecutionuuid"`
-	TestCaseExecutionVersion        string    `json:"testcaseexecutionversion"`
+	TestCaseExecutionVersion        int32     `json:"testcaseexecutionversion"`
 	MessageTimeStamp                time.Time `json:"messagetimestamp"`
 }
 
@@ -92,7 +92,7 @@ type UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct struct {
 	UserId                          string    `json:"userid"`
 	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
 	TestCaseExecutionUuid           string    `json:"testcaseexecutionuuid"`
-	TestCaseExecutionVersion        string    `json:"testcaseexecutionversion"`
+	TestCaseExecutionVersion        int32     `json:"testcaseexecutionversion"`
 	MessageTimeStamp                time.Time `json:"messagetimestamp"`
 }
 

@@ -40,23 +40,24 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) UnSubscribeToMessages(
 	for _, tempTestCaseExecutionsStatusUnSubscriptions := range unSubscribeToMessagesRequest.TestCaseExecutionsStatusUnSubscriptions {
 
 		var tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.
-			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
+			UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
 		tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = common_config.
-			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{
+			UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{
 			TesterGuiApplicationId:          unSubscribeToMessagesRequest.ApplicationRunTimeIdentification.ApplicationRunTimeUuid,
 			UserId:                          userID,
 			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
 			TestCaseExecutionUuid:           tempTestCaseExecutionsStatusUnSubscriptions.GetTestCaseExecutionUuid(),
-			TestCaseExecutionVersion:        string(tempTestCaseExecutionsStatusUnSubscriptions.GetTestCaseExecutionVersion()),
+			TestCaseExecutionVersion:        tempTestCaseExecutionsStatusUnSubscriptions.GetTestCaseExecutionVersion(),
 			MessageTimeStamp:                time.Now(),
 		}
 
 		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination,
-			SomeoneIsClosingDown:               nil,
-			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: &tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
-			UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination,
+			TesterGuiIsClosingDown:                                             nil,
+			GuiExecutionServerIsClosingDown:                                    nil,
+			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
+			UserUnsubscribesToUserAndTestCaseExecutionCombination:              &tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
 		}
 
 		// Put on EngineChannel
