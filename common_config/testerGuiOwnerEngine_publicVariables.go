@@ -59,9 +59,10 @@ type TesterGuiIsClosingDownStruct struct {
 // The following message is sent over Postgres Broadcast system and over TesterGuiOwnerEngine-channel
 // Used to specify that a GuiExecutionServer is Closing Down
 type GuiExecutionServerIsClosingDownStruct struct {
-	GuiExecutionServerApplicationId    string                                   `json:"guiexecutionserverapplicationid"`
-	MessageTimeStamp                   time.Time                                `json:"messagetimestamp"`
-	GuiExecutionServerResponsibilities []GuiExecutionServerResponsibilityStruct `json:"guiexecutionserverresponsibilities"`
+	GuiExecutionServerApplicationId                     string                                   `json:"guiexecutionserverapplicationid"`
+	MessageTimeStamp                                    time.Time                                `json:"messagetimestamp"`
+	GuiExecutionServerResponsibilities                  []GuiExecutionServerResponsibilityStruct `json:"guiexecutionserverresponsibilities"`
+	CurrentGuiExecutionServerIsClosingDownReturnChannel *chan bool                               // Should not be converted into json
 }
 
 // GuiExecutionServerResponsibilityStruct

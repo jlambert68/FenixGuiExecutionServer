@@ -8,78 +8,101 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//TesterGuiIsClosingDownMessage
+
+// Broadcast message to all other GuiExecutionServers that 'TesterGuiIsClosingDownMessage'
+func broadcastSenderForChannelMessage_TesterGuiIsClosingDownMessage(
+	tempGuiExecutionServerIsClosingDown common_config.TesterGuiIsClosingDownStruct) (
+	err error) {
+
+	// Convert into Broadcast message type
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType:                TesterGuiIsClosingDownMessage,
+		TesterGuiIsClosingDown:                                             tempGuiExecutionServerIsClosingDown,
+		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+	}
+
+	// Broadcast message via Channel on Broadcast system
+	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
+
+	return err
+}
+
+// Broadcast message to all other GuiExecutionServers that 'GuiExecutionServerIsClosingDownMessage'
+func broadcastSenderForChannelMessage_GuiExecutionServerIsClosingDownMessage(
+	tempGuiExecutionServerIsClosingDown common_config.GuiExecutionServerIsClosingDownStruct) (
+	err error) {
+
+	// Convert into Broadcast message type
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType:                GuiExecutionServerIsClosingDownMessage,
+		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
+		GuiExecutionServerIsClosingDown:                                    tempGuiExecutionServerIsClosingDown,
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+	}
+
+	// Broadcast message via Channel on Broadcast system
+	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
+
+	return err
+}
+
 // Broadcast message to all other GuiExecutionServers that 'ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
-func broadcastSenderForChannel2_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
+func broadcastSenderForChannelMessage_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
 	tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct) (
 	err error) {
 
 	// Convert into Broadcast message type
-	var tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
-	tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{
-		TesterGuiApplicationId:          tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.TesterGuiApplicationId,
-		UserId:                          tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.UserId,
-		GuiExecutionServerApplicationId: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.GuiExecutionServerApplicationId,
-		TestCaseExecutionUuid:           tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.TestCaseExecutionUuid,
-		TestCaseExecutionVersion:        tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.TestCaseExecutionVersion,
-		MessageTimeStamp:                tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct.MessageTimeStamp,
-	}
-	var broadcastMessageForSomeoneIsClosingDown Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct
-	broadcastMessageForSomeoneIsClosingDown = Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct{
-		PostgresChannel2MessageMessageType:                                 ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage,
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType:                ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage,
+		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
+		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct,
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
 	}
 
-	broadcastMessageForSomeoneIsClosingDown = Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct{
-		PostgresChannel2MessageMessageType:                                 0,
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
-	}
-
-	// Broadcast message via Channel 2 on Broadcast system
-	err = broadcastSenderForChannel2(&broadcastMessageForSomeoneIsClosingDown)
+	// Broadcast message via Channel  on Broadcast system
+	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
 
 	return err
 }
 
 // Broadcast message to all other GuiExecutionServers that 'UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage'
-func broadcastSenderForChannel2_UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage(
+func broadcastSenderForChannelMessage_UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage(
 	userUnsubscribesToUserAndTestCaseExecutionCombination common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct) (
 	err error) {
 
 	// Convert into Broadcast message type
-	var tempUserUnsubscribesToUserAndTestCaseExecutionCombination UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
-	tempUserUnsubscribesToUserAndTestCaseExecutionCombination = UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{
-		TesterGuiApplicationId:          userUnsubscribesToUserAndTestCaseExecutionCombination.TesterGuiApplicationId,
-		UserId:                          userUnsubscribesToUserAndTestCaseExecutionCombination.UserId,
-		GuiExecutionServerApplicationId: userUnsubscribesToUserAndTestCaseExecutionCombination.GuiExecutionServerApplicationId,
-		TestCaseExecutionUuid:           userUnsubscribesToUserAndTestCaseExecutionCombination.TestCaseExecutionUuid,
-		TestCaseExecutionVersion:        userUnsubscribesToUserAndTestCaseExecutionCombination.TestCaseExecutionVersion,
-		MessageTimeStamp:                userUnsubscribesToUserAndTestCaseExecutionCombination.MessageTimeStamp,
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType:                UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage,
+		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
+		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              userUnsubscribesToUserAndTestCaseExecutionCombination,
 	}
 
-	var broadcastMessageForUnsubscribesToUserAndTestCaseExecutionCombination Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct
-	broadcastMessageForUnsubscribesToUserAndTestCaseExecutionCombination = Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct{
-		PostgresChannel2MessageMessageType:                                 UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage,
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              tempUserUnsubscribesToUserAndTestCaseExecutionCombination,
-	}
-
-	// Broadcast message via Channel 2 on Broadcast system
-	err = broadcastSenderForChannel2(&broadcastMessageForUnsubscribesToUserAndTestCaseExecutionCombination)
+	// Broadcast message via Channel on Broadcast system
+	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
 
 	return err
 }
 
 // Broadcast message on Channel 2
-func broadcastSenderForChannel2(
-	broadcastMesageForPostgresChannel2Message *Channel2TakeOverUserAndTestCaseExecutionCombinationOrTesterGuiUnsubscribesStruct) (
+func broadcastSenderForGuiExecutionServersInternalCommunicationChannel(
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel *BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct) (
 	err error) {
 
 	// Create json as string
-	var broadcastMessageForPostgresChannel2AsByteSlice []byte
-	var broadcastMessageForPostgresChannel2AsByteSliceAsString string
-	broadcastMessageForPostgresChannel2AsByteSlice, err = json.Marshal(broadcastMesageForPostgresChannel2Message)
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSlice []byte
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString string
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSlice, err = json.Marshal(broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
 	if err != nil {
 
 		common_config.Logger.WithFields(logrus.Fields{
@@ -91,7 +114,8 @@ func broadcastSenderForChannel2(
 	}
 
 	// Convert byte slice into string
-	broadcastMessageForPostgresChannel2AsByteSliceAsString = string(broadcastMessageForPostgresChannel2AsByteSlice)
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString =
+		string(broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSlice)
 
 	conn, err := fenixSyncShared.DbPool.Acquire(context.Background())
 	if err != nil {
@@ -106,21 +130,22 @@ func broadcastSenderForChannel2(
 	defer conn.Release()
 
 	_, err = fenixSyncShared.DbPool.Exec(context.Background(),
-		"SELECT pg_notify('testerGuiOwnerEngineChannel2', $1)", broadcastMessageForPostgresChannel2AsByteSlice)
+		"SELECT pg_notify('testerGuiOwnerEngineChannel2', $1)",
+		broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSlice)
 	if err != nil {
 
 		common_config.Logger.WithFields(logrus.Fields{
 			"id": "d7c5685c-f19b-4885-83b8-bba6b0408ec9",
-			"broadcastMessageForPostgresChannel2AsByteSliceAsString": broadcastMessageForPostgresChannel2AsByteSliceAsString,
+			"broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString": broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString,
 			"err": err.Error(),
-		}).Error("Error sending 'broadcastMesageForPostgresChannel2Message' on Channel 2")
+		}).Error("Error sending 'broadcastMessageForGuiExecutionServersInternalCommunicationChannel' on Channel 2")
 
 		return err
 	}
 
 	common_config.Logger.WithFields(logrus.Fields{
 		"id": "b87e98c9-a9a3-4d2d-8c6a-e6067b4f31c5",
-		"broadcastMessageForPostgresChannel2AsByteSliceAsString": broadcastMessageForPostgresChannel2AsByteSliceAsString,
+		"broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString": broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString,
 	}).Debug("Message sent over Broadcast system, on Channel 2")
 
 	return err

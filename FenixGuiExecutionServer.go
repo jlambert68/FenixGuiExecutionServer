@@ -73,8 +73,8 @@ func fenixGuiExecutionServerMain() {
 		// Put message on 'testGuiExecutionEngineChannel' to be processed
 		var tempGuiExecutionServerIsClosingDown common_config.GuiExecutionServerIsClosingDownStruct
 		tempGuiExecutionServerIsClosingDown = common_config.GuiExecutionServerIsClosingDownStruct{
-			ApplicationId:    common_config.ApplicationRunTimeUuid,
-			MessageTimeStamp: time.Now(),
+			GuiExecutionServerApplicationId:                     common_config.ApplicationRunTimeUuid,
+			MessageTimeStamp:                                    time.Now(),
 			CurrentGuiExecutionServerIsClosingDownReturnChannel: &responseChannel,
 			GuiExecutionServerResponsibilities:                  nil,
 		}

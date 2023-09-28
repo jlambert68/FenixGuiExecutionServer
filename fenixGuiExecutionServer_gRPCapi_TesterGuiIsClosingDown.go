@@ -37,19 +37,19 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsClosingDown(
 	}
 
 	// Put message on 'testGuiExecutionEngineChannel' to be processed
-	var tempSomeoneIsClosingDown common_config.SomeoneIsClosingDownStruct
-	tempSomeoneIsClosingDown = common_config.SomeoneIsClosingDownStruct{
-		WhoISClosingDown: common_config.TesterGui,
-		ApplicationId:    userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid,
-		UserId:           userID,
-		MessageTimeStamp: time.Now(),
-		CurrentGuiExecutionServerIsClosingDownReturnChannel: nil,
+	var tempTesterGuiIsClosingDown common_config.TesterGuiIsClosingDownStruct
+	tempTesterGuiIsClosingDown = common_config.TesterGuiIsClosingDownStruct{
+		TesterGuiApplicationId:          userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid,
+		UserId:                          userID,
+		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
+		MessageTimeStamp:                time.Now(),
 	}
 
 	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-		TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_UserIsClosingDown,
-		SomeoneIsClosingDown:               &tempSomeoneIsClosingDown,
+		TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserIsClosingDown,
+		TesterGuiIsClosingDown:                                             &tempTesterGuiIsClosingDown,
+		GuiExecutionServerIsClosingDown:                                    nil,
 		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
 	}
