@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-// InitiateAndStartBroadcastChannel2ListenerEngine
+// InitiateAndStartBroadcastChannelListenerEngine
 // Start listen for Broadcasts regarding Channel 1
 // 'MessageForSomeoneIsClosingDown'
-func InitiateAndStartBroadcastChannel2ListenerEngine() {
+func InitiateAndStartBroadcastChannelListenerEngine() {
 
 	go func() {
 		for {
-			err := BroadcastListenerChannel2()
+			err := BroadcastListener_GuiExecutionServersInternalCommunicationChannel()
 			if err != nil {
 
 				common_config.Logger.WithFields(logrus.Fields{
@@ -30,12 +30,17 @@ func InitiateAndStartBroadcastChannel2ListenerEngine() {
 	}()
 }
 
-func BroadcastListenerChannel2() error {
+func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 
 	var err error
 	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
 
 	if fenixSyncShared.DbPool == nil {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":  "09901ce4-2d84-4282-983d-1f99ffe5bf91",
+			"err": err,
+		}).Error("empty pool reference")
+
 		return errors.New("empty pool reference")
 	}
 
@@ -82,7 +87,9 @@ func BroadcastListenerChannel2() error {
 				// A 'TesterGui' is closing down
 
 				// Was call originated from this 'GuiExecutionServer'
-				if broadcastMessageForGuiExecutionServersInternalCommunicationChannel.TesterGuiIsClosingDown.TesterGuiApplicationId == common_config.ApplicationRunTimeUuid {
+				if broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+					TesterGuiIsClosingDown.TesterGuiApplicationId == common_config.ApplicationRunTimeUuid {
+
 					// Call was originated from this 'GuiExecutionServer'
 
 					// Do nothing
@@ -90,21 +97,14 @@ func BroadcastListenerChannel2() error {
 				} else {
 					// Call was originated from other 'GuiExecutionServer'
 
-					// Convert message into channel-version of message
-					var tempSomeoneIsClosingDown common_config.SomeoneIsClosingDownStruct
-					tempSomeoneIsClosingDown = common_config.SomeoneIsClosingDownStruct{
-						WhoISClosingDown: broadcastMessageForSomeoneIsClosingDown.WhoISClosingDown,
-						ApplicationId:    broadcastMessageForSomeoneIsClosingDown.ApplicationId,
-						UserId:           broadcastMessageForSomeoneIsClosingDown.UserId,
-						MessageTimeStamp: broadcastMessageForSomeoneIsClosingDown.MessageTimeStamp,
-						CurrentGuiExecutionServerIsClosingDownReturnChannel: nil,
-					}
+					// Convert message into channel-version of message and Put message on
+					// 'testGuiExecutionEngineChannel' to be processed
 
-					// Put message on 'testGuiExecutionEngineChannel' to be processed
 					var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-						TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_UserIsClosingDown,
-						SomeoneIsClosingDown:               &tempSomeoneIsClosingDown,
+						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserIsClosingDown,
+						TesterGuiIsClosingDown:                                             &broadcastMessageForGuiExecutionServersInternalCommunicationChannel.TesterGuiIsClosingDown,
+						GuiExecutionServerIsClosingDown:                                    nil,
 						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
 						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
 					}
@@ -128,30 +128,29 @@ func BroadcastListenerChannel2() error {
 					// Other 'GuiExecutionServer' is closing Down
 
 					// Convert message into channel-version of message
-					var tempGuiExecutionServerResponsibilities []*common_config.GuiExecutionServerResponsibilitiesStruct
+					var tempGuiExecutionServerResponsibilities []common_config.GuiExecutionServerResponsibilityStruct
 					for _, tempGuiExecutionServerResponsibility := range broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
 						GuiExecutionServerIsClosingDown.GuiExecutionServerResponsibilities {
 
-						var guiExecutionServerResponsibilities common_config.GuiExecutionServerResponsibilitiesStruct
-						guiExecutionServerResponsibilities = common_config.GuiExecutionServerResponsibilitiesStruct{
-							TestGuiApplicationId:     tempGuiExecutionServerResponsibility.TesterGuiApplicationId,
+						var guiExecutionServerResponsibility common_config.GuiExecutionServerResponsibilityStruct
+						guiExecutionServerResponsibility = common_config.GuiExecutionServerResponsibilityStruct{
+							TesterGuiApplicationId:   tempGuiExecutionServerResponsibility.TesterGuiApplicationId,
 							UserId:                   tempGuiExecutionServerResponsibility.UserId,
 							TestCaseExecutionUuid:    tempGuiExecutionServerResponsibility.TestCaseExecutionUuid,
 							TestCaseExecutionVersion: tempGuiExecutionServerResponsibility.TestCaseExecutionVersion,
 						}
 
 						tempGuiExecutionServerResponsibilities = append(
-							tempGuiExecutionServerResponsibilities, &guiExecutionServerResponsibilities)
+							tempGuiExecutionServerResponsibilities, guiExecutionServerResponsibility)
 					}
 
 					var tempGuiExecutionServerIsClosingDown common_config.GuiExecutionServerIsClosingDownStruct
 					tempGuiExecutionServerIsClosingDown = common_config.GuiExecutionServerIsClosingDownStruct{
-						ApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+						GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
 							GuiExecutionServerIsClosingDown.GuiExecutionServerApplicationId,
 						MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
 							GuiExecutionServerIsClosingDown.MessageTimeStamp,
-						CurrentGuiExecutionServerIsClosingDownReturnChannel: nil,
-						GuiExecutionServerResponsibilities:                  tempGuiExecutionServerResponsibilities,
+						GuiExecutionServerResponsibilities: tempGuiExecutionServerResponsibilities,
 					}
 
 					// Put message on 'testGuiExecutionEngineChannel' to be processed
@@ -184,19 +183,27 @@ func BroadcastListenerChannel2() error {
 					// Call was originated from other 'GuiExecutionServer'
 
 					// Convert message into channel-version of message
-					var tempGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
-					tempGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{
-						TesterGuiApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+					var tempGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.
+						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
+					tempGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = common_config.
+						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{
+						TesterGuiApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+							ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
 							TesterGuiApplicationId,
-						UserId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						UserId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+							ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
 							UserId,
-						GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+							ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
 							GuiExecutionServerApplicationId,
-						TestCaseExecutionUuid: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						TestCaseExecutionUuid: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+							ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
 							TestCaseExecutionUuid,
-						TestCaseExecutionVersion: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						TestCaseExecutionVersion: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+							ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
 							TestCaseExecutionVersion,
-						MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+							ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
 							MessageTimeStamp,
 					}
 
@@ -206,12 +213,6 @@ func BroadcastListenerChannel2() error {
 						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
 						TesterGuiIsClosingDown:                                             nil,
 						GuiExecutionServerIsClosingDown:                                    nil,
-						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: xxxx,
-						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
-					}
-					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-						TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
-						SomeoneIsClosingDown:               nil,
 						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: &tempGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
 						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
 					}
@@ -255,8 +256,9 @@ func BroadcastListenerChannel2() error {
 					// Put message on 'testGuiExecutionEngineChannel' to be processed
 					var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-						TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination,
-						SomeoneIsClosingDown:               nil,
+						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination,
+						TesterGuiIsClosingDown:                                             nil,
+						GuiExecutionServerIsClosingDown:                                    nil,
 						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
 						UserUnsubscribesToUserAndTestCaseExecutionCombination:              &tempUserUnsubscribesToUserAndTestCaseExecutionCombinationStruct,
 					}
@@ -272,100 +274,6 @@ func BroadcastListenerChannel2() error {
 				}).Fatal("Unhandled 'GuiExecutionServersInternalCommunicationChannelType'")
 
 			}
-
-			// 'ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination' or
-			// 'UserUnsubscribesToUserAndTestCaseExecutionCombination'
-			if broadcastMessageForGuiExecutionServersInternalCommunicationChannel.PostgresChannel2MessageMessageType ==
-				ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage {
-				// A call from TesterGui to a GuiExecutionServer was done for TestGui to receive ExecutionStatusUpdates
-
-				// Was call originated from this 'GuiExecutionServer'
-				if broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-					GuiExecutionServerApplicationId == common_config.ApplicationRunTimeUuid {
-					// Call was originated from this 'GuiExecutionServer'
-
-					// Do nothing
-
-				} else {
-					// Call was originated from other 'GuiExecutionServer'
-
-					// Convert message into channel-version of message
-					var tempGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
-					tempGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{
-						TesterGuiApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							TesterGuiApplicationId,
-						UserId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							UserId,
-						GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							GuiExecutionServerApplicationId,
-						TestCaseExecutionUuid: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							TestCaseExecutionUuid,
-						TestCaseExecutionVersion: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							TestCaseExecutionVersion,
-						MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							MessageTimeStamp,
-					}
-
-					// Put message on 'testGuiExecutionEngineChannel' to be processed
-					var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
-					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-						TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
-						SomeoneIsClosingDown:               nil,
-						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: &tempGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
-						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
-					}
-
-					// Put on EngineChannel
-					common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
-
-				}
-
-			} else {
-				// A call from TesterGui saying that it unSubscribes to ExecutionStatusUpdates
-
-				// Was call originated from this 'GuiExecutionServer'
-				if broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-					GuiExecutionServerApplicationId == common_config.ApplicationRunTimeUuid {
-
-					// Call was originated from this 'GuiExecutionServer'
-
-					// Do nothing
-
-				} else {
-					// Call was originated from other 'GuiExecutionServer'
-
-					// Convert message into channel-version of message
-					var tempUserUnsubscribesToUserAndTestCaseExecutionCombinationStruct common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
-					tempUserUnsubscribesToUserAndTestCaseExecutionCombinationStruct = common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{
-						TesterGuiApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							TesterGuiApplicationId,
-						UserId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							UserId,
-						GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							GuiExecutionServerApplicationId,
-						TestCaseExecutionUuid: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							TestCaseExecutionUuid,
-						TestCaseExecutionVersion: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							TestCaseExecutionVersion,
-						MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
-							MessageTimeStamp,
-					}
-
-					// Put message on 'testGuiExecutionEngineChannel' to be processed
-					var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
-					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-						TesterGuiOwnerEngineChannelCommand: common_config.ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination,
-						SomeoneIsClosingDown:               nil,
-						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
-						UserUnsubscribesToUserAndTestCaseExecutionCombination:              &tempUserUnsubscribesToUserAndTestCaseExecutionCombinationStruct,
-					}
-
-					// Put on EngineChannel
-					common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
-				}
-
-			}
-
 		}
 	}
 }

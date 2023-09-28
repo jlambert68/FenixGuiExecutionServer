@@ -6,8 +6,7 @@ package testerGuiOwnerEngine
 // Initiate BroadcastListeners for Channel 1 and Channel 2
 func InitiateTesterGuiOwnerEngine() {
 
-	go InitiateAndStartBroadcastChannel1ListenerEngine()
-	go InitiateAndStartBroadcastChannel2ListenerEngine()
+	go InitiateAndStartBroadcastChannelListenerEngine()
 	go startTesterGuiOwnerEngineChannelReader()
 
 }
