@@ -14,6 +14,7 @@ const (
 	GuiExecutionServerIsClosingDownMessage
 	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage
 	UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage
+	GuiExecutionServerIsStartingUpMessage
 )
 
 // BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
@@ -25,6 +26,7 @@ type BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct st
 	GuiExecutionServerIsClosingDown                                    common_config.GuiExecutionServerIsClosingDownStruct                                    `json:"guiexecutionserverisclosingdown"`
 	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct `json:"thisguiexecutionservertakesthisuserandtestcaseexecutioncombination"`
 	UserUnsubscribesToUserAndTestCaseExecutionCombination              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct              `json:"userunsubscribestouserandtestcaseexecutioncombination"`
+	GuiExecutionServerIsStartingUp                                     common_config.GuiExecutionServerIsStartingUpStruct                                     `json:"guiexecutionserverisstartingup"`
 }
 
 /*

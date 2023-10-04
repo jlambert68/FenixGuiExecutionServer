@@ -73,28 +73,50 @@ func broadcastSenderForChannelMessage_ThisGuiExecutionServerTakesThisUserAndTest
 	return err
 }
 
-// Broadcast message to all other GuiExecutionServers that 'UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage'
-func broadcastSenderForChannelMessage_UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage(
-	userUnsubscribesToUserAndTestCaseExecutionCombination common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct) (
+// Broadcast message to all other GuiExecutionServers that 'ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
+func broadcastSenderForChannelMessage_xxxx(
+	tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct) (
 	err error) {
 
 	// Convert into Broadcast message type
 	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
 	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
-		GuiExecutionServersInternalCommunicationChannelType:                UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage,
+		GuiExecutionServersInternalCommunicationChannelType:                ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage,
 		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
 		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              userUnsubscribesToUserAndTestCaseExecutionCombination,
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct,
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
 	}
 
-	// Broadcast message via Channel on Broadcast system
+	// Broadcast message via Channel  on Broadcast system
 	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
 
 	return err
 }
 
-// Broadcast message on Channel 2
+// Broadcast message to all other GuiExecutionServers that 'ThisGuiExecutionServerIsStartingUp'
+func broadcastSenderForChannelMessage_ThisGuiExecutionServerIsStartingUp(
+	tempTGuiExecutionServerIsStartingUp common_config.GuiExecutionServerIsStartingUpStruct) (
+	err error) {
+
+	// Convert into Broadcast message type
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType:                GuiExecutionServerIsStartingUpMessage,
+		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
+		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		GuiExecutionServerIsStartingUp:                                     tempTGuiExecutionServerIsStartingUp,
+	}
+
+	// Broadcast message via Channel  on Broadcast system
+	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
+
+	return err
+}
+
+// Broadcast message on 'GuiExecutionServersInternalCommunicationChannel'
 func broadcastSenderForGuiExecutionServersInternalCommunicationChannel(
 	broadcastMessageForGuiExecutionServersInternalCommunicationChannel *BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct) (
 	err error) {
@@ -123,7 +145,7 @@ func broadcastSenderForGuiExecutionServersInternalCommunicationChannel(
 		common_config.Logger.WithFields(logrus.Fields{
 			"id":  "cf404e66-7b97-424b-b377-776b28adbf7f",
 			"err": err.Error(),
-		}).Error("Error when acquiring sql-connection for Channel 2")
+		}).Error("Error when acquiring sql-connection for 'GuiExecutionServersInternalCommunicationChannel'")
 
 		return err
 	}
@@ -138,7 +160,7 @@ func broadcastSenderForGuiExecutionServersInternalCommunicationChannel(
 			"id": "d7c5685c-f19b-4885-83b8-bba6b0408ec9",
 			"broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString": broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString,
 			"err": err.Error(),
-		}).Error("Error sending 'broadcastMessageForGuiExecutionServersInternalCommunicationChannel' on Channel 2")
+		}).Error("Error sending 'broadcastMessageForGuiExecutionServersInternalCommunicationChannel'")
 
 		return err
 	}
@@ -146,7 +168,7 @@ func broadcastSenderForGuiExecutionServersInternalCommunicationChannel(
 	common_config.Logger.WithFields(logrus.Fields{
 		"id": "b87e98c9-a9a3-4d2d-8c6a-e6067b4f31c5",
 		"broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString": broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString,
-	}).Debug("Message sent over Broadcast system, on Channel 2")
+	}).Debug("Message sent over Broadcast system, on Channel ")
 
 	return err
 }

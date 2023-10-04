@@ -17,6 +17,9 @@ func startTesterGuiOwnerEngineChannelReader() {
 			common_config.TesterGuiOwnerEngineChannelEngineType, common_config.TesterGuiOwnerEngineChannelSize)
 	}
 
+	// Inform other running GuiExecutionServers that this server is starting up
+	informOtherGuiExecutionServersThatThisGuiExecutionServerIsStartingUp()
+
 	for {
 		// Wait for incoming command over channel
 		incomingTesterGuiOwnerEngineChannelCommand = <-common_config.TesterGuiOwnerEngineChannelEngineCommandChannel
@@ -68,18 +71,24 @@ func startTesterGuiOwnerEngineChannelReader() {
 				incomingTesterGuiOwnerEngineChannelCommand)
 
 		case common_config.ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination:
-			proceessUserUnsubscribesToUserAndTestCaseExecutionCombination(
+			processUserUnsubscribesToUserAndTestCaseExecutionCombination(
 				incomingTesterGuiOwnerEngineChannelCommand)
 
 		case common_config.ChannelCommand_UserIsClosingDown:
 			processUserIsClosingDown(incomingTesterGuiOwnerEngineChannelCommand)
+
+		case common_config.ChannelCommand_ThisGuiExecutionServerIsStartingUp:
+			processThisGuiExecutionServerIsStartingUp(incomingTesterGuiOwnerEngineChannelCommand)
+
+		case common_config.ChannelCommand_AnotherGuiExecutionServerIsStartingUp:
+			processAnotherGuiExecutionServerIsStartingUp(incomingTesterGuiOwnerEngineChannelCommand)
 
 		// No other command is supported
 		default:
 			common_config.Logger.WithFields(logrus.Fields{
 				"Id": "8ef55340-bb8c-42cb-bfc-879b7407d64d",
 				"incomingTesterGuiOwnerEngineChannelCommand": incomingTesterGuiOwnerEngineChannelCommand,
-			}).Fatalln("Unknown command in TesterGuiOwnerEngineChannel for TesterGuiOwnerEngine")
+			}).Fatalln("Unhandled command in TesterGuiOwnerEngineChannel for TesterGuiOwnerEngine")
 		}
 
 		// Clear memory for Message
@@ -91,11 +100,19 @@ func startTesterGuiOwnerEngineChannelReader() {
 func processThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
 	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
 
+	// Process the actual command 'ChannelCommand_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
+	commandThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
+
 }
 
 // Process channel command 'ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
 func processAnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
 	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
+	commandAnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
 
 }
 
@@ -103,11 +120,23 @@ func processAnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinatio
 func processThisGuiExecutionServerIsClosingDown(
 	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
 
+	// Process the actual command 'ChannelCommand_ThisGuiExecutionServerIsClosingDown'
+	commandThisGuiExecutionServerIsClosingDown(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
+
+	// Continue process to close down this server
+	*incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown.
+		CurrentGuiExecutionServerIsClosingDownReturnChannel <- true
+
 }
 
 // Process channel command 'ChannelCommand_AnotherGuiExecutionServerIsClosingDown'
 func processAnotherGuiExecutionServerIsClosingDown(
 	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerIsClosingDown'
+	commandAnotherGuiExecutionServerIsClosingDown(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
 
 }
 
@@ -115,16 +144,48 @@ func processAnotherGuiExecutionServerIsClosingDown(
 func processUserSubscribesToUserAndTestCaseExecutionCombination(
 	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
 
+	// Process the actual command 'ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination'
+	commandUserSubscribesToUserAndTestCaseExecutionCombination(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
+
 }
 
 // Process channel command 'ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination'
-func proceessUserUnsubscribesToUserAndTestCaseExecutionCombination(
+func processUserUnsubscribesToUserAndTestCaseExecutionCombination(
 	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination'
+	commandUserUnsubscribesToUserAndTestCaseExecutionCombination(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
 
 }
 
 // Process channel command 'ChannelCommand_UserIsClosingDown'
 func processUserIsClosingDown(
 	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_UserIsClosingDown'
+	commandUserIsClosingDown(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
+
+}
+
+// Process channel command 'ChannelCommand_ThisGuiExecutionServerIsStartingUp'
+func processThisGuiExecutionServerIsStartingUp(
+	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_ThisGuiExecutionServerIsStartingUp'
+	commandThisGuiExecutionServerIsStartingUp(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsStartingUp)
+
+}
+
+// Process channel command 'ChannelCommand_AnotherGuiExecutionServerIsStartingUp'
+func processAnotherGuiExecutionServerIsStartingUp(
+	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerIsStartingUp'
+	commandAnotherGuiExecutionServerIsStartingUp(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
 
 }
