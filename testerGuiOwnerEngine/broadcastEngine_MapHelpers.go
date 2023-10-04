@@ -1,6 +1,7 @@
 package testerGuiOwnerEngine
 
 import (
+	"FenixGuiExecutionServer/common_config"
 	"fmt"
 	"sync"
 )
@@ -9,18 +10,18 @@ var subscriptionsMapMutex = &sync.RWMutex{}
 
 // Load Subscription from the Subscriptions-Map
 func loadFromTestCaseExecutionsSubscriptionsMap(
-	testCaseExecutionsSubscriptionsMapKey TestCaseExecutionsSubscriptionsMapKeyType) (
-	applicationsRunTimeUuid *[]ApplicationRunTimeUuidType,
+	testCaseExecutionsSubscriptionsMapKey testCaseExecutionsSubscriptionsMapKeyType) (
+	guiExecutionServerResponsibilityStruct *common_config.GuiExecutionServerResponsibilityStruct,
 	existInMap bool) {
 
 	// Lock Map for Reading
 	subscriptionsMapMutex.RLock()
 
 	// Read Map
-	applicationsRunTimeUuid, existInMap = TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey]
+	guiExecutionServerResponsibilityStruct, existInMap = testCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey]
 
 	if existInMap == false {
-		for x, y := range TestCaseExecutionsSubscriptionsMap {
+		for x, y := range testCaseExecutionsSubscriptionsMap {
 			yy := *y
 			fmt.Println(x, yy)
 		}
@@ -29,19 +30,19 @@ func loadFromTestCaseExecutionsSubscriptionsMap(
 	//UnLock Map
 	subscriptionsMapMutex.RUnlock()
 
-	return applicationsRunTimeUuid, existInMap
+	return guiExecutionServerResponsibilityStruct, existInMap
 }
 
 // Save Subscription to the Subscriptions-Map
 func saveToTestCaseExecutionsSubscriptionsMap(
-	testCaseExecutionsSubscriptionsMapKey TestCaseExecutionsSubscriptionsMapKeyType,
-	applicationRunTimeUuidSliceReference *[]ApplicationRunTimeUuidType) {
+	testCaseExecutionsSubscriptionsMapKey testCaseExecutionsSubscriptionsMapKeyType,
+	guiExecutionServerResponsibilityStruct *common_config.GuiExecutionServerResponsibilityStruct) {
 
 	// Lock Map for Writing
 	subscriptionsMapMutex.Lock()
 
 	// Save to Subscription-Map
-	TestCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey] = applicationRunTimeUuidSliceReference
+	testCaseExecutionsSubscriptionsMap[testCaseExecutionsSubscriptionsMapKey] = guiExecutionServerResponsibilityStruct
 
 	//UnLock Map
 	subscriptionsMapMutex.Unlock()

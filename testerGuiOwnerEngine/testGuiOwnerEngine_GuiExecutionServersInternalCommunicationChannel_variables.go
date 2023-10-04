@@ -2,6 +2,7 @@ package testerGuiOwnerEngine
 
 import (
 	"FenixGuiExecutionServer/common_config"
+	"time"
 )
 
 // GuiExecutionServersInternalCommunicationChannelTypeType
@@ -29,56 +30,23 @@ type BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct st
 	GuiExecutionServerIsStartingUp                                     common_config.GuiExecutionServerIsStartingUpStruct                                     `json:"guiexecutionserverisstartingup"`
 }
 
-/*
-// TesterGuiIsClosingDownStruct
-// The following message is sent over Postgres Broadcast system and over TesterGuiOwnerEngine-channel
-// Used to specify that a TesterGui is Closing Down
-type TesterGuiIsClosingDownStruct struct {
-	TesterGuiApplicationId          string    `json:"testerguiapplicationid"`
-	UserId                          string    `json:"userid"`
-	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
-	MessageTimeStamp                time.Time `json:"messagetimestamp"`
+// testCaseExecutionsSubscriptionsMap
+// Map that holds information about all TestCaseExecutions that different TesterGui:s are subscribing to from this GuiExecutionServer
+// map['TestCaseExecutionKey']*common_config.GuiExecutionServerResponsibilityStruct
+var testCaseExecutionsSubscriptionsMap map[testCaseExecutionsSubscriptionsMapKeyType]*common_config.GuiExecutionServerResponsibilityStruct
+
+// testCaseExecutionsSubscriptionsMapKeyType
+// the Key to 'testCaseExecutionsSubscriptionsMap'. Is a concatenation of 'TestCaseExecutionUuid' and 'TestCaseExecutionUuidVersion'
+type testCaseExecutionsSubscriptionsMapKeyType string
+
+// guiExecutionServerStartUpOrderStruct
+// Structure holding one ApplicationRunTimeUuid and StartUpTime for a GuiExecutionServer
+type guiExecutionServerStartUpOrderStruct struct {
+	ApplicationRunTimeUuid        string
+	applicationRunTimeStartUpTime time.Time
 }
 
-// GuiExecutionServerIsClosingDownStruct
-// The following message is sent over Postgres Broadcast system and over TesterGuiOwnerEngine-channel
-// Used to specify that a GuiExecutionServer is Closing Down
-type GuiExecutionServerIsClosingDownStruct struct {
-	GuiExecutionServerApplicationId    string                                   `json:"guiexecutionserverapplicationid"`
-	MessageTimeStamp                   time.Time                                `json:"messagetimestamp"`
-	GuiExecutionServerResponsibilities []GuiExecutionServerResponsibilityStruct `json:"guiexecutionserverresponsibilities"`
-}
-
-// GuiExecutionServerResponsibilityStruct
-// Holds one Responsibility for GuiExecutionServer, regarding sending ExecutionStatusUpdates
-type GuiExecutionServerResponsibilityStruct struct {
-	TesterGuiApplicationId   string `json:"testguiapplicationid"`
-	UserId                   string `json:"userid"`
-	TestCaseExecutionUuid    string `json:"testcaseexecutionuuid"`
-	TestCaseExecutionVersion int    `json:"testcaseexecutionversion"`
-}
-
-// ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
-// Used to specify that a specified GuiExecutionServer takes over status-sending-control for a TesterGui for a specific TestCaseExecutionUuid
-type ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct struct {
-	TesterGuiApplicationId          string    `json:"testerguiapplicationid"`
-	UserId                          string    `json:"userid"`
-	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
-	TestCaseExecutionUuid           string    `json:"testcaseexecutionuuid"`
-	TestCaseExecutionVersion        string    `json:"testcaseexecutionversion"`
-	MessageTimeStamp                time.Time `json:"messagetimestamp"`
-}
-
-// UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
-// Used to specify that a specified TesterGui unsubscribes to a  for a specific TestCaseExecutionUuid
-type UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct struct {
-	TesterGuiApplicationId          string    `json:"testerguiapplicationid"`
-	UserId                          string    `json:"userid"`
-	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
-	TestCaseExecutionUuid           string    `json:"testcaseexecutionuuid"`
-	TestCaseExecutionVersion        string    `json:"testcaseexecutionversion"`
-	MessageTimeStamp                time.Time `json:"messagetimestamp"`
-}
-
-
-*/
+// guiExecutionServerStartUpOrder
+// Slice containing all GuiExecutionServers broadcasted starting order. GuiExecutionServers are stored in StartUpTimeOrder
+// When the length == 1 then this GuiExecutionServer takes over all responsibility from other closing GuiExecutionServer
+var guiExecutionServerStartUpOrder []*guiExecutionServerStartUpOrderStruct

@@ -45,6 +45,9 @@ func fenixGuiExecutionServerMain() {
 	common_config.ApplicationRunTimeUuid = uuidGenerator.New().String()
 	fmt.Println("common_config.ApplicationRunTimeUuid: " + common_config.ApplicationRunTimeUuid)
 
+	// Set start up time for this instance
+	common_config.ApplicationRunTimeStartUpTime = time.Now()
+
 	// Connect to CloudDB
 	fenixSyncShared.ConnectToDB()
 

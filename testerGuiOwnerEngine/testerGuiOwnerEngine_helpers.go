@@ -11,7 +11,21 @@ import (
 // Initiate BroadcastListeners for Channel 1 and Channel 2
 func InitiateTesterGuiOwnerEngine() {
 
+	// Initiate variable holding Subscriptions handled by this GuiExecutionServer
+	testCaseExecutionsSubscriptionsMap = make(map[testCaseExecutionsSubscriptionsMapKeyType]*common_config.GuiExecutionServerResponsibilityStruct)
+
+	// Add this GuiExecutionServer to guiExecutionServerStartUpOrder slice
+	var tempGuiExecutionServerStartUpOrder *guiExecutionServerStartUpOrderStruct
+	tempGuiExecutionServerStartUpOrder = &guiExecutionServerStartUpOrderStruct{
+		ApplicationRunTimeUuid:        common_config.ApplicationRunTimeUuid,
+		applicationRunTimeStartUpTime: common_config.ApplicationRunTimeStartUpTime,
+	}
+	guiExecutionServerStartUpOrder = append(guiExecutionServerStartUpOrder, tempGuiExecutionServerStartUpOrder)
+
+	// Start up broadcast Listener engine, used for receiving messages from other GuiExecutionServer
 	go InitiateAndStartBroadcastChannelListenerEngine()
+
+	// Start up GuiOwnerEngine
 	go startTesterGuiOwnerEngineChannelReader()
 
 }
