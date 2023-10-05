@@ -40,9 +40,9 @@ var testCaseExecutionsSubscriptionsMap map[testCaseExecutionsSubscriptionsMapKey
 type testCaseExecutionsSubscriptionsMapKeyType string
 
 // guiExecutionServerStartUpOrderStruct
-// Structure holding one ApplicationRunTimeUuid and StartUpTime for a GuiExecutionServer
+// Structure holding one applicationRunTimeUuid and StartUpTime for a GuiExecutionServer
 type guiExecutionServerStartUpOrderStruct struct {
-	ApplicationRunTimeUuid        string
+	applicationRunTimeUuid        string
 	applicationRunTimeStartUpTime time.Time
 }
 

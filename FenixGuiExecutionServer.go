@@ -43,7 +43,7 @@ func fenixGuiExecutionServerMain() {
 
 	// Create Unique Uuid for run time instance used as identification when communication with GuiExecutionServer
 	common_config.ApplicationRunTimeUuid = uuidGenerator.New().String()
-	fmt.Println("common_config.ApplicationRunTimeUuid: " + common_config.ApplicationRunTimeUuid)
+	fmt.Println("common_config.applicationRunTimeUuid: " + common_config.ApplicationRunTimeUuid)
 
 	// Set start up time for this instance
 	common_config.ApplicationRunTimeStartUpTime = time.Now()

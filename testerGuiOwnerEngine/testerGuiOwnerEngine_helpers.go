@@ -17,7 +17,7 @@ func InitiateTesterGuiOwnerEngine() {
 	// Add this GuiExecutionServer to guiExecutionServerStartUpOrder slice
 	var tempGuiExecutionServerStartUpOrder *guiExecutionServerStartUpOrderStruct
 	tempGuiExecutionServerStartUpOrder = &guiExecutionServerStartUpOrderStruct{
-		ApplicationRunTimeUuid:        common_config.ApplicationRunTimeUuid,
+		applicationRunTimeUuid:        common_config.ApplicationRunTimeUuid,
 		applicationRunTimeStartUpTime: common_config.ApplicationRunTimeStartUpTime,
 	}
 	guiExecutionServerStartUpOrder = append(guiExecutionServerStartUpOrder, tempGuiExecutionServerStartUpOrder)

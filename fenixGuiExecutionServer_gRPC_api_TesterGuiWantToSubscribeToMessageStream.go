@@ -34,7 +34,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessageStream(use
 		return errors.New(returnMessage.Comments)
 	}
 
-	// Check if TesterGui:s 'ApplicationRunTimeUuid' already exits
+	// Check if TesterGui:s 'applicationRunTimeUuid' already exits
 	var testCaseExecutionsSubscriptionChannelInformation *broadcastEngine_ExecutionStatusUpdate.TestCaseExecutionsSubscriptionChannelInformationStruct
 	var existInMap bool
 

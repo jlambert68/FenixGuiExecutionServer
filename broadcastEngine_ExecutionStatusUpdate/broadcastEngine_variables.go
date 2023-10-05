@@ -22,7 +22,7 @@ type MessageToTestGuiForwardChannelStruct struct {
 
 // TestCaseExecutionsSubscriptionChannelInformationMap
 // Map for holding information about the data needed to route ExecutionStatuses to correct TesterGui
-// map['ApplicationRunTimeUuid']*TestCaseExecutionsSubscriptionChannelInformationStruct
+// map['applicationRunTimeUuid']*TestCaseExecutionsSubscriptionChannelInformationStruct
 var TestCaseExecutionsSubscriptionChannelInformationMap map[ApplicationRunTimeUuidType]*TestCaseExecutionsSubscriptionChannelInformationStruct
 
 // TestCaseExecutionsSubscriptionsMap
@@ -39,7 +39,7 @@ type TestCaseExecutionsSubscriptionChannelInformationStruct struct {
 }
 
 // ApplicationRunTimeUuidType
-// Type used for 'ApplicationRunTimeUuid'
+// Type used for 'applicationRunTimeUuid'
 type ApplicationRunTimeUuidType string
 
 // TestCaseExecutionUuidType

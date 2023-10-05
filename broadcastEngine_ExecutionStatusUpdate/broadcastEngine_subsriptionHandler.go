@@ -51,7 +51,7 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(
 	if allApplicationRunTimeUuids == nil {
 		var tempAllApplicationRunTimeUuids []ApplicationRunTimeUuidType
 
-		// Add new 'ApplicationRunTimeUuid' to slice
+		// Add new 'applicationRunTimeUuid' to slice
 		tempAllApplicationRunTimeUuids = append(tempAllApplicationRunTimeUuids, applicationRunTimeUuid)
 
 		// Add it to map
@@ -68,7 +68,7 @@ func AddSubscriptionForTestCaseExecutionToTesterGui(
 
 	} else {
 
-		// Loop all 'ApplicationRunTimeUuid' to verify if incoming 'applicationRunTimeUuid' exists in slice
+		// Loop all 'applicationRunTimeUuid' to verify if incoming 'applicationRunTimeUuid' exists in slice
 		var foundApplicationRunTimeUuidInSlice bool
 		for _, tempApplicationRunTimeUuid := range *allApplicationRunTimeUuids {
 			if tempApplicationRunTimeUuid == applicationRunTimeUuid {
@@ -133,7 +133,7 @@ func whoIsSubscribingToTestCaseExecution(testCaseExecutionUuidTestCaseExecutionV
 			common_config.Logger.WithFields(logrus.Fields{
 				"Id":                         "81fb8977-2ff4-4cfa-84e5-ba9c2f03485e",
 				"tempApplicationRunTimeUuid": tempApplicationRunTimeUuid,
-			}).Info("Couldn't find Channel data based on 'ApplicationRunTimeUuid'. Could be an error or that TesterGui hasn't yet open up gRPC-stream for Messages")
+			}).Info("Couldn't find Channel data based on 'applicationRunTimeUuid'. Could be an error or that TesterGui hasn't yet open up gRPC-stream for Messages")
 
 			return messageToTesterGuiForwardChannels
 		}
