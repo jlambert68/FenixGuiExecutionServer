@@ -67,6 +67,24 @@ func deleteTestCaseExecutionsSubscriptionFromMap(
 
 }
 
+// List all Subscriptions from the Subscriptions-Map
+func listAllTestCaseExecutionsSubscriptionsFromMap() (
+	guiExecutionServerResponsibilities []common_config.GuiExecutionServerResponsibilityStruct) {
+
+	// Lock Map for Reading
+	subscriptionsMapLoadAndSaveMutex.RLock()
+
+	// Get all values from map
+	for _, guiExecutionServerResponsibility := range testCaseExecutionsSubscriptionsMap {
+
+		guiExecutionServerResponsibilities = append(guiExecutionServerResponsibilities, *guiExecutionServerResponsibility)
+	}
+	//UnLock Map
+	subscriptionsMapLoadAndSaveMutex.RUnlock()
+
+	return guiExecutionServerResponsibilities
+}
+
 // Save Subscription to the Subscriptions-Map, if it is not already in the map
 func saveToTestCaseExecutionsSubscriptionToMapIfMissingInMap(
 	testCaseExecutionsSubscriptionsMapKey testCaseExecutionsSubscriptionsMapKeyType,

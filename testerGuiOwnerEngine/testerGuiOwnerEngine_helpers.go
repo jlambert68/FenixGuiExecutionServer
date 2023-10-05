@@ -14,13 +14,13 @@ func InitiateTesterGuiOwnerEngine() {
 	// Initiate variable holding Subscriptions handled by this GuiExecutionServer
 	testCaseExecutionsSubscriptionsMap = make(map[testCaseExecutionsSubscriptionsMapKeyType]*common_config.GuiExecutionServerResponsibilityStruct)
 
-	// Add this GuiExecutionServer to guiExecutionServerStartUpOrder slice
+	// Add this GuiExecutionServer to slice with all other GuiExecutionServers that started after this one
 	var tempGuiExecutionServerStartUpOrder *guiExecutionServerStartUpOrderStruct
 	tempGuiExecutionServerStartUpOrder = &guiExecutionServerStartUpOrderStruct{
 		applicationRunTimeUuid:        common_config.ApplicationRunTimeUuid,
 		applicationRunTimeStartUpTime: common_config.ApplicationRunTimeStartUpTime,
 	}
-	guiExecutionServerStartUpOrder = append(guiExecutionServerStartUpOrder, tempGuiExecutionServerStartUpOrder)
+	insertGuiExecutionServerIntoTimeOrderedSlice(tempGuiExecutionServerStartUpOrder)
 
 	// Start up broadcast Listener engine, used for receiving messages from other GuiExecutionServer
 	go InitiateAndStartBroadcastChannelListenerEngine()

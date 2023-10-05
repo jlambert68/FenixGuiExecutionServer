@@ -13,27 +13,46 @@ var guiExecutonServerSliceLoadAndSaveMutex = &sync.RWMutex{}
 // GuiExecutionServers are ordered in StartUp-time-order, ascending, with this GuiExecutionServer as
 // the first item
 func insertGuiExecutionServerIntoTimeOrderedSlice(
-	oldSlice []*guiExecutionServerStartUpOrderStruct,
-	v *guiExecutionServerStartUpOrderStruct) (
-	newSlice []*guiExecutionServerStartUpOrderStruct) {
+	elementToInsert *guiExecutionServerStartUpOrderStruct) {
 
 	// Lock Slice for update
 	guiExecutonServerSliceLoadAndSaveMutex.Lock()
 
+	// If the slice is empty, then do simple insert
+	if len(guiExecutionServerStartUpOrder) == 0 {
+		guiExecutionServerStartUpOrder = append(guiExecutionServerStartUpOrder, elementToInsert)
+
+		return
+	}
+
+	// Do not insert elements with a TimeStamp  that is before to current GuiExecutionsServers StartUp-TimeStamp
+	// Current GuiExecutionsServer is always store first in the slice
+	if guiExecutionServerStartUpOrder[0].applicationRunTimeStartUpTime.
+		After(elementToInsert.applicationRunTimeStartUpTime) {
+
+		return
+	}
+
+	// If the slice only has one element, then do simple insert
+	if len(guiExecutionServerStartUpOrder) == 1 {
+		guiExecutionServerStartUpOrder = append(guiExecutionServerStartUpOrder, elementToInsert)
+
+		return
+	}
+
 	// Find the index were item should be inserted
 	var index int
-	index = sort.Search(len(oldSlice), func(i int) bool {
+	index = sort.Search(len(guiExecutionServerStartUpOrder), func(i int) bool {
 
-		return oldSlice[i].applicationRunTimeStartUpTime.After(v.applicationRunTimeStartUpTime)
+		return guiExecutionServerStartUpOrder[i].applicationRunTimeStartUpTime.After(elementToInsert.applicationRunTimeStartUpTime)
 	})
 
 	// Insert Item at index
-	newSlice = insertAtIndex(oldSlice, index, v)
+	guiExecutionServerStartUpOrder = insertAtIndex(guiExecutionServerStartUpOrder, index, elementToInsert)
 
 	//UnLock Slice
 	guiExecutonServerSliceLoadAndSaveMutex.Unlock()
 
-	return newSlice
 }
 
 // Helper function that inserts element into slice at index and returns a new slice.
