@@ -1,0 +1,12 @@
+package testerGuiOwnerEngine
+
+import "FenixGuiExecutionServer/common_config"
+
+// Process the actual command 'ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp'
+func commandThisGuiExecutionServerSendsStartedUpTimeStamp(
+	guiExecutionServerStartedUpTimeStampRefresher *common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct) {
+
+	// Broadcast message to other GuiExecutionServer
+	broadcastSenderForChannelMessage_ThisGuiExecutionServerSendsStartedUpTimeStamp(*guiExecutionServerStartedUpTimeStampRefresher)
+
+}

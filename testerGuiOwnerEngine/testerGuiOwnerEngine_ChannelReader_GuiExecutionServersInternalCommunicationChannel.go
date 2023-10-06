@@ -50,14 +50,6 @@ func startTesterGuiOwnerEngineChannelReader() {
 
 		switch incomingTesterGuiOwnerEngineChannelCommand.TesterGuiOwnerEngineChannelCommand {
 
-		case common_config.ChannelCommand_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination:
-			processThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
-				incomingTesterGuiOwnerEngineChannelCommand)
-
-		case common_config.ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination:
-			processAnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
-				incomingTesterGuiOwnerEngineChannelCommand)
-
 		case common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown:
 			processThisGuiExecutionServerIsClosingDown(
 				incomingTesterGuiOwnerEngineChannelCommand)
@@ -83,6 +75,12 @@ func startTesterGuiOwnerEngineChannelReader() {
 		case common_config.ChannelCommand_AnotherGuiExecutionServerIsStartingUp:
 			processAnotherGuiExecutionServerIsStartingUp(incomingTesterGuiOwnerEngineChannelCommand)
 
+		case common_config.ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp:
+			processThisGuiExecutionServerSendsStartedUpTimeStamp(incomingTesterGuiOwnerEngineChannelCommand)
+
+		case common_config.ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp:
+			processAnotherGuiExecutionServerSendsStartedUpTimeStamp(incomingTesterGuiOwnerEngineChannelCommand)
+
 		// No other command is supported
 		default:
 			common_config.Logger.WithFields(logrus.Fields{
@@ -94,26 +92,6 @@ func startTesterGuiOwnerEngineChannelReader() {
 		// Clear memory for Message
 		incomingTesterGuiOwnerEngineChannelCommand = nil
 	}
-}
-
-// Process channel command 'ChannelCommand_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
-func processThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
-	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
-
-	// Process the actual command 'ChannelCommand_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
-	commandThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
-		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
-
-}
-
-// Process channel command 'ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
-func processAnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
-	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
-
-	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
-	commandAnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
-		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
-
 }
 
 // Process channel command 'ChannelCommand_ThisGuiExecutionServerIsClosingDown'
@@ -166,7 +144,7 @@ func processUserIsClosingDown(
 
 	// Process the actual command 'ChannelCommand_UserIsClosingDown'
 	commandUserIsClosingDown(
-		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
+		incomingTesterGuiOwnerEngineChannelCommand.TesterGuiIsClosingDown)
 
 }
 
@@ -186,6 +164,26 @@ func processAnotherGuiExecutionServerIsStartingUp(
 
 	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerIsStartingUp'
 	commandAnotherGuiExecutionServerIsStartingUp(
-		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsStartingUp)
+
+}
+
+// Process channel command 'ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp'
+func processThisGuiExecutionServerSendsStartedUpTimeStamp(
+	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp'
+	commandThisGuiExecutionServerSendsStartedUpTimeStamp(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerStartedUpTimeStampRefresher)
+
+}
+
+// Process channel command 'ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp'
+func processAnotherGuiExecutionServerSendsStartedUpTimeStamp(
+	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp'
+	commandAnotherGuiExecutionServerSendsStartedUpTimeStamp(
+		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerStartedUpTimeStampRefresher)
 
 }

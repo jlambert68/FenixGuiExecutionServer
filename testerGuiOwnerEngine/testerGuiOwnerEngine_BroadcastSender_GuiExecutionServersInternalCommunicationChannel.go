@@ -44,6 +44,7 @@ func broadcastSenderForChannelMessage_GuiExecutionServerIsClosingDownMessage(
 		GuiExecutionServerIsClosingDown:                                    tempGuiExecutionServerIsClosingDown,
 		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
 	}
 
 	// Broadcast message via Channel on Broadcast system
@@ -65,6 +66,7 @@ func broadcastSenderForChannelMessage_ThisGuiExecutionServerTakesThisUserAndTest
 		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
 		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct,
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
 	}
 
 	// Broadcast message via Channel  on Broadcast system
@@ -86,6 +88,7 @@ func broadcastSenderForChannelMessage_xxxx(
 		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
 		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct,
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
 	}
 
 	// Broadcast message via Channel  on Broadcast system
@@ -96,7 +99,7 @@ func broadcastSenderForChannelMessage_xxxx(
 
 // Broadcast message to all other GuiExecutionServers that 'ThisGuiExecutionServerIsStartingUp'
 func broadcastSenderForChannelMessage_ThisGuiExecutionServerIsStartingUp(
-	tempTGuiExecutionServerIsStartingUp common_config.GuiExecutionServerIsStartingUpStruct) (
+	tempGuiExecutionServerIsStartingUp common_config.GuiExecutionServerIsStartingUpStruct) (
 	err error) {
 
 	// Convert into Broadcast message type
@@ -107,7 +110,32 @@ func broadcastSenderForChannelMessage_ThisGuiExecutionServerIsStartingUp(
 		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
 		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
-		GuiExecutionServerIsStartingUp:                                     tempTGuiExecutionServerIsStartingUp,
+		GuiExecutionServerIsStartingUp:                                     tempGuiExecutionServerIsStartingUp,
+		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
+	}
+
+	// Broadcast message via Channel  on Broadcast system
+	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
+
+	return err
+}
+
+// Broadcast message to all other GuiExecutionServers about 'ThisGuiExecutionServerSendsStartedUpTimeStamp'
+// This is done periodically to ensure that all other GuiExecutionServers have the same "world view"
+func broadcastSenderForChannelMessage_ThisGuiExecutionServerSendsStartedUpTimeStamp(
+	tempGuiExecutionServerStartedUpTimeStampRefresher common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct) (
+	err error) {
+
+	// Convert into Broadcast message type
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType:                GuiExecutionServerSendsStartedUpTimeStampMessage,
+		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
+		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
+		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		GuiExecutionServerIsStartingUp:                                     common_config.GuiExecutionServerIsStartingUpStruct{},
+		GuiExecutionServerSendStartedUpTimeStamp:                           tempGuiExecutionServerStartedUpTimeStampRefresher,
 	}
 
 	// Broadcast message via Channel  on Broadcast system

@@ -16,6 +16,7 @@ const (
 	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage
 	UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage
 	GuiExecutionServerIsStartingUpMessage
+	GuiExecutionServerSendsStartedUpTimeStampMessage
 )
 
 // BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
@@ -28,6 +29,7 @@ type BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct st
 	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct `json:"thisguiexecutionservertakesthisuserandtestcaseexecutioncombination"`
 	UserUnsubscribesToUserAndTestCaseExecutionCombination              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct              `json:"userunsubscribestouserandtestcaseexecutioncombination"`
 	GuiExecutionServerIsStartingUp                                     common_config.GuiExecutionServerIsStartingUpStruct                                     `json:"guiexecutionserverisstartingup"`
+	GuiExecutionServerSendStartedUpTimeStamp                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct                      `json:"guiexecutionserversendstarteduptimestamp"`
 }
 
 // testCaseExecutionsSubscriptionsMap
@@ -50,3 +52,5 @@ type guiExecutionServerStartUpOrderStruct struct {
 // Slice containing all GuiExecutionServers broadcasted starting order. GuiExecutionServers are stored in StartUpTimeOrder
 // When the length == 1 then this GuiExecutionServer takes over all responsibility from other closing GuiExecutionServer
 var guiExecutionServerStartUpOrder []*guiExecutionServerStartUpOrderStruct
+
+// Sleep time between

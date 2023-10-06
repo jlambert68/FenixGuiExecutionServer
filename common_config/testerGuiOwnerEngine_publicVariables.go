@@ -26,15 +26,15 @@ type TesterGuiOwnerEngineChannelEngineType chan *TesterGuiOwnerEngineChannelComm
 type TesterGuiOwnerEngineChannelCommandType uint8
 
 const (
-	ChannelCommand_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination TesterGuiOwnerEngineChannelCommandType = iota
-	ChannelCommand_AnotherGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination
-	ChannelCommand_ThisGuiExecutionServerIsClosingDown
+	ChannelCommand_ThisGuiExecutionServerIsClosingDown TesterGuiOwnerEngineChannelCommandType = iota
 	ChannelCommand_AnotherGuiExecutionServerIsClosingDown
 	ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination
 	ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination
 	ChannelCommand_UserIsClosingDown
 	ChannelCommand_ThisGuiExecutionServerIsStartingUp
 	ChannelCommand_AnotherGuiExecutionServerIsStartingUp
+	ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp
+	ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp
 )
 
 // TesterGuiOwnerEngineChannelCommandStruct
@@ -46,6 +46,7 @@ type TesterGuiOwnerEngineChannelCommandStruct struct {
 	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination *ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
 	UserUnsubscribesToUserAndTestCaseExecutionCombination              *UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
 	GuiExecutionServerIsStartingUp                                     *GuiExecutionServerIsStartingUpStruct
+	GuiExecutionServerStartedUpTimeStampRefresher                      *GuiExecutionServerStartedUpTimeStampRefresherStruct
 }
 
 // TesterGuiIsClosingDownStruct
@@ -70,8 +71,16 @@ type GuiExecutionServerIsClosingDownStruct struct {
 
 // GuiExecutionServerIsStartingUpStruct
 // The following message is sent over Postgres Broadcast system and over TesterGuiOwnerEngine-channel
-// Used to specify that a GuiExecutionServer is Starting Upwn
+// Used to specify that a GuiExecutionServer is Starting Up
 type GuiExecutionServerIsStartingUpStruct struct {
+	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
+	MessageTimeStamp                time.Time `json:"messagetimestamp"`
+}
+
+// GuiExecutionServerStartedUpTimeStampRefresherStruct
+// The following message is sent over Postgres Broadcast system and over TesterGuiOwnerEngine-channel
+// Message is Broadcasted by GuiExecutionServer to other GuiExecutionServers to refresh and sync StartUp-TimeStampss
+type GuiExecutionServerStartedUpTimeStampRefresherStruct struct {
 	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
 	MessageTimeStamp                time.Time `json:"messagetimestamp"`
 }
