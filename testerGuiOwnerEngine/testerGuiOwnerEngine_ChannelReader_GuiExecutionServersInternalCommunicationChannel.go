@@ -81,6 +81,9 @@ func startTesterGuiOwnerEngineChannelReader() {
 		case common_config.ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp:
 			processAnotherGuiExecutionServerSendsStartedUpTimeStamp(incomingTesterGuiOwnerEngineChannelCommand)
 
+		case common_config.ChannelCommand_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination:
+			processAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination(incomingTesterGuiOwnerEngineChannelCommand)
+
 		// No other command is supported
 		default:
 			common_config.Logger.WithFields(logrus.Fields{
@@ -185,5 +188,15 @@ func processAnotherGuiExecutionServerSendsStartedUpTimeStamp(
 	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp'
 	commandAnotherGuiExecutionServerSendsStartedUpTimeStamp(
 		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerStartedUpTimeStampRefresher)
+
+}
+
+// Process channel command 'ChannelCommand_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination'
+func processAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination(
+	incomingTesterGuiOwnerEngineChannelCommand *common_config.TesterGuiOwnerEngineChannelCommandStruct) {
+
+	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination'
+	commandAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination(
+		incomingTesterGuiOwnerEngineChannelCommand.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination)
 
 }

@@ -35,6 +35,7 @@ const (
 	ChannelCommand_AnotherGuiExecutionServerIsStartingUp
 	ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp
 	ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp
+	ChannelCommand_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination
 )
 
 // TesterGuiOwnerEngineChannelCommandStruct
@@ -43,10 +44,11 @@ type TesterGuiOwnerEngineChannelCommandStruct struct {
 	TesterGuiOwnerEngineChannelCommand                                 TesterGuiOwnerEngineChannelCommandType
 	TesterGuiIsClosingDown                                             *TesterGuiIsClosingDownStruct
 	GuiExecutionServerIsClosingDown                                    *GuiExecutionServerIsClosingDownStruct
-	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination *ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
 	UserUnsubscribesToUserAndTestCaseExecutionCombination              *UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
 	GuiExecutionServerIsStartingUp                                     *GuiExecutionServerIsStartingUpStruct
 	GuiExecutionServerStartedUpTimeStampRefresher                      *GuiExecutionServerStartedUpTimeStampRefresherStruct
+	UserSubscribesToUserAndTestCaseExecutionCombination                *UserSubscribesToUserAndTestCaseExecutionCombinationStruct
+	AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination *AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct
 }
 
 // TesterGuiIsClosingDownStruct
@@ -94,9 +96,9 @@ type GuiExecutionServerResponsibilityStruct struct {
 	TestCaseExecutionVersion int32  `json:"testcaseexecutionversion"`
 }
 
-// ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
-// Used to specify that a specified GuiExecutionServer takes over status-sending-control for a TesterGui for a specific TestCaseExecutionUuid
-type ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct struct {
+// UserSubscribesToUserAndTestCaseExecutionCombinationStruct
+// Used to specify that a specified TesterGui subscribes to a specific TestCaseExecutionUuid
+type UserSubscribesToUserAndTestCaseExecutionCombinationStruct struct {
 	TesterGuiApplicationId          string    `json:"testerguiapplicationid"`
 	UserId                          string    `json:"userid"`
 	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
@@ -106,8 +108,19 @@ type ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct st
 }
 
 // UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
-// Used to specify that a specified TesterGui unsubscribes to a  for a specific TestCaseExecutionUuid
+// Used to specify that a specified TesterGui unsubscribes to a specific TestCaseExecutionUuid
 type UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct struct {
+	TesterGuiApplicationId          string    `json:"testerguiapplicationid"`
+	UserId                          string    `json:"userid"`
+	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
+	TestCaseExecutionUuid           string    `json:"testcaseexecutionuuid"`
+	TestCaseExecutionVersion        int32     `json:"testcaseexecutionversion"`
+	MessageTimeStamp                time.Time `json:"messagetimestamp"`
+}
+
+// AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct
+// Used to specify that a specific TestCaseExecutionUuid has been taken over by other GuiExecutionServer
+type AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct struct {
 	TesterGuiApplicationId          string    `json:"testerguiapplicationid"`
 	UserId                          string    `json:"userid"`
 	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`

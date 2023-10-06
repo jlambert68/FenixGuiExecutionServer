@@ -283,13 +283,12 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 					// Put message on 'testGuiExecutionEngineChannel' to be processed
 					var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp,
-						TesterGuiIsClosingDown:                                             nil,
-						GuiExecutionServerIsClosingDown:                                    nil,
-						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
-						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
-						GuiExecutionServerIsStartingUp:                                     nil,
-						GuiExecutionServerStartedUpTimeStampRefresher:                      &tempGuiExecutionServerStartedUpTimeStampRefresher,
+						TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp,
+						TesterGuiIsClosingDown:                                nil,
+						GuiExecutionServerIsClosingDown:                       nil,
+						UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
+						GuiExecutionServerIsStartingUp:                        nil,
+						GuiExecutionServerStartedUpTimeStampRefresher:         &tempGuiExecutionServerStartedUpTimeStampRefresher,
 					}
 
 					// Put on EngineChannel

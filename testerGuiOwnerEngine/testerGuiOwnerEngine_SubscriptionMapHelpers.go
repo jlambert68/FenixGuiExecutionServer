@@ -53,8 +53,7 @@ func saveToTestCaseExecutionsSubscriptionToMap(
 
 // Delete Subscription from the Subscriptions-Map
 func deleteTestCaseExecutionsSubscriptionFromMap(
-	testCaseExecutionsSubscriptionsMapKey testCaseExecutionsSubscriptionsMapKeyType,
-	guiExecutionServerResponsibilityStruct *common_config.GuiExecutionServerResponsibilityStruct) {
+	testCaseExecutionsSubscriptionsMapKey testCaseExecutionsSubscriptionsMapKeyType) {
 
 	// Lock Map for Deleting
 	subscriptionsMapLoadAndSaveMutex.Lock()
