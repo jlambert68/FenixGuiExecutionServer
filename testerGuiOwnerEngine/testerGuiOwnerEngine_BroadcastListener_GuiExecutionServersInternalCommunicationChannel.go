@@ -105,9 +105,10 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserIsClosingDown,
 						TesterGuiIsClosingDown:                                             &broadcastMessageForGuiExecutionServersInternalCommunicationChannel.TesterGuiIsClosingDown,
 						GuiExecutionServerIsClosingDown:                                    nil,
-						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
 						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
 						GuiExecutionServerIsStartingUp:                                     nil,
+						GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+						AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
 					}
 
 					// Put on EngineChannel
@@ -160,9 +161,10 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_AnotherGuiExecutionServerIsClosingDown,
 						TesterGuiIsClosingDown:                                             nil,
 						GuiExecutionServerIsClosingDown:                                    &tempGuiExecutionServerIsClosingDown,
-						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
 						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
 						GuiExecutionServerIsStartingUp:                                     nil,
+						GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+						AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
 					}
 
 					// Put on EngineChannel
@@ -174,7 +176,7 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 
 				// Was call originated from this 'GuiExecutionServer'
 				if broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
-					ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+					UserUnsubscribesToUserAndTestCaseExecutionCombination.
 					GuiExecutionServerApplicationId == common_config.ApplicationRunTimeUuid {
 
 					// Call was originated from this 'GuiExecutionServer'
@@ -187,17 +189,17 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 					// Convert message into channel-version of message
 					var tempUserUnsubscribesToUserAndTestCaseExecutionCombinationStruct common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
 					tempUserUnsubscribesToUserAndTestCaseExecutionCombinationStruct = common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{
-						TesterGuiApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						TesterGuiApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.UserUnsubscribesToUserAndTestCaseExecutionCombination.
 							TesterGuiApplicationId,
-						UserId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						UserId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.UserUnsubscribesToUserAndTestCaseExecutionCombination.
 							UserId,
-						GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.UserUnsubscribesToUserAndTestCaseExecutionCombination.
 							GuiExecutionServerApplicationId,
-						TestCaseExecutionUuid: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						TestCaseExecutionUuid: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.UserUnsubscribesToUserAndTestCaseExecutionCombination.
 							TestCaseExecutionUuid,
-						TestCaseExecutionVersion: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						TestCaseExecutionVersion: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.UserUnsubscribesToUserAndTestCaseExecutionCombination.
 							TestCaseExecutionVersion,
-						MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination.
+						MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.UserUnsubscribesToUserAndTestCaseExecutionCombination.
 							MessageTimeStamp,
 					}
 
@@ -207,9 +209,10 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination,
 						TesterGuiIsClosingDown:                                             nil,
 						GuiExecutionServerIsClosingDown:                                    nil,
-						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
 						UserUnsubscribesToUserAndTestCaseExecutionCombination:              &tempUserUnsubscribesToUserAndTestCaseExecutionCombinationStruct,
 						GuiExecutionServerIsStartingUp:                                     nil,
+						GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+						AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
 					}
 
 					// Put on EngineChannel
@@ -246,9 +249,10 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_AnotherGuiExecutionServerIsStartingUp,
 						TesterGuiIsClosingDown:                                             nil,
 						GuiExecutionServerIsClosingDown:                                    nil,
-						ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
 						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
 						GuiExecutionServerIsStartingUp:                                     &tempGuiExecutionServerIsStartingUp,
+						GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+						AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
 					}
 
 					// Put on EngineChannel
@@ -283,12 +287,56 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 					// Put message on 'testGuiExecutionEngineChannel' to be processed
 					var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-						TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp,
-						TesterGuiIsClosingDown:                                nil,
-						GuiExecutionServerIsClosingDown:                       nil,
-						UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
-						GuiExecutionServerIsStartingUp:                        nil,
-						GuiExecutionServerStartedUpTimeStampRefresher:         &tempGuiExecutionServerStartedUpTimeStampRefresher,
+						TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp,
+						TesterGuiIsClosingDown:                                             nil,
+						GuiExecutionServerIsClosingDown:                                    nil,
+						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+						GuiExecutionServerIsStartingUp:                                     nil,
+						GuiExecutionServerStartedUpTimeStampRefresher:                      &tempGuiExecutionServerStartedUpTimeStampRefresher,
+						AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
+					}
+
+					// Put on EngineChannel
+					common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
+				}
+
+			case AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination:
+				// Other GuiExecutionServer has taken this combination of TestCaseExecution and TesterGui
+
+				// Was call originated from this 'GuiExecutionServer'
+				if broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+					GuiExecutionServerSendStartedUpTimeStamp.
+					GuiExecutionServerApplicationId == common_config.ApplicationRunTimeUuid {
+
+					// Call was originated from this 'GuiExecutionServer'
+
+					// Do nothing
+
+				} else {
+					// Call was originated from other 'GuiExecutionServer'
+
+					// Convert message into channel-version of message
+					var tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination common_config.
+						AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct
+					tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination = common_config.
+						AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct{
+						GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+							GuiExecutionServerIsStartingUp.GuiExecutionServerApplicationId,
+						MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+							GuiExecutionServerIsStartingUp.MessageTimeStamp,
+					}
+
+					// Put message on 'testGuiExecutionEngineChannel' to be processed
+					var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
+					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
+						TesterGuiOwnerEngineChannelCommand: common_config.
+							ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp,
+						TesterGuiIsClosingDown:                                             nil,
+						GuiExecutionServerIsClosingDown:                                    nil,
+						UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+						GuiExecutionServerIsStartingUp:                                     nil,
+						GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+						AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: &tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination,
 					}
 
 					// Put on EngineChannel

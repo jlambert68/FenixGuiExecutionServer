@@ -30,25 +30,30 @@ func commandUserSubscribesToUserAndTestCaseExecutionCombination(
 		saveToTestCaseExecutionsSubscriptionToMap(
 			testCaseExecutionsSubscriptionsMapKey, guiExecutionServerResponsibility)
 
-		// Inform Other GuiExecutionServers to remove this Key from their maps
+		// Inform other GuiExecutionServers to remove this Key from their maps
 		// Create channel message
-		var tempGuiExecutionServerStartedUpTimeStampRefresher common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
-		tempGuiExecutionServerStartedUpTimeStampRefresher = common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{
-			GuiExecutionServerApplicationId: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
-				GuiExecutionServerIsStartingUp.GuiExecutionServerApplicationId,
-			MessageTimeStamp: broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
-				GuiExecutionServerIsStartingUp.MessageTimeStamp,
+		var tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination common_config.
+			AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct
+		tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination = common_config.
+			AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct{
+			TesterGuiApplicationId:          userSubscribesToUserAndTestCaseExecutionCombination.TesterGuiApplicationId,
+			UserId:                          userSubscribesToUserAndTestCaseExecutionCombination.UserId,
+			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
+			TestCaseExecutionUuid:           userSubscribesToUserAndTestCaseExecutionCombination.TestCaseExecutionUuid,
+			TestCaseExecutionVersion:        userSubscribesToUserAndTestCaseExecutionCombination.TestCaseExecutionVersion,
+			MessageTimeStamp:                userSubscribesToUserAndTestCaseExecutionCombination.MessageTimeStamp,
 		}
 
 		// Put message on 'testGuiExecutionEngineChannel' to be processed
 		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp,
-			TesterGuiIsClosingDown:                                nil,
-			GuiExecutionServerIsClosingDown:                       nil,
-			UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
-			GuiExecutionServerIsStartingUp:                        nil,
-			GuiExecutionServerStartedUpTimeStampRefresher:         &tempGuiExecutionServerStartedUpTimeStampRefresher,
+			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp,
+			TesterGuiIsClosingDown:                                             nil,
+			GuiExecutionServerIsClosingDown:                                    nil,
+			UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+			GuiExecutionServerIsStartingUp:                                     nil,
+			GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+			AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: &tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination,
 		}
 
 		// Put on EngineChannel

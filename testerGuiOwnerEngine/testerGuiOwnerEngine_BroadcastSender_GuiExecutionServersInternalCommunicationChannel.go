@@ -21,8 +21,9 @@ func broadcastSenderForChannelMessage_TesterGuiIsClosingDownMessage(
 		GuiExecutionServersInternalCommunicationChannelType:                TesterGuiIsClosingDownMessage,
 		TesterGuiIsClosingDown:                                             tempGuiExecutionServerIsClosingDown,
 		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
+		AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: common_config.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct{},
 	}
 
 	// Broadcast message via Channel on Broadcast system
@@ -42,56 +43,12 @@ func broadcastSenderForChannelMessage_GuiExecutionServerIsClosingDownMessage(
 		GuiExecutionServersInternalCommunicationChannelType:                GuiExecutionServerIsClosingDownMessage,
 		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
 		GuiExecutionServerIsClosingDown:                                    tempGuiExecutionServerIsClosingDown,
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
 		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
+		AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: common_config.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct{},
 	}
 
 	// Broadcast message via Channel on Broadcast system
-	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
-
-	return err
-}
-
-// Broadcast message to all other GuiExecutionServers that 'ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
-func broadcastSenderForChannelMessage_ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination(
-	tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct) (
-	err error) {
-
-	// Convert into Broadcast message type
-	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
-	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
-		GuiExecutionServersInternalCommunicationChannelType:                ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage,
-		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
-		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct,
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
-		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
-	}
-
-	// Broadcast message via Channel  on Broadcast system
-	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
-
-	return err
-}
-
-// Broadcast message to all other GuiExecutionServers that 'ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination'
-func broadcastSenderForChannelMessage_xxxx(
-	tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct) (
-	err error) {
-
-	// Convert into Broadcast message type
-	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
-	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
-		GuiExecutionServersInternalCommunicationChannelType:                ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage,
-		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
-		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct,
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
-		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
-	}
-
-	// Broadcast message via Channel  on Broadcast system
 	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
 
 	return err
@@ -108,10 +65,10 @@ func broadcastSenderForChannelMessage_ThisGuiExecutionServerIsStartingUp(
 		GuiExecutionServersInternalCommunicationChannelType:                GuiExecutionServerIsStartingUpMessage,
 		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
 		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
 		GuiExecutionServerIsStartingUp:                                     tempGuiExecutionServerIsStartingUp,
 		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
+		AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: common_config.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct{},
 	}
 
 	// Broadcast message via Channel  on Broadcast system
@@ -132,10 +89,32 @@ func broadcastSenderForChannelMessage_ThisGuiExecutionServerSendsStartedUpTimeSt
 		GuiExecutionServersInternalCommunicationChannelType:                GuiExecutionServerSendsStartedUpTimeStampMessage,
 		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
 		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
 		GuiExecutionServerIsStartingUp:                                     common_config.GuiExecutionServerIsStartingUpStruct{},
 		GuiExecutionServerSendStartedUpTimeStamp:                           tempGuiExecutionServerStartedUpTimeStampRefresher,
+		AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: common_config.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct{},
+	}
+
+	// Broadcast message via Channel  on Broadcast system
+	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
+
+	return err
+}
+
+// Broadcast message to all other GuiExecutionServers that (this) 'AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination'
+func broadcastSenderForChannelMessage_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination(
+	tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination common_config.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct) (
+	err error) {
+
+	// Convert into Broadcast message type
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType:                AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination,
+		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
+		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		GuiExecutionServerSendStartedUpTimeStamp:                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
+		AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination,
 	}
 
 	// Broadcast message via Channel  on Broadcast system

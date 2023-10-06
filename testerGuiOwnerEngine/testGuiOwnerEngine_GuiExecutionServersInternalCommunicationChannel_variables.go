@@ -17,6 +17,7 @@ const (
 	UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage
 	GuiExecutionServerIsStartingUpMessage
 	GuiExecutionServerSendsStartedUpTimeStampMessage
+	AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination
 )
 
 // BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
@@ -26,10 +27,10 @@ type BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct st
 	GuiExecutionServersInternalCommunicationChannelType                GuiExecutionServersInternalCommunicationChannelTypeType                                `json:"guiexecutionserversinternalcommunicationchanneltype"`
 	TesterGuiIsClosingDown                                             common_config.TesterGuiIsClosingDownStruct                                             `json:"testerguiisclosingdown"`
 	GuiExecutionServerIsClosingDown                                    common_config.GuiExecutionServerIsClosingDownStruct                                    `json:"guiexecutionserverisclosingdown"`
-	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct `json:"thisguiexecutionservertakesthisuserandtestcaseexecutioncombination"`
 	UserUnsubscribesToUserAndTestCaseExecutionCombination              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct              `json:"userunsubscribestouserandtestcaseexecutioncombination"`
 	GuiExecutionServerIsStartingUp                                     common_config.GuiExecutionServerIsStartingUpStruct                                     `json:"guiexecutionserverisstartingup"`
 	GuiExecutionServerSendStartedUpTimeStamp                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct                      `json:"guiexecutionserversendstarteduptimestamp"`
+	AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination common_config.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct `json:"anotherguiexecutionserverovertakesthistestcaseexecutioncombination"`
 }
 
 // testCaseExecutionsSubscriptionsMap

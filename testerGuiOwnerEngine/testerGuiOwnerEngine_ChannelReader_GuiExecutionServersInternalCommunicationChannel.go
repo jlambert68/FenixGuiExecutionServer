@@ -108,7 +108,6 @@ func processThisGuiExecutionServerIsClosingDown(
 	// Continue process to close down this server
 	*incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown.
 		CurrentGuiExecutionServerIsClosingDownReturnChannel <- true
-
 }
 
 // Process channel command 'ChannelCommand_AnotherGuiExecutionServerIsClosingDown'
@@ -118,7 +117,6 @@ func processAnotherGuiExecutionServerIsClosingDown(
 	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerIsClosingDown'
 	commandAnotherGuiExecutionServerIsClosingDown(
 		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
-
 }
 
 // Process channel command 'ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination
@@ -127,8 +125,7 @@ func processUserSubscribesToUserAndTestCaseExecutionCombination(
 
 	// Process the actual command 'ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination'
 	commandUserSubscribesToUserAndTestCaseExecutionCombination(
-		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
-
+		incomingTesterGuiOwnerEngineChannelCommand.UserSubscribesToUserAndTestCaseExecutionCombination)
 }
 
 // Process channel command 'ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination'
@@ -137,8 +134,7 @@ func processUserUnsubscribesToUserAndTestCaseExecutionCombination(
 
 	// Process the actual command 'ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination'
 	commandUserUnsubscribesToUserAndTestCaseExecutionCombination(
-		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsClosingDown)
-
+		incomingTesterGuiOwnerEngineChannelCommand.UserUnsubscribesToUserAndTestCaseExecutionCombination)
 }
 
 // Process channel command 'ChannelCommand_UserIsClosingDown'
@@ -148,7 +144,6 @@ func processUserIsClosingDown(
 	// Process the actual command 'ChannelCommand_UserIsClosingDown'
 	commandUserIsClosingDown(
 		incomingTesterGuiOwnerEngineChannelCommand.TesterGuiIsClosingDown)
-
 }
 
 // Process channel command 'ChannelCommand_ThisGuiExecutionServerIsStartingUp'
@@ -158,7 +153,6 @@ func processThisGuiExecutionServerIsStartingUp(
 	// Process the actual command 'ChannelCommand_ThisGuiExecutionServerIsStartingUp'
 	commandThisGuiExecutionServerIsStartingUp(
 		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsStartingUp)
-
 }
 
 // Process channel command 'ChannelCommand_AnotherGuiExecutionServerIsStartingUp'
@@ -168,7 +162,6 @@ func processAnotherGuiExecutionServerIsStartingUp(
 	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerIsStartingUp'
 	commandAnotherGuiExecutionServerIsStartingUp(
 		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerIsStartingUp)
-
 }
 
 // Process channel command 'ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp'
@@ -178,7 +171,6 @@ func processThisGuiExecutionServerSendsStartedUpTimeStamp(
 	// Process the actual command 'ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp'
 	commandThisGuiExecutionServerSendsStartedUpTimeStamp(
 		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerStartedUpTimeStampRefresher)
-
 }
 
 // Process channel command 'ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp'
@@ -188,7 +180,6 @@ func processAnotherGuiExecutionServerSendsStartedUpTimeStamp(
 	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp'
 	commandAnotherGuiExecutionServerSendsStartedUpTimeStamp(
 		incomingTesterGuiOwnerEngineChannelCommand.GuiExecutionServerStartedUpTimeStampRefresher)
-
 }
 
 // Process channel command 'ChannelCommand_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination'
@@ -198,5 +189,4 @@ func processAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination(
 	// Process the actual command 'ChannelCommand_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination'
 	commandAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination(
 		incomingTesterGuiOwnerEngineChannelCommand.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination)
-
 }
