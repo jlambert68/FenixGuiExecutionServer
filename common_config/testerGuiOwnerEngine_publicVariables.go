@@ -38,6 +38,19 @@ const (
 	ChannelCommand_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination
 )
 
+var ChannelCommand_Descriptions = map[TesterGuiOwnerEngineChannelCommandType]string{
+	0: "ChannelCommand_ThisGuiExecutionServerIsClosingDown",
+	1: "ChannelCommand_AnotherGuiExecutionServerIsClosingDown",
+	2: "ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination",
+	3: "ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination",
+	4: "ChannelCommand_UserIsClosingDown",
+	5: "ChannelCommand_ThisGuiExecutionServerIsStartingUp",
+	6: "ChannelCommand_AnotherGuiExecutionServerIsStartingUp",
+	7: "ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp",
+	8: "ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp",
+	9: "ChannelCommand_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination",
+}
+
 // TesterGuiOwnerEngineChannelCommandStruct
 // The struct for the message that are sent over the channel to the TesterGuiOwnerEngineEngine
 type TesterGuiOwnerEngineChannelCommandStruct struct {

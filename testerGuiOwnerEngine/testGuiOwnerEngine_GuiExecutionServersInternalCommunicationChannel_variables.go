@@ -13,12 +13,20 @@ type GuiExecutionServersInternalCommunicationChannelTypeType uint8
 const (
 	TesterGuiIsClosingDownMessage GuiExecutionServersInternalCommunicationChannelTypeType = iota
 	GuiExecutionServerIsClosingDownMessage
-	ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationMessage
 	UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage
 	GuiExecutionServerIsStartingUpMessage
 	GuiExecutionServerSendsStartedUpTimeStampMessage
 	AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination
 )
+
+var guiExecutionServersInternalCommunicationChannelTypeDescription = map[GuiExecutionServersInternalCommunicationChannelTypeType]string{
+	0: "TesterGuiIsClosingDownMessage",
+	1: "GuiExecutionServerIsClosingDownMessage",
+	2: "UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage",
+	3: "GuiExecutionServerIsStartingUpMessage",
+	4: "GuiExecutionServerSendsStartedUpTimeStampMessage",
+	5: "AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination",
+}
 
 // BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
 // The following message is sent over Postgres Broadcast system, 'Channel 1'

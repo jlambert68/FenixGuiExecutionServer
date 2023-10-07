@@ -19,7 +19,7 @@ func MyTestPubSubFunctions() {
 	// -- createTopic 'myTestTopic'
 	fmt.Println("createTopic")
 	testTopic := "myTestTopic"
-	err := createTopic(testTopic)
+	_, err := createTopic(testTopic)
 	if err != nil {
 		log.Println("'createTopic' - err: %s ", err.Error())
 		os.Exit(0)
@@ -29,7 +29,7 @@ func MyTestPubSubFunctions() {
 	// -- createTopic 'myTestTopic-DeadLettering'
 	fmt.Println("createTopic")
 	testTopicDeadLettering := "myTestTopic-DeadLettering"
-	err = createTopic(testTopicDeadLettering)
+	_, err = createTopic(testTopicDeadLettering)
 	if err != nil {
 		log.Println("'createTopic' - err: %s ", err.Error())
 		os.Exit(0)

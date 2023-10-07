@@ -27,6 +27,7 @@ func startTesterGuiOwnerEngineChannelReader() {
 		common_config.Logger.WithFields(logrus.Fields{
 			"Id": "a2809c91-87bc-44fc-894b-c8cdd73b521f",
 			"incomingTesterGuiOwnerEngineChannelCommand": incomingTesterGuiOwnerEngineChannelCommand,
+			"ChannelCommand_Descriptions":                common_config.ChannelCommand_Descriptions[incomingTesterGuiOwnerEngineChannelCommand.TesterGuiOwnerEngineChannelCommand],
 		}).Debug("Message received on 'TesterGuiOwnerEngineChannel'")
 
 		// If size of Channel > 'TesterGuiOwnerEngineChannelWarningLevel' then log Warning message

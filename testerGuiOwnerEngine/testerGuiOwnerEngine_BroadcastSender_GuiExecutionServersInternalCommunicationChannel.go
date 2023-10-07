@@ -128,6 +128,11 @@ func broadcastSenderForGuiExecutionServersInternalCommunicationChannel(
 	broadcastMessageForGuiExecutionServersInternalCommunicationChannel *BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct) (
 	err error) {
 
+	common_config.Logger.WithFields(logrus.Fields{
+		"id": "a356d4dc-2672-4026-a6d8-539a47e1b564",
+		"guiExecutionServersInternalCommunicationChannelTypeDescription": guiExecutionServersInternalCommunicationChannelTypeDescription[broadcastMessageForGuiExecutionServersInternalCommunicationChannel.GuiExecutionServersInternalCommunicationChannelType],
+	}).Debug("Broadcasting this message type")
+
 	// Create json as string
 	var broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSlice []byte
 	var broadcastMessageForGuiExecutionServersInternalCommunicationChannelAsByteSliceAsString string

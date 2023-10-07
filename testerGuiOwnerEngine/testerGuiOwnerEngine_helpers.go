@@ -45,7 +45,7 @@ func informOtherGuiExecutionServersThatThisGuiExecutionServerIsStartingUp() {
 
 	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-		TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
+		TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerIsStartingUp,
 		TesterGuiIsClosingDown:                                nil,
 		GuiExecutionServerIsClosingDown:                       nil,
 		UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,

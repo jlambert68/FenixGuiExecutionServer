@@ -5,7 +5,6 @@ import (
 	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/gcp"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
-	pubsub "FenixGuiExecutionServer/outgoingPubSubMessages"
 	"FenixGuiExecutionServer/testerGuiOwnerEngine"
 	"context"
 	"fmt"
@@ -61,7 +60,7 @@ func fenixGuiExecutionServerMain() {
 	// Clean up when leaving. Is placed after logger because shutdown logs information
 	defer cleanup()
 
-	pubsub.MyTestPubSubFunctions()
+	//pubsub.MyTestPubSubFunctions()
 
 	// Start TesterGuiOwnerEngine
 	testerGuiOwnerEngine.InitiateTesterGuiOwnerEngine()
