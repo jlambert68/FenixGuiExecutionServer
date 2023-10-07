@@ -50,8 +50,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsClosingDown(
 		TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserIsClosingDown,
 		TesterGuiIsClosingDown:                                             &tempTesterGuiIsClosingDown,
 		GuiExecutionServerIsClosingDown:                                    nil,
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+		GuiExecutionServerIsStartingUp:                                     nil,
+		GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+		UserSubscribesToUserAndTestCaseExecutionCombination:                nil,
+		AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
 	}
 
 	// Put on EngineChannel

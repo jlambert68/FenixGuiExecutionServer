@@ -39,11 +39,12 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessages(
 	// Loop all TestCaseExecutions, to subscribe to, and put them 'testGuiExecutionEngineChannel' to be processed
 	for _, tempTestCaseExecutionsStatusSubscriptions := range subscribeToMessagesRequest.TestCaseExecutionsStatusSubscriptions {
 
-		var tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination common_config.
-			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct
-		tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = common_config.
-			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombinationStruct{
-			TesterGuiApplicationId:          subscribeToMessagesRequest.ApplicationRunTimeIdentification.ApplicationRunTimeUuid,
+		var tempUserSubscribesToUserAndTestCaseExecutionCombination common_config.
+			UserSubscribesToUserAndTestCaseExecutionCombinationStruct
+		tempUserSubscribesToUserAndTestCaseExecutionCombination = common_config.
+			UserSubscribesToUserAndTestCaseExecutionCombinationStruct{
+			TesterGuiApplicationId: subscribeToMessagesRequest.
+				ApplicationRunTimeIdentification.ApplicationRunTimeUuid,
 			UserId:                          userID,
 			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
 			TestCaseExecutionUuid:           tempTestCaseExecutionsStatusSubscriptions.GetTestCaseExecutionUuid(),
@@ -56,8 +57,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessages(
 			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserSubscribesToUserAndTestCaseExecutionCombination,
 			TesterGuiIsClosingDown:                                             nil,
 			GuiExecutionServerIsClosingDown:                                    nil,
-			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: &tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
 			UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+			GuiExecutionServerIsStartingUp:                                     nil,
+			GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+			UserSubscribesToUserAndTestCaseExecutionCombination:                &tempUserSubscribesToUserAndTestCaseExecutionCombination,
+			AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
 		}
 
 		// Put on EngineChannel

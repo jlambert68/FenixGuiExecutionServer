@@ -9,6 +9,7 @@ import (
 	fenixExecutionServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGrpcApi/go_grpc_api"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 // InitiateTestCaseExecution - *********************************************************************
@@ -48,6 +49,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		return initiateSingleTestCaseExecutionResponseMessage, nil
 	}
 
+	// *********
 	// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
 	broadcastEngine_ExecutionStatusUpdate.AddSubscriptionForTestCaseExecutionToTesterGui(
 		broadcastEngine_ExecutionStatusUpdate.ApplicationRunTimeUuidType(
@@ -56,6 +58,38 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 			initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
 		1)
 
+	// ******
+	// Add a Subscription, using new the new PubSub-system, on this 'TestCaseExecution' for this 'TesterGui'
+	// Create message to be put on 'testGuiExecutionEngineChannel' to be processed
+	var tempUserSubscribesToUserAndTestCaseExecutionCombination common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct
+	tempUserSubscribesToUserAndTestCaseExecutionCombination = common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct{
+		TesterGuiApplicationId: initiateSingleTestCaseExecutionRequestMessage.
+			UserAndApplicationRunTimeIdentification.GetApplicationRunTimeUuid(),
+		UserId: initiateSingleTestCaseExecutionRequestMessage.
+			UserAndApplicationRunTimeIdentification.GetUserId(),
+		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
+		TestCaseExecutionUuid: initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.
+			GetTestCaseExecutionUuid(),
+		TestCaseExecutionVersion: int32(initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.GetTestCaseExecutionVersion()),
+		MessageTimeStamp:         time.Now(),
+	}
+
+	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
+	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
+		TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
+		TesterGuiIsClosingDown:                                             nil,
+		GuiExecutionServerIsClosingDown:                                    nil,
+		UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+		GuiExecutionServerIsStartingUp:                                     nil,
+		GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+		UserSubscribesToUserAndTestCaseExecutionCombination:                &tempUserSubscribesToUserAndTestCaseExecutionCombination,
+		AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
+	}
+
+	// Put on GuiOwnerEngineChannel
+	common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
+
+	// Send Execution to ExecutionServer
 	go func() {
 		// Prepare message to be sent to ExecutionServer
 		var testCaseExecutionsToProcessMessage *fenixExecutionServerGrpcApi.TestCaseExecutionsToProcessMessage
