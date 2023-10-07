@@ -9,7 +9,7 @@ import (
 )
 
 // Creates a Topic
-func createTopic(topicID string) (err error) {
+func createTopic(topicID string) (createdTopic *pubsub.Topic, err error) {
 
 	ctx := context.Background()
 
@@ -25,7 +25,7 @@ func createTopic(topicID string) (err error) {
 			"pubSubClient": pubSubClient,
 		}).Error("Got some problem when creating 'pubsub.NewClient'")
 
-		return err
+		return nil, err
 	}
 
 	if pubSubClient == nil {
@@ -35,14 +35,14 @@ func createTopic(topicID string) (err error) {
 			"pubSubClient": pubSubClient,
 		}).Error("Got some problem when creating 'pubsub.NewClient'")
 
-		return errors.New("got some problem when creating 'pubsub.NewClient'")
+		return nil, errors.New("got some problem when creating 'pubsub.NewClient'")
 	}
 
 	defer pubSubClient.Close()
 
 	// Create a new Topic
 	//var pubSubTopic *pubsub.Topic
-	_, err = pubSubClient.CreateTopic(ctx, topicID)
+	createdTopic, err = pubSubClient.CreateTopic(ctx, topicID)
 	if err != nil {
 
 		common_config.Logger.WithFields(logrus.Fields{
@@ -50,8 +50,8 @@ func createTopic(topicID string) (err error) {
 			"err": err,
 		}).Error("Got some problem when creating a new PubSub Topic")
 
-		return err
+		return nil, err
 	}
 
-	return err
+	return createdTopic, err
 }

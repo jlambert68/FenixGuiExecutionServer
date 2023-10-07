@@ -2,6 +2,7 @@ package testerGuiOwnerEngine
 
 import (
 	"FenixGuiExecutionServer/common_config"
+	"FenixGuiExecutionServer/outgoingPubSubMessages"
 	"strconv"
 )
 
@@ -59,6 +60,12 @@ func commandUserSubscribesToUserAndTestCaseExecutionCombination(
 		// Put on EngineChannel
 		common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
 
-	}
+		// Check if PubSub-Topic already exists
+		var pubSubTopicToLookFor string
+		pubSubTopicToLookFor = generatePubSubTopicForExecutionStatusUpdates(
+			tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination.TesterGuiApplicationId)
 
+		// Secure that PubSub exist, if not then creat both PubSubTopic and PubSubTopic-Subscription
+		outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)
+	}
 }

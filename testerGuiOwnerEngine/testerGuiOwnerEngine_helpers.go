@@ -110,3 +110,18 @@ func reInformOtherGuiExecutionServersAboutThatThisGuiExecutionServersStartingUpS
 	common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
 
 }
+
+// Create the PubSub-topic from TesterGui-ApplicationUuid
+func generatePubSubTopicForExecutionStatusUpdates(testerGuiApplicationUuid string) (statusExecutionTopic string) {
+
+	const statusExecutionTopicPrefix string = "StatusExecutionTopic-"
+
+	// Get the first 8 characters from TesterGui-ApplicationUuid
+	var shortedAppUuid string
+	shortedAppUuid = testerGuiApplicationUuid[0:8]
+
+	// Build PubSub-topic
+	statusExecutionTopic = statusExecutionTopicPrefix + shortedAppUuid
+
+	return statusExecutionTopic
+}
