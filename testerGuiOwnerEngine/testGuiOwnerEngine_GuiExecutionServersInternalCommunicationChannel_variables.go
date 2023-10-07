@@ -54,4 +54,5 @@ type guiExecutionServerStartUpOrderStruct struct {
 // When the length == 1 then this GuiExecutionServer takes over all responsibility from other closing GuiExecutionServer
 var guiExecutionServerStartUpOrder []*guiExecutionServerStartUpOrderStruct
 
-// Sleep time between
+// Sleep time between broadcasting for this GuiExecutionServer's StartUpTimeStamp
+const timeStampBroadcastDuration time.Duration = 5 * time.Minute

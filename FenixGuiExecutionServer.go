@@ -84,11 +84,12 @@ func fenixGuiExecutionServerMain() {
 
 		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
-			TesterGuiIsClosingDown:                                             nil,
-			GuiExecutionServerIsClosingDown:                                    &tempGuiExecutionServerIsClosingDown,
-			ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
-			UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
+			TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
+			TesterGuiIsClosingDown:                                nil,
+			GuiExecutionServerIsClosingDown:                       &tempGuiExecutionServerIsClosingDown,
+			UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
+			GuiExecutionServerIsStartingUp:                        nil,
+			GuiExecutionServerStartedUpTimeStampRefresher:         nil,
 		}
 
 		// Put on GuiOwnerEngineChannel

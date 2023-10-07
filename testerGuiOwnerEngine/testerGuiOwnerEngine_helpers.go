@@ -28,6 +28,9 @@ func InitiateTesterGuiOwnerEngine() {
 	// Start up GuiOwnerEngine
 	go startTesterGuiOwnerEngineChannelReader()
 
+	// Start up periodic broadcaster for StartUp-timestamp
+	reInformOtherGuiExecutionServersAboutThatThisGuiExecutionServersStartingUpStartUpTimeStamp()
+
 }
 
 // Inform other running GuiExecutionServers that this server is starting up
@@ -42,13 +45,12 @@ func informOtherGuiExecutionServersThatThisGuiExecutionServerIsStartingUp() {
 
 	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-		TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
-		TesterGuiIsClosingDown:                                             nil,
-		GuiExecutionServerIsClosingDown:                                    nil,
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
-		GuiExecutionServerIsStartingUp:                                     &tempGuiExecutionServerIsStartingUp,
-		GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+		TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
+		TesterGuiIsClosingDown:                                nil,
+		GuiExecutionServerIsClosingDown:                       nil,
+		UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
+		GuiExecutionServerIsStartingUp:                        &tempGuiExecutionServerIsStartingUp,
+		GuiExecutionServerStartedUpTimeStampRefresher:         nil,
 	}
 
 	// Put on GuiOwnerEngineChannel
@@ -56,12 +58,34 @@ func informOtherGuiExecutionServersThatThisGuiExecutionServerIsStartingUp() {
 
 }
 
-// re-inform, in a periodic manner, other running GuiExecutionServers that this server is starting up
+// re-inform, in a periodic manner, other running GuiExecutionServers about this server's StartingUp-timestamp
 func reInformOtherGuiExecutionServersAboutThatThisGuiExecutionServersStartingUpStartUpTimeStamp() {
 
 	go func() {
 		for {
-			time.Sleep(time.Millisecond)
+			// Sleep for a while before broadcasting
+			time.Sleep(timeStampBroadcastDuration)
+
+			// Put message on 'testGuiExecutionEngineChannel' to be processed
+			var tempGuiExecutionServerStartedUpTimeStampRefresher common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct
+			tempGuiExecutionServerStartedUpTimeStampRefresher = common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{
+				GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
+				MessageTimeStamp:                time.Now(),
+			}
+
+			var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
+			testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
+				TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
+				TesterGuiIsClosingDown:                                nil,
+				GuiExecutionServerIsClosingDown:                       nil,
+				UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
+				GuiExecutionServerIsStartingUp:                        nil,
+				GuiExecutionServerStartedUpTimeStampRefresher:         &tempGuiExecutionServerStartedUpTimeStampRefresher,
+			}
+
+			// Put on GuiOwnerEngineChannel
+			common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
+
 		}
 	}()
 
@@ -74,13 +98,12 @@ func reInformOtherGuiExecutionServersAboutThatThisGuiExecutionServersStartingUpS
 
 	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-		TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
-		TesterGuiIsClosingDown:                                             nil,
-		GuiExecutionServerIsClosingDown:                                    nil,
-		ThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination: nil,
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
-		GuiExecutionServerIsStartingUp:                                     &tempGuiExecutionServerIsStartingUp,
-		GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
+		TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
+		TesterGuiIsClosingDown:                                nil,
+		GuiExecutionServerIsClosingDown:                       nil,
+		UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
+		GuiExecutionServerIsStartingUp:                        &tempGuiExecutionServerIsStartingUp,
+		GuiExecutionServerStartedUpTimeStampRefresher:         nil,
 	}
 
 	// Put on GuiOwnerEngineChannel
