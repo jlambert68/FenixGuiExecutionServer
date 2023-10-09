@@ -1,0 +1,22 @@
+package testerGuiOwnerEngine
+
+import (
+	"FenixGuiExecutionServer/common_config"
+	"strconv"
+)
+
+// Process the actual command 'ChannelCommand_AnotherGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination'
+func commandAnotherGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination(
+	anotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination *common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct) {
+
+	// Remove the subscription from the map
+	// Create Key used for 'testCaseExecutionsSubscriptionsMap'
+	var testCaseExecutionsSubscriptionsMapKey testCaseExecutionsSubscriptionsMapKeyType
+	testCaseExecutionsSubscriptionsMapKey = testCaseExecutionsSubscriptionsMapKeyType(
+		anotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination.TestCaseExecutionUuid +
+			strconv.Itoa(int(anotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination.TestCaseExecutionVersion)))
+
+	// Remove this responsibility subscription
+	deleteTestCaseExecutionsSubscriptionFromMap(testCaseExecutionsSubscriptionsMapKey)
+
+}

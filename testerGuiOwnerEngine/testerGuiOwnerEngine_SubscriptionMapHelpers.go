@@ -66,6 +66,33 @@ func deleteTestCaseExecutionsSubscriptionFromMap(
 
 }
 
+// Delete All Subscription, for specific TesterGui, from the Subscriptions-Map
+func deleteTesterGuiFromTestCaseExecutionsSubscriptionFromMap(testerGuiApplicationUuid string) {
+
+	// Lock Map for Deleting
+	subscriptionsMapLoadAndSaveMutex.Lock()
+
+	var testCaseExecutionsSubscriptionsMapKeys []testCaseExecutionsSubscriptionsMapKeyType
+
+	// List all 'testCaseExecutionsSubscriptionsMapKeys' that match TesterGuiApplicationId
+	for testCaseExecutionsSubscriptionsMapKey, guiExecutionServerResponsibility := range testCaseExecutionsSubscriptionsMap {
+
+		if guiExecutionServerResponsibility.TesterGuiApplicationId == testerGuiApplicationUuid {
+			testCaseExecutionsSubscriptionsMapKeys = append(testCaseExecutionsSubscriptionsMapKeys, testCaseExecutionsSubscriptionsMapKey)
+		}
+
+	}
+
+	// Loop the 'testCaseExecutionsSubscriptionsMapKeys' and delete from Subscription-Map
+	for _, testCaseExecutionsSubscriptionsMapKey := range testCaseExecutionsSubscriptionsMapKeys {
+		delete(testCaseExecutionsSubscriptionsMap, testCaseExecutionsSubscriptionsMapKey)
+	}
+
+	//UnLock Map
+	subscriptionsMapLoadAndSaveMutex.Unlock()
+
+}
+
 // List all Subscriptions from the Subscriptions-Map
 func listAllTestCaseExecutionsSubscriptionsFromMap() (
 	guiExecutionServerResponsibilities []common_config.GuiExecutionServerResponsibilityStruct) {

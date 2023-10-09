@@ -16,7 +16,7 @@ const (
 	UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage
 	GuiExecutionServerIsStartingUpMessage
 	GuiExecutionServerSendsStartedUpTimeStampMessage
-	AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination
+	UserSubscribesToUserAndTestCaseExecutionCombinationMessage
 )
 
 var guiExecutionServersInternalCommunicationChannelTypeDescription = map[GuiExecutionServersInternalCommunicationChannelTypeType]string{
@@ -25,7 +25,7 @@ var guiExecutionServersInternalCommunicationChannelTypeDescription = map[GuiExec
 	2: "UserUnsubscribesToUserAndTestCaseExecutionCombinationMessage",
 	3: "GuiExecutionServerIsStartingUpMessage",
 	4: "GuiExecutionServerSendsStartedUpTimeStampMessage",
-	5: "AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination",
+	5: "UserSubscribesToUserAndTestCaseExecutionCombinationMessage",
 }
 
 // BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct

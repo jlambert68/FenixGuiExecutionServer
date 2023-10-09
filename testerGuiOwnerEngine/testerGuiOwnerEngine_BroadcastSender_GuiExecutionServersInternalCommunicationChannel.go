@@ -101,7 +101,7 @@ func broadcastSenderForChannelMessage_ThisGuiExecutionServerSendsStartedUpTimeSt
 	return err
 }
 
-// Broadcast message to all other GuiExecutionServers that (this) 'AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination'
+// Broadcast message to all other GuiExecutionServers that (this) 'UserSubscribesToUserAndTestCaseExecutionCombinationMessage'
 func broadcastSenderForChannelMessage_AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination(
 	tempAnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination common_config.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct) (
 	err error) {
@@ -109,7 +109,7 @@ func broadcastSenderForChannelMessage_AnotherGuiExecutionServerOvertakesThisTest
 	// Convert into Broadcast message type
 	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
 	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
-		GuiExecutionServersInternalCommunicationChannelType:                AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination,
+		GuiExecutionServersInternalCommunicationChannelType:                UserSubscribesToUserAndTestCaseExecutionCombinationMessage,
 		TesterGuiIsClosingDown:                                             common_config.TesterGuiIsClosingDownStruct{},
 		GuiExecutionServerIsClosingDown:                                    common_config.GuiExecutionServerIsClosingDownStruct{},
 		UserUnsubscribesToUserAndTestCaseExecutionCombination:              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},

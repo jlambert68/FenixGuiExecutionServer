@@ -53,7 +53,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) UnSubscribeToMessages(
 
 		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_UserUnsubscribesToUserAndTestCaseExecutionCombination,
+			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServersUserUnsubscribesToUserAndTestCaseExecutionCombination,
 			TesterGuiIsClosingDown:                                             nil,
 			GuiExecutionServerIsClosingDown:                                    nil,
 			UserUnsubscribesToUserAndTestCaseExecutionCombination:              &tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
