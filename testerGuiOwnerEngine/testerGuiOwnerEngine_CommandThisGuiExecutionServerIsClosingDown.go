@@ -14,6 +14,6 @@ func commandThisGuiExecutionServerIsClosingDown(
 	guiExecutionServerIsClosingDown.GuiExecutionServerResponsibilities = guiExecutionServerResponsibilities
 
 	// Broadcast message to other GuiExecutionServer
-	broadcastSenderForChannelMessage_GuiExecutionServerIsClosingDownMessage(*guiExecutionServerIsClosingDown)
+	broadcastSenderForChannelMessage_ThisGuiExecutionServerIsClosingDownMessage(*guiExecutionServerIsClosingDown)
 
 }

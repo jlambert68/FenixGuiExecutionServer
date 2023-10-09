@@ -31,8 +31,16 @@ func commandThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombi
 		saveToTestCaseExecutionsSubscriptionToMap(
 			testCaseExecutionsSubscriptionsMapKey, guiExecutionServerResponsibility)
 
+		// Check if PubSub-Topic already exists
+		var pubSubTopicToLookFor string
+		pubSubTopicToLookFor = generatePubSubTopicForExecutionStatusUpdates(
+			userSubscribesToUserAndTestCaseExecutionCombination.TesterGuiApplicationId)
+
+		// Secure that PubSub exist, if not then creat both PubSubTopic and PubSubTopic-Subscription
+		outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)
+
 		// Inform other GuiExecutionServers to remove this Key from their maps
-		// Create channel message
+		// Create message
 		var tempUserSubscribesToUserAndTestCaseExecutionCombination common_config.
 			UserSubscribesToUserAndTestCaseExecutionCombinationStruct
 		tempUserSubscribesToUserAndTestCaseExecutionCombination = common_config.
@@ -45,28 +53,9 @@ func commandThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombi
 			MessageTimeStamp:                userSubscribesToUserAndTestCaseExecutionCombination.MessageTimeStamp,
 		}
 
-		// Check if PubSub-Topic already exists
-		var pubSubTopicToLookFor string
-		pubSubTopicToLookFor = generatePubSubTopicForExecutionStatusUpdates(
-			tempUserSubscribesToUserAndTestCaseExecutionCombination.TesterGuiApplicationId)
-
-		// Secure that PubSub exist, if not then creat both PubSubTopic and PubSubTopic-Subscription
-		outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)
-
-		// Put message on 'testGuiExecutionEngineChannel' to be processed
-		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
-		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination,
-			TesterGuiIsClosingDown:                                nil,
-			GuiExecutionServerIsClosingDown:                       nil,
-			UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
-			GuiExecutionServerIsStartingUp:                        nil,
-			GuiExecutionServerStartedUpTimeStampRefresher:         nil,
-			UserSubscribesToUserAndTestCaseExecutionCombination:   &tempUserSubscribesToUserAndTestCaseExecutionCombination,
-		}
-
-		// Put on EngineChannel
-		common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
+		// Send message to be broadcasted to other GuiExecutionServers
+		broadcastSenderForChannelMessage_ThisGuiExecutionServersTesterGuiSubscribesToThisTestCaseExecutionCombination(
+			tempUserSubscribesToUserAndTestCaseExecutionCombination)
 
 	}
 }

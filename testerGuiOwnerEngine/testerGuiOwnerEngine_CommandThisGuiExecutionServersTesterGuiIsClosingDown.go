@@ -10,6 +10,6 @@ func commandThisGuiExecutionServersTesterGuiIsClosingDown(
 	deleteTesterGuiFromTestCaseExecutionsSubscriptionFromMap(testerGuiIsClosingDown.TesterGuiApplicationId)
 
 	// Broadcast message to other GuiExecutionServer
-	broadcastSenderForChannelMessage_TesterGuiIsClosingDownMessage(*testerGuiIsClosingDown)
+	broadcastSenderForChannelMessage_ThisGuiExecutionServersTesterGuiIsClosingDownMessage(*testerGuiIsClosingDown)
 
 }

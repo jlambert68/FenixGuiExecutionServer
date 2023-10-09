@@ -32,13 +32,13 @@ var guiExecutionServersInternalCommunicationChannelTypeDescription = map[GuiExec
 // The following message is sent over Postgres Broadcast system, 'Channel 1'
 // Used to specify that a TesterGui or GuiExecutionServer is Closing Down
 type BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct struct {
-	GuiExecutionServersInternalCommunicationChannelType                GuiExecutionServersInternalCommunicationChannelTypeType                                `json:"guiexecutionserversinternalcommunicationchanneltype"`
-	TesterGuiIsClosingDown                                             common_config.TesterGuiIsClosingDownStruct                                             `json:"testerguiisclosingdown"`
-	GuiExecutionServerIsClosingDown                                    common_config.GuiExecutionServerIsClosingDownStruct                                    `json:"guiexecutionserverisclosingdown"`
-	UserUnsubscribesToUserAndTestCaseExecutionCombination              common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct              `json:"userunsubscribestouserandtestcaseexecutioncombination"`
-	GuiExecutionServerIsStartingUp                                     common_config.GuiExecutionServerIsStartingUpStruct                                     `json:"guiexecutionserverisstartingup"`
-	GuiExecutionServerSendStartedUpTimeStamp                           common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct                      `json:"guiexecutionserversendstarteduptimestamp"`
-	AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination common_config.AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombinationStruct `json:"anotherguiexecutionserverovertakesthistestcaseexecutioncombination"`
+	GuiExecutionServersInternalCommunicationChannelType   GuiExecutionServersInternalCommunicationChannelTypeType                   `json:"guiexecutionserversinternalcommunicationchanneltype"`
+	TesterGuiIsClosingDown                                common_config.TesterGuiIsClosingDownStruct                                `json:"testerguiisclosingdown"`
+	GuiExecutionServerIsClosingDown                       common_config.GuiExecutionServerIsClosingDownStruct                       `json:"guiexecutionserverisclosingdown"`
+	UserUnsubscribesToUserAndTestCaseExecutionCombination common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct `json:"userunsubscribestouserandtestcaseexecutioncombination"`
+	GuiExecutionServerIsStartingUp                        common_config.GuiExecutionServerIsStartingUpStruct                        `json:"guiexecutionserverisstartingup"`
+	GuiExecutionServerSendStartedUpTimeStamp              common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct         `json:"guiexecutionserversendstarteduptimestamp"`
+	UserSubscribesToUserAndTestCaseExecutionCombination   common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct   `json:"usersubscribestouserandtestcaseexecutioncombination"`
 }
 
 // testCaseExecutionsSubscriptionsMap

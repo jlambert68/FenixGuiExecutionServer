@@ -19,4 +19,22 @@ func commandThisGuiExecutionServersUserUnsubscribesToUserAndTestCaseExecutionCom
 	// Remove this responsibility subscription
 	deleteTestCaseExecutionsSubscriptionFromMap(testCaseExecutionsSubscriptionsMapKey)
 
+	// Inform other GuiExecutionServers to remove this Key from their maps
+	// Create message
+	var tempUserUnsubscribesToUserAndTestCaseExecutionCombination common_config.
+		UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct
+	tempUserUnsubscribesToUserAndTestCaseExecutionCombination = common_config.
+		UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{
+		TesterGuiApplicationId:          userUnsubscribesToUserAndTestCaseExecutionCombination.TesterGuiApplicationId,
+		UserId:                          userUnsubscribesToUserAndTestCaseExecutionCombination.UserId,
+		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
+		TestCaseExecutionUuid:           userUnsubscribesToUserAndTestCaseExecutionCombination.TestCaseExecutionUuid,
+		TestCaseExecutionVersion:        userUnsubscribesToUserAndTestCaseExecutionCombination.TestCaseExecutionVersion,
+		MessageTimeStamp:                userUnsubscribesToUserAndTestCaseExecutionCombination.MessageTimeStamp,
+	}
+
+	// Send message to be broadcasted to other GuiExecutionServers
+	broadcastSenderForChannelMessage_ThisGuiExecutionServersTesterGuiUnsubscribesToThisTestCaseExecutionCombination(
+		tempUserUnsubscribesToUserAndTestCaseExecutionCombination)
+
 }
