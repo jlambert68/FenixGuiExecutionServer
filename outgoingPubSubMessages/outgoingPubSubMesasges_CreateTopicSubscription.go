@@ -9,9 +9,11 @@ import (
 )
 
 // Creates a Topic
-func createTopicSubscription(topicID string, deadLetterinTopicID string) (err error) {
+func createTopicSubscription(topicID string, deadLetteringTopicID string) (err error) {
 
-	topicSubscriptionId := topicID + "-sub"
+	// Get the Topic-Subscription-name
+	var topicSubscriptionId string
+	topicSubscriptionId = createTopicSubscriptionName(topicID)
 
 	ctx := context.Background()
 
@@ -35,9 +37,17 @@ func createTopicSubscription(topicID string, deadLetterinTopicID string) (err er
 	var topic *pubsub.Topic
 	topic = pubSubClient.Topic(topicID)
 
-	// Get the DeadLettering-Topic object
+	// Get the DeadLettering-Topic object if an incoming name was supplied
 	var deadLetteringTopic *pubsub.Topic
-	deadLetteringTopic = pubSubClient.Topic(deadLetterinTopicID)
+	var deadLetterPolicy *pubsub.DeadLetterPolicy
+	if len(deadLetteringTopicID) > 0 {
+		deadLetteringTopic = pubSubClient.Topic(deadLetteringTopicID)
+
+		deadLetterPolicy = &pubsub.DeadLetterPolicy{
+			DeadLetterTopic:     deadLetteringTopic.String(),
+			MaxDeliveryAttempts: 5,
+		}
+	}
 
 	// Set up Subscription parameters
 	var subscriptionConfig pubsub.SubscriptionConfig
@@ -52,11 +62,8 @@ func createTopicSubscription(topicID string, deadLetterinTopicID string) (err er
 		ExpirationPolicy:      nil,
 		Labels:                nil,
 		EnableMessageOrdering: false,
-		DeadLetterPolicy: &pubsub.DeadLetterPolicy{
-			DeadLetterTopic:     deadLetteringTopic.String(),
-			MaxDeliveryAttempts: 5,
-		},
-		Filter: "",
+		DeadLetterPolicy:      deadLetterPolicy,
+		Filter:                "",
 		RetryPolicy: &pubsub.RetryPolicy{
 			MinimumBackoff: nil,
 			MaximumBackoff: nil,
@@ -81,4 +88,15 @@ func createTopicSubscription(topicID string, deadLetterinTopicID string) (err er
 	}
 
 	return err
+}
+
+// Creates a Topic-Subscription-Name
+func createTopicSubscriptionName(topicID string) (topicSubscriptionName string) {
+
+	const topicSubscriptionPostfix string = "-sub"
+
+	// Create the Topic-Subscription-name
+	topicSubscriptionName = topicID + topicSubscriptionPostfix
+
+	return topicSubscriptionName
 }
