@@ -28,12 +28,12 @@ func CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToVerify string
 	for _, tempTopic := range pubSubTopics {
 
 		// Look if the Topic was found
-		if tempTopic.String() == pubSubTopicToVerify {
+		if tempTopic.ID() == pubSubTopicToVerify {
 			topicExists = true
 
 		}
 		// If the DeadLettingTopic was found
-		if tempTopic.String() == pubSubDeadLetteringTopicToVerify {
+		if tempTopic.ID() == pubSubDeadLetteringTopicToVerify {
 			deadLetteringTopicExists = true
 			foundDeadLettingTopics = tempTopic
 
@@ -47,11 +47,11 @@ func CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToVerify string
 
 	// Create Subscription Name
 	var topicSubscriptionNameToVerify string
-	topicSubscriptionNameToVerify = pubSubTopicToVerify + "-sub"
+	topicSubscriptionNameToVerify = createTopicSubscriptionName(pubSubTopicToVerify)
 
 	// Create DeadLettering-Subscription Name
 	var topicDeadLetteringSubscriptionNameToVerify string
-	topicDeadLetteringSubscriptionNameToVerify = createDeadLetteringTopicSubscriptionName(pubSubDeadLetteringTopicToVerify)
+	topicDeadLetteringSubscriptionNameToVerify = createDeadLetteringTopicSubscriptionName(pubSubTopicToVerify)
 
 	// Get all topic-subscriptions
 	pubSubTopicSubscriptions, err = listSubscriptions(pubSubTopicToVerify)
@@ -60,20 +60,20 @@ func CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToVerify string
 	for _, tempTopicSubscription := range pubSubTopicSubscriptions {
 
 		// If the TopicSubscription was found then exit for loop
-		if tempTopicSubscription.String() == topicSubscriptionNameToVerify {
+		if tempTopicSubscription.ID() == topicSubscriptionNameToVerify {
 			topicSubscriptionExists = true
 			break
 		}
 	}
 
 	// Get all DeadLettering-topic-subscriptions
-	pubSubDeadLetteringTopicSubscriptions, err = listSubscriptions(pubSubTopicToVerify)
+	pubSubDeadLetteringTopicSubscriptions, err = listSubscriptions(pubSubDeadLetteringTopicToVerify)
 
 	// Loop the slice with DeadLettering-topic-subscriptions to find out if subscriptions already exists
 	for _, tempDeadLetterTopicSubscription := range pubSubDeadLetteringTopicSubscriptions {
 
 		// If the DeadLetteringTopicSubscription was found then exit for loop
-		if tempDeadLetterTopicSubscription.String() == topicDeadLetteringSubscriptionNameToVerify {
+		if tempDeadLetterTopicSubscription.ID() == topicDeadLetteringSubscriptionNameToVerify {
 			deadLetteringTopicSubscriptionExists = true
 			break
 		}
@@ -97,7 +97,7 @@ func CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToVerify string
 
 	// if the TopicSubscription was not found then create the TopicSubscription
 	if topicSubscriptionExists == false {
-		err = createTopicSubscription(pubSubTopicToVerify, foundDeadLettingTopics.String())
+		err = createTopicSubscription(pubSubTopicToVerify, foundDeadLettingTopics.ID())
 		if err != nil {
 			return err
 		}

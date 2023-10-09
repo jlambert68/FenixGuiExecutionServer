@@ -17,6 +17,7 @@ const (
 	GuiExecutionServerIsStartingUpMessage
 	GuiExecutionServerSendsStartedUpTimeStampMessage
 	UserSubscribesToUserAndTestCaseExecutionCombinationMessage
+	TesterGuiIsStartingUpMessage
 )
 
 var guiExecutionServersInternalCommunicationChannelTypeDescription = map[GuiExecutionServersInternalCommunicationChannelTypeType]string{
@@ -26,6 +27,7 @@ var guiExecutionServersInternalCommunicationChannelTypeDescription = map[GuiExec
 	3: "GuiExecutionServerIsStartingUpMessage",
 	4: "GuiExecutionServerSendsStartedUpTimeStampMessage",
 	5: "UserSubscribesToUserAndTestCaseExecutionCombinationMessage",
+	6: "TesterGuiIsStartingUpMessage",
 }
 
 // BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
@@ -39,6 +41,7 @@ type BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct st
 	GuiExecutionServerIsStartingUp                        common_config.GuiExecutionServerIsStartingUpStruct                        `json:"guiexecutionserverisstartingup"`
 	GuiExecutionServerSendStartedUpTimeStamp              common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct         `json:"guiexecutionserversendstarteduptimestamp"`
 	UserSubscribesToUserAndTestCaseExecutionCombination   common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct   `json:"usersubscribestouserandtestcaseexecutioncombination"`
+	TesterGuiIsStartingUp                                 common_config.TesterGuiIsStartingUpStruct                                 `json:"testerguiisstartingup"`
 }
 
 // testCaseExecutionsSubscriptionsMap

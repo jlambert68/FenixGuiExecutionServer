@@ -53,14 +53,14 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) UnSubscribeToMessages(
 
 		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServersUserUnsubscribesToUserAndTestCaseExecutionCombination,
-			TesterGuiIsClosingDown:                                             nil,
-			GuiExecutionServerIsClosingDown:                                    nil,
-			UserUnsubscribesToUserAndTestCaseExecutionCombination:              &tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
-			GuiExecutionServerIsStartingUp:                                     nil,
-			GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
-			UserSubscribesToUserAndTestCaseExecutionCombination:                nil,
-			AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil}
+			TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServersUserUnsubscribesToUserAndTestCaseExecutionCombination,
+			TesterGuiIsClosingDown:                                nil,
+			GuiExecutionServerIsClosingDown:                       nil,
+			UserUnsubscribesToUserAndTestCaseExecutionCombination: &tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination,
+			GuiExecutionServerIsStartingUp:                        nil,
+			GuiExecutionServerStartedUpTimeStampRefresher:         nil,
+			UserSubscribesToUserAndTestCaseExecutionCombination:   nil,
+		}
 
 		// Put on EngineChannel
 		common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand

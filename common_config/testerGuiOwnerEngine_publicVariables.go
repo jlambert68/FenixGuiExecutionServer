@@ -38,6 +38,8 @@ const (
 	ChannelCommand_AnotherGuiExecutionServersTesterGuiIsClosingDown
 	ChannelCommand_AnotherGuiExecutionServersUserUnsubscribesToUserAndTestCaseExecutionCombination
 	ChannelCommand_AnotherGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination
+	ChannelCommand_ThisGuiExecutionServersTesterGuiIsStartingUp
+	ChannelCommand_AnotherGuiExecutionServersTesterGuiIsStartingUp
 )
 
 var ChannelCommand_Descriptions = map[TesterGuiOwnerEngineChannelCommandType]string{
@@ -50,9 +52,11 @@ var ChannelCommand_Descriptions = map[TesterGuiOwnerEngineChannelCommandType]str
 	6:  "ChannelCommand_AnotherGuiExecutionServerIsStartingUp",
 	7:  "ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp",
 	8:  "ChannelCommand_AnotherGuiExecutionServerSendsStartedUpTimeStamp",
-	10: "ChannelCommand_AnotherGuiExecutionServersTesterGuiIsClosingDown",
-	11: "ChannelCommand_AnotherGuiExecutionServersUserUnsubscribesToUserAndTestCaseExecutionCombination",
-	12: "ChannelCommand_AnotherGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination",
+	9:  "ChannelCommand_AnotherGuiExecutionServersTesterGuiIsClosingDown",
+	10: "ChannelCommand_AnotherGuiExecutionServersUserUnsubscribesToUserAndTestCaseExecutionCombination",
+	11: "ChannelCommand_AnotherGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination",
+	12: "ChannelCommand_ThisGuiExecutionServersTesterGuiIsStartingUp",
+	13: "ChannelCommand_AnotherGuiExecutionServersTesterGuiIsStartingUp",
 }
 
 // TesterGuiOwnerEngineChannelCommandStruct
@@ -65,12 +69,23 @@ type TesterGuiOwnerEngineChannelCommandStruct struct {
 	GuiExecutionServerIsStartingUp                        *GuiExecutionServerIsStartingUpStruct
 	GuiExecutionServerStartedUpTimeStampRefresher         *GuiExecutionServerStartedUpTimeStampRefresherStruct
 	UserSubscribesToUserAndTestCaseExecutionCombination   *UserSubscribesToUserAndTestCaseExecutionCombinationStruct
+	TesterGuiIsStartingUp                                 *TesterGuiIsStartingUpStruct
 }
 
 // TesterGuiIsClosingDownStruct
 // The following message is sent over Postgres Broadcast system and over TesterGuiOwnerEngine-channel
 // Used to specify that a TesterGui is Closing Down
 type TesterGuiIsClosingDownStruct struct {
+	TesterGuiApplicationId          string    `json:"testerguiapplicationid"`
+	UserId                          string    `json:"userid"`
+	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`
+	MessageTimeStamp                time.Time `json:"messagetimestamp"`
+}
+
+// TesterGuiIsStartingUpStruct
+// The following message is sent over Postgres Broadcast system and over TesterGuiOwnerEngine-channel
+// Used to specify that a TesterGui is Starting up
+type TesterGuiIsStartingUpStruct struct {
 	TesterGuiApplicationId          string    `json:"testerguiapplicationid"`
 	UserId                          string    `json:"userid"`
 	GuiExecutionServerApplicationId string    `json:"guiexecutionserverapplicationid"`

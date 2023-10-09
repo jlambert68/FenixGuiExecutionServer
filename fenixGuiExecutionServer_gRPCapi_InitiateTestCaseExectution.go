@@ -76,14 +76,13 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 
 	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-		TesterGuiOwnerEngineChannelCommand:                                 common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
-		TesterGuiIsClosingDown:                                             nil,
-		GuiExecutionServerIsClosingDown:                                    nil,
-		UserUnsubscribesToUserAndTestCaseExecutionCombination:              nil,
-		GuiExecutionServerIsStartingUp:                                     nil,
-		GuiExecutionServerStartedUpTimeStampRefresher:                      nil,
-		UserSubscribesToUserAndTestCaseExecutionCombination:                &tempUserSubscribesToUserAndTestCaseExecutionCombination,
-		AnotherGuiExecutionServerOvertakesThisTestCaseExecutionCombination: nil,
+		TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination,
+		TesterGuiIsClosingDown:                                nil,
+		GuiExecutionServerIsClosingDown:                       nil,
+		UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
+		GuiExecutionServerIsStartingUp:                        nil,
+		GuiExecutionServerStartedUpTimeStampRefresher:         nil,
+		UserSubscribesToUserAndTestCaseExecutionCombination:   &tempUserSubscribesToUserAndTestCaseExecutionCombination,
 	}
 
 	// Put on GuiOwnerEngineChannel

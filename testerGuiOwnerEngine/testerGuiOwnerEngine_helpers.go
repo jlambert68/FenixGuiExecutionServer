@@ -112,16 +112,17 @@ func reInformOtherGuiExecutionServersAboutThatThisGuiExecutionServersStartingUpS
 }
 
 // Create the PubSub-topic from TesterGui-ApplicationUuid
-func generatePubSubTopicForExecutionStatusUpdates(testerGuiApplicationUuid string) (statusExecutionTopic string) {
+func generatePubSubTopicForExecutionStatusUpdates(testerGuiUserId string) (statusExecutionTopic string) {
 
-	const statusExecutionTopicPrefix string = "StatusExecutionTopic-"
+	var pubSubTopicBase string
+	pubSubTopicBase = common_config.TestExecutionStatusPubSubTopicBase
 
 	// Get the first 8 characters from TesterGui-ApplicationUuid
-	var shortedAppUuid string
-	shortedAppUuid = testerGuiApplicationUuid[0:8]
+	// var shortedAppUuid string
+	// shortedAppUuid = testerGuiApplicationUuid[0:8]
 
 	// Build PubSub-topic
-	statusExecutionTopic = statusExecutionTopicPrefix + shortedAppUuid
+	statusExecutionTopic = pubSubTopicBase + "-" + testerGuiUserId
 
 	return statusExecutionTopic
 }

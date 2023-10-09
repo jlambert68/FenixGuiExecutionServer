@@ -34,7 +34,7 @@ func commandThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombi
 		// Check if PubSub-Topic already exists
 		var pubSubTopicToLookFor string
 		pubSubTopicToLookFor = generatePubSubTopicForExecutionStatusUpdates(
-			userSubscribesToUserAndTestCaseExecutionCombination.TesterGuiApplicationId)
+			userSubscribesToUserAndTestCaseExecutionCombination.UserId)
 
 		// Secure that PubSub exist, if not then creat both PubSubTopic and PubSubTopic-Subscription
 		outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)

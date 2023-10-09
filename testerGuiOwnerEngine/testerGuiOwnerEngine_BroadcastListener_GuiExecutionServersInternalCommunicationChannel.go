@@ -343,6 +343,39 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 					common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
 				}
 
+			case TesterGuiIsStartingUpMessage:
+				// A 'TesterGui' is starting up
+
+				// Was call originated from this 'GuiExecutionServer'
+				if broadcastMessageForGuiExecutionServersInternalCommunicationChannel.
+					TesterGuiIsStartingUp.TesterGuiApplicationId == common_config.ApplicationRunTimeUuid {
+
+					// Call was originated from this 'GuiExecutionServer'
+
+					// Do nothing
+
+				} else {
+					// Call was originated from other 'GuiExecutionServer'
+
+					// Convert message into channel-version of message and Put message on
+					// 'testGuiExecutionEngineChannel' to be processed
+
+					var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
+					testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
+						TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_AnotherGuiExecutionServersTesterGuiIsStartingUp,
+						TesterGuiIsClosingDown:                                nil,
+						GuiExecutionServerIsClosingDown:                       nil,
+						UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
+						GuiExecutionServerIsStartingUp:                        nil,
+						GuiExecutionServerStartedUpTimeStampRefresher:         nil,
+						UserSubscribesToUserAndTestCaseExecutionCombination:   nil,
+						TesterGuiIsStartingUp:                                 &broadcastMessageForGuiExecutionServersInternalCommunicationChannel.TesterGuiIsStartingUp,
+					}
+
+					// Put on EngineChannel
+					common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
+				}
+
 			default:
 				common_config.Logger.WithFields(logrus.Fields{
 					"Id": "ddfcf5d8-6e59-4ab9-a03e-eb12c3f54106",

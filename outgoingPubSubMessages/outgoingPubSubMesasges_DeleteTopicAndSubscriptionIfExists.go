@@ -28,12 +28,12 @@ func DeleteTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToDelete string
 	for _, tempTopic := range pubSubTopics {
 
 		// Look if the Topic was found
-		if tempTopic.String() == pubSubTopicToDelete {
+		if tempTopic.ID() == pubSubTopicToDelete {
 			topicExists = true
 
 		}
 		// If the DeadLettingTopic was found
-		if tempTopic.String() == pubSubDeadLetteringTopicToDelete {
+		if tempTopic.ID() == pubSubDeadLetteringTopicToDelete {
 			deadLetteringTopicExists = true
 
 		}

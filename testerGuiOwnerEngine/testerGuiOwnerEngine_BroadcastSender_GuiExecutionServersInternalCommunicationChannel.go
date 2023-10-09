@@ -145,6 +145,30 @@ func broadcastSenderForChannelMessage_ThisGuiExecutionServersTesterGuiUnsubscrib
 	return err
 }
 
+// Broadcast message to all other GuiExecutionServers that 'ThisGuiExecutionServerIsStartingUp'
+func broadcastSenderForChannelMessage_ThisGuiExecutionServersTesterGuiIsStartingUp(
+	tempTesterGuiIsStartingUp common_config.TesterGuiIsStartingUpStruct) (
+	err error) {
+
+	// Convert into Broadcast message type
+	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
+	broadcastMessageForGuiExecutionServersInternalCommunicationChannel = BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct{
+		GuiExecutionServersInternalCommunicationChannelType:   TesterGuiIsStartingUpMessage,
+		TesterGuiIsClosingDown:                                common_config.TesterGuiIsClosingDownStruct{},
+		GuiExecutionServerIsClosingDown:                       common_config.GuiExecutionServerIsClosingDownStruct{},
+		UserUnsubscribesToUserAndTestCaseExecutionCombination: common_config.UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		GuiExecutionServerIsStartingUp:                        common_config.GuiExecutionServerIsStartingUpStruct{},
+		GuiExecutionServerSendStartedUpTimeStamp:              common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{},
+		UserSubscribesToUserAndTestCaseExecutionCombination:   common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct{},
+		TesterGuiIsStartingUp:                                 tempTesterGuiIsStartingUp,
+	}
+
+	// Broadcast message via Channel  on Broadcast system
+	err = broadcastSenderForGuiExecutionServersInternalCommunicationChannel(&broadcastMessageForGuiExecutionServersInternalCommunicationChannel)
+
+	return err
+}
+
 // Broadcast message on 'GuiExecutionServersInternalCommunicationChannel'
 func broadcastSenderForGuiExecutionServersInternalCommunicationChannel(
 	broadcastMessageForGuiExecutionServersInternalCommunicationChannel *BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct) (
