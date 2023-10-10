@@ -2,7 +2,6 @@ package testerGuiOwnerEngine
 
 import (
 	"FenixGuiExecutionServer/common_config"
-	"FenixGuiExecutionServer/outgoingPubSubMessages"
 	"strconv"
 )
 
@@ -31,15 +30,18 @@ func commandThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombi
 		saveToTestCaseExecutionsSubscriptionToMap(
 			testCaseExecutionsSubscriptionsMapKey, guiExecutionServerResponsibility)
 
-		// Check if PubSub-Topic already exists
-		var pubSubTopicToLookFor string
-		pubSubTopicToLookFor = generatePubSubTopicForExecutionStatusUpdates(
-			userSubscribesToUserAndTestCaseExecutionCombination.UserId)
+		// This part is not needed due to that Check is done when TesterGui starts up
+		/*
+			// Check if PubSub-Topic already exists
+			var pubSubTopicToLookFor string
+			pubSubTopicToLookFor = generatePubSubTopicForExecutionStatusUpdates(
+				userSubscribesToUserAndTestCaseExecutionCombination.UserId)
 
-		// Secure that PubSub exist, if not then creat both PubSubTopic and PubSubTopic-Subscription
-		outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)
+			// Secure that PubSub exist, if not then create both PubSubTopic and PubSubTopic-Subscription
+			outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)
+		*/
 
-		// Inform other GuiExecutionServers to remove this Key from their maps
+		// Inform other GuiExecutionServers to remove this Key from their maps because this one takes control
 		// Create message
 		var tempUserSubscribesToUserAndTestCaseExecutionCombination common_config.
 			UserSubscribesToUserAndTestCaseExecutionCombinationStruct

@@ -12,8 +12,6 @@ import (
 	uuidGenerator "github.com/google/uuid"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
-	"log"
-	"os"
 	"time"
 )
 
@@ -64,13 +62,13 @@ func fenixGuiExecutionServerMain() {
 	defer cleanup()
 
 	//pubsub.MyTestPubSubFunctions()
-	log.Println("Start PubSub")
+	//log.Println("Start PubSub")
 	cloudProject := "mycloud-run-project"
 	outgoingPubSubMessages.InitiatePubSubFunctionality(cloudProject)
-	_ = outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists("FENIXTOPIC")
-	log.Println("End PubSub")
+	//_ = outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists("FENIXTOPIC")
+	//log.Println("End PubSub")
 
-	os.Exit(0)
+	//os.Exit(0)
 
 	// Start TesterGuiOwnerEngine
 	testerGuiOwnerEngine.InitiateTesterGuiOwnerEngine()

@@ -37,8 +37,8 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsStartingUp(
 	}
 
 	// Put message on 'testGuiExecutionEngineChannel' to be processed
-	var tempTesterGuiIsClosingDown common_config.TesterGuiIsClosingDownStruct
-	tempTesterGuiIsClosingDown = common_config.TesterGuiIsClosingDownStruct{
+	var tempTesterGuiIsStartingUp common_config.TesterGuiIsStartingUpStruct
+	tempTesterGuiIsStartingUp = common_config.TesterGuiIsStartingUpStruct{
 		TesterGuiApplicationId:          userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid,
 		UserId:                          userID,
 		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
@@ -48,12 +48,13 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsStartingUp(
 	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
 		TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServersTesterGuiIsStartingUp,
-		TesterGuiIsClosingDown:                                &tempTesterGuiIsClosingDown,
+		TesterGuiIsClosingDown:                                nil,
 		GuiExecutionServerIsClosingDown:                       nil,
 		UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
 		GuiExecutionServerIsStartingUp:                        nil,
 		GuiExecutionServerStartedUpTimeStampRefresher:         nil,
 		UserSubscribesToUserAndTestCaseExecutionCombination:   nil,
+		TesterGuiIsStartingUp:                                 &tempTesterGuiIsStartingUp,
 	}
 
 	// Put on EngineChannel

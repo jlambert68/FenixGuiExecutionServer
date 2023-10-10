@@ -5,7 +5,7 @@ import (
 	"FenixGuiExecutionServer/outgoingPubSubMessages"
 )
 
-// Process the actual command 'ChannelCommand_ThisGuiExecutionServerIsStartingUp'
+// Process the actual command 'ChannelCommand_ThisGuiExecutionServersTesterGuiIsStartingUp'
 func commandThisGuiExecutionServersTesterGuiIsStartingUp(
 	testerGuiIsStartingUp *common_config.TesterGuiIsStartingUpStruct) {
 

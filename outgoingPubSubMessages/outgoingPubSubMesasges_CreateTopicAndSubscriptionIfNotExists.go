@@ -53,29 +53,33 @@ func CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToVerify string
 	var topicDeadLetteringSubscriptionNameToVerify string
 	topicDeadLetteringSubscriptionNameToVerify = createDeadLetteringTopicSubscriptionName(pubSubTopicToVerify)
 
-	// Get all topic-subscriptions
-	pubSubTopicSubscriptions, err = listSubscriptions(pubSubTopicToVerify)
+	// Get all topic-subscription when the Topic existed
+	if topicExists == true {
+		pubSubTopicSubscriptions, err = listSubscriptions(pubSubTopicToVerify)
 
-	// Loop the slice with topic-subscriptions to find out if subscriptions already exists
-	for _, tempTopicSubscription := range pubSubTopicSubscriptions {
+		// Loop the slice with topic-subscriptions to find out if subscriptions already exists
+		for _, tempTopicSubscription := range pubSubTopicSubscriptions {
 
-		// If the TopicSubscription was found then exit for loop
-		if tempTopicSubscription.ID() == topicSubscriptionNameToVerify {
-			topicSubscriptionExists = true
-			break
+			// If the TopicSubscription was found then exit for loop
+			if tempTopicSubscription.ID() == topicSubscriptionNameToVerify {
+				topicSubscriptionExists = true
+				break
+			}
 		}
 	}
 
-	// Get all DeadLettering-topic-subscriptions
-	pubSubDeadLetteringTopicSubscriptions, err = listSubscriptions(pubSubDeadLetteringTopicToVerify)
+	// Get all DeadLettering-topic-subscriptions when the Topic existed
+	if deadLetteringTopicExists == true {
+		pubSubDeadLetteringTopicSubscriptions, err = listSubscriptions(pubSubDeadLetteringTopicToVerify)
 
-	// Loop the slice with DeadLettering-topic-subscriptions to find out if subscriptions already exists
-	for _, tempDeadLetterTopicSubscription := range pubSubDeadLetteringTopicSubscriptions {
+		// Loop the slice with DeadLettering-topic-subscriptions to find out if subscriptions already exists
+		for _, tempDeadLetterTopicSubscription := range pubSubDeadLetteringTopicSubscriptions {
 
-		// If the DeadLetteringTopicSubscription was found then exit for loop
-		if tempDeadLetterTopicSubscription.ID() == topicDeadLetteringSubscriptionNameToVerify {
-			deadLetteringTopicSubscriptionExists = true
-			break
+			// If the DeadLetteringTopicSubscription was found then exit for loop
+			if tempDeadLetterTopicSubscription.ID() == topicDeadLetteringSubscriptionNameToVerify {
+				deadLetteringTopicSubscriptionExists = true
+				break
+			}
 		}
 	}
 

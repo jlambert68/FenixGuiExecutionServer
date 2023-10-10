@@ -40,7 +40,7 @@ func informOtherGuiExecutionServersThatThisGuiExecutionServerIsStartingUp() {
 	var tempGuiExecutionServerIsStartingUp common_config.GuiExecutionServerIsStartingUpStruct
 	tempGuiExecutionServerIsStartingUp = common_config.GuiExecutionServerIsStartingUpStruct{
 		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
-		MessageTimeStamp:                time.Now(),
+		MessageTimeStamp:                common_config.ApplicationRunTimeStartUpTime,
 	}
 
 	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
@@ -70,12 +70,12 @@ func reInformOtherGuiExecutionServersAboutThatThisGuiExecutionServersStartingUpS
 			var tempGuiExecutionServerStartedUpTimeStampRefresher common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct
 			tempGuiExecutionServerStartedUpTimeStampRefresher = common_config.GuiExecutionServerStartedUpTimeStampRefresherStruct{
 				GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
-				MessageTimeStamp:                time.Now(),
+				MessageTimeStamp:                common_config.ApplicationRunTimeStartUpTime,
 			}
 
 			var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
 			testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-				TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
+				TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerSendsStartedUpTimeStamp,
 				TesterGuiIsClosingDown:                                nil,
 				GuiExecutionServerIsClosingDown:                       nil,
 				UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
@@ -88,27 +88,6 @@ func reInformOtherGuiExecutionServersAboutThatThisGuiExecutionServersStartingUpS
 
 		}
 	}()
-
-	// Put message on 'testGuiExecutionEngineChannel' to be processed
-	var tempGuiExecutionServerIsStartingUp common_config.GuiExecutionServerIsStartingUpStruct
-	tempGuiExecutionServerIsStartingUp = common_config.GuiExecutionServerIsStartingUpStruct{
-		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
-		MessageTimeStamp:                time.Now(),
-	}
-
-	var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
-	testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-		TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServerIsClosingDown,
-		TesterGuiIsClosingDown:                                nil,
-		GuiExecutionServerIsClosingDown:                       nil,
-		UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
-		GuiExecutionServerIsStartingUp:                        &tempGuiExecutionServerIsStartingUp,
-		GuiExecutionServerStartedUpTimeStampRefresher:         nil,
-	}
-
-	// Put on GuiOwnerEngineChannel
-	common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
-
 }
 
 // Create the PubSub-topic from TesterGui-ApplicationUuid
