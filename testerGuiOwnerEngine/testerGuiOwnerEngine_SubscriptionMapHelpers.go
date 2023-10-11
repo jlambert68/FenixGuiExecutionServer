@@ -2,6 +2,7 @@ package testerGuiOwnerEngine
 
 import (
 	"FenixGuiExecutionServer/common_config"
+	"strconv"
 	"sync"
 )
 
@@ -104,6 +105,34 @@ func listAllTestCaseExecutionsSubscriptionsFromMap() (
 	for _, guiExecutionServerResponsibility := range testCaseExecutionsSubscriptionsMap {
 
 		guiExecutionServerResponsibilities = append(guiExecutionServerResponsibilities, *guiExecutionServerResponsibility)
+	}
+	//UnLock Map
+	subscriptionsMapLoadAndSaveMutex.RUnlock()
+
+	return guiExecutionServerResponsibilities
+}
+
+// ListAllTestCaseExecutionsSubscriptionsForExecutionsSubscriptionsMapKeyFromMap
+// List all Subscriptions from the Subscriptions-Map where incoming key is equal to stored key
+func ListAllTestCaseExecutionsSubscriptionsForExecutionsSubscriptionsMapKeyFromMap(executionsSubscriptionsMapKey string) (
+	guiExecutionServerResponsibilities []common_config.GuiExecutionServerResponsibilityStruct) {
+
+	// Lock Map for Reading
+	subscriptionsMapLoadAndSaveMutex.RLock()
+
+	// Get all values from map
+	for _, guiExecutionServerResponsibility := range testCaseExecutionsSubscriptionsMap {
+
+		// Create Key used for 'testCaseExecutionsSubscriptionsMap'
+		var testCaseExecutionsSubscriptionsMapKey testCaseExecutionsSubscriptionsMapKeyType
+		testCaseExecutionsSubscriptionsMapKey = testCaseExecutionsSubscriptionsMapKeyType(
+			guiExecutionServerResponsibility.TestCaseExecutionUuid +
+				strconv.Itoa(int(guiExecutionServerResponsibility.TestCaseExecutionVersion)))
+
+		// Only add GuiExecutionServerResponsibility when incoming key is equal to stored key
+		if string(testCaseExecutionsSubscriptionsMapKey) == executionsSubscriptionsMapKey {
+			guiExecutionServerResponsibilities = append(guiExecutionServerResponsibilities, *guiExecutionServerResponsibility)
+		}
 	}
 	//UnLock Map
 	subscriptionsMapLoadAndSaveMutex.RUnlock()

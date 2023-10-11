@@ -44,9 +44,13 @@ var GcpProject string
 var UsePubSubWhenSendingExecutionStatus bool
 
 // TestExecutionStatusPubSubTopicBase
-// Extract PubSub-Topic-base for where to send the 'TestExecutionsStatus'
+// PubSub-Topic-base for where to send the 'TestExecutionsStatus'
 var TestExecutionStatusPubSubTopicBase string
 
+// TestExecutionStatusPubSubTopicSchema
+// Topic-schema name to be used when sending 'TestExecutionsStatus' to TesterGui
+var TestExecutionStatusPubSubTopicSchema string
+
 // LocalServiceAccountPath
-// Extract local path to Service-Account file
+// Local path to Service-Account file
 var LocalServiceAccountPath string

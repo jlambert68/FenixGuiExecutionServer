@@ -158,6 +158,9 @@ func init() {
 		common_config.LocalServiceAccountPath = ""
 	}
 
+	// Extract the topic-schema name to be used when sending 'TestExecutionsStatus' to TesterGui
+	common_config.TestExecutionStatusPubSubTopicSchema = mustGetenv("TestExecutionStatusPubSubTopicSchema")
+
 	// Set the environment variable that Google-client-libraries look for
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", common_config.LocalServiceAccountPath)
 

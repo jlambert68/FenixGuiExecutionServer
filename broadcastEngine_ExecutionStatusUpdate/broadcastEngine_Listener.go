@@ -2,12 +2,15 @@ package broadcastEngine_ExecutionStatusUpdate
 
 import (
 	"FenixGuiExecutionServer/common_config"
+	"FenixGuiExecutionServer/outgoingPubSubMessages"
+	"FenixGuiExecutionServer/testerGuiOwnerEngine"
 	"context"
 	"encoding/json"
 	"errors"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"strconv"
@@ -691,14 +694,21 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 	var executionType string
 	for _, tempTestCaseExecutionUuidTestCaseExecutionVersion = range testCaseExecutionUuidAndTestCaseExecutionVersionKeySlice {
 
-		// Extract which TesterGuis that are subscribing to this 'TestCaseExecution(Version)'
-		var messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType
-		messageToTesterGuiForwardChannels = whoIsSubscribingToTestCaseExecution(tempTestCaseExecutionUuidTestCaseExecutionVersion)
+		/*
+			// Extract which TesterGuis that are subscribing to this 'TestCaseExecution(Version)'
+			var messageToTesterGuiForwardChannels []*MessageToTesterGuiForwardChannelType
+			messageToTesterGuiForwardChannels = whoIsSubscribingToTestCaseExecution(tempTestCaseExecutionUuidTestCaseExecutionVersion)
 
-		// If there aren't any subscribers then continue to next 'TestCaseExecutionUuid+TestCaseExecutionVersion'
-		if len(messageToTesterGuiForwardChannels) == 0 {
-			continue
-		}
+			// If there aren't any subscribers then continue to next 'TestCaseExecutionUuid+TestCaseExecutionVersion'
+			if len(messageToTesterGuiForwardChannels) == 0 {
+				continue
+			}
+		*/
+
+		// Extract which TesterGuis that are subscribing to this 'TestCaseExecution(Version)'
+		var guiExecutionServerResponsibilities []common_config.GuiExecutionServerResponsibilityStruct
+		guiExecutionServerResponsibilities = testerGuiOwnerEngine.
+			ListAllTestCaseExecutionsSubscriptionsForExecutionsSubscriptionsMapKeyFromMap(tempTestCaseExecutionUuidTestCaseExecutionVersion)
 
 		// extract info about if there are TestCaseExecutions and/or TestInstructionExecutions
 		// map['TestCaseExecutionUuid' + 'TestCaseExecutionVersion'][]'TestCaseExecutionUuid' + 'TestCaseExecutionVersion' + indicator('TC' or 'TI')]'
@@ -766,34 +776,202 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 
 		}
 
-		// The 'subscribeToMessagesStreamResponse' that will be added into Channel message
-		var subscribeToMessagesStreamResponse *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
-		subscribeToMessagesStreamResponse = &fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse{
-			ProtoFileVersionUsedByClient:     fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
-			IsKeepAliveMessage:               false,
-			ExecutionsStatus:                 testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage,
-			OriginalMessageCreationTimeStamp: originalMessageCreationTimeStampForGrpc,
+		// Convert into PubSub-version 'TestCaseExecutionsStatus-slice'
+		var pubSubTestCaseExecutionsStatusSlice []*fenixExecutionServerGuiGrpcApi.
+			ExecutionStatusMessagesPubSubSchema_TestCaseExecutionStatusMessage
+		for _, tempPubSubTestCaseExecutionsStatus := range testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage.
+			GetTestCaseExecutionsStatus() {
+
+			var pubSubTestCaseExecutionsStatus *fenixExecutionServerGuiGrpcApi.
+				ExecutionStatusMessagesPubSubSchema_TestCaseExecutionStatusMessage
+			pubSubTestCaseExecutionsStatus = &fenixExecutionServerGuiGrpcApi.
+				ExecutionStatusMessagesPubSubSchema_TestCaseExecutionStatusMessage{
+				TestCaseExecutionUuid:    tempPubSubTestCaseExecutionsStatus.GetTestCaseExecutionUuid(),
+				TestCaseExecutionVersion: tempPubSubTestCaseExecutionsStatus.GetTestCaseExecutionVersion(),
+				BroadcastTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+					Seconds: tempPubSubTestCaseExecutionsStatus.GetBroadcastTimeStamp().GetSeconds(),
+					Nanos:   tempPubSubTestCaseExecutionsStatus.GetBroadcastTimeStamp().GetNanos(),
+				},
+				PreviousBroadcastTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+					Seconds: tempPubSubTestCaseExecutionsStatus.GetPreviousBroadcastTimeStamp().GetSeconds(),
+					Nanos:   tempPubSubTestCaseExecutionsStatus.GetPreviousBroadcastTimeStamp().GetNanos(),
+				},
+				TestCaseExecutionDetails: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_TestCaseExecutionDetailsMessage{
+					ExecutionStartTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+						Seconds: tempPubSubTestCaseExecutionsStatus.TestCaseExecutionDetails.GetExecutionStartTimeStamp().
+							GetSeconds(),
+						Nanos: tempPubSubTestCaseExecutionsStatus.TestCaseExecutionDetails.GetExecutionStartTimeStamp().
+							GetNanos(),
+					},
+					ExecutionStopTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+						Seconds: tempPubSubTestCaseExecutionsStatus.TestCaseExecutionDetails.GetExecutionStopTimeStamp().
+							GetSeconds(),
+						Nanos: tempPubSubTestCaseExecutionsStatus.TestCaseExecutionDetails.GetExecutionStopTimeStamp().
+							GetNanos(),
+					},
+					TestCaseExecutionStatus: fenixExecutionServerGuiGrpcApi.
+						ExecutionStatusMessagesPubSubSchema_TestCaseExecutionStatusEnum(tempPubSubTestCaseExecutionsStatus.
+							TestCaseExecutionDetails.GetTestCaseExecutionStatus()),
+					ExecutionHasFinished: tempPubSubTestCaseExecutionsStatus.TestCaseExecutionDetails.
+						GetExecutionHasFinished(),
+					ExecutionStatusUpdateTimeStamp: &fenixExecutionServerGuiGrpcApi.
+						ExecutionStatusMessagesPubSubSchema_Timestamp{
+						Seconds: tempPubSubTestCaseExecutionsStatus.TestCaseExecutionDetails.
+							GetExecutionStatusUpdateTimeStamp().GetSeconds(),
+						Nanos: tempPubSubTestCaseExecutionsStatus.TestCaseExecutionDetails.
+							GetExecutionStatusUpdateTimeStamp().GetNanos(),
+					},
+					UniqueDatabaseRowCounter: tempPubSubTestCaseExecutionsStatus.TestCaseExecutionDetails.
+						GetUniqueDatabaseRowCounter(),
+				},
+			}
+
+			pubSubTestCaseExecutionsStatusSlice = append(pubSubTestCaseExecutionsStatusSlice, pubSubTestCaseExecutionsStatus)
 		}
 
-		// Create channel Message to be sent over channel, and later sent to TesterGui
-		var messageToTestGuiForwardChannel MessageToTestGuiForwardChannelStruct
-		messageToTestGuiForwardChannel = MessageToTestGuiForwardChannelStruct{
-			SubscribeToMessagesStreamResponse: subscribeToMessagesStreamResponse,
-			IsKeepAliveMessage:                false,
+		// Convert into PubSub-version 'TestInstructionExecutionsStatus-slice'
+		var pubSubTestInstructionExecutionsStatusSlice []*fenixExecutionServerGuiGrpcApi.
+			ExecutionStatusMessagesPubSubSchema_TestInstructionExecutionStatusMessage
+		for _, tempPubSubTestInstructionExecutionsStatus := range testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage.
+			GetTestInstructionExecutionsStatus() {
+
+			var pubSubTestInstructionExecutionsStatus *fenixExecutionServerGuiGrpcApi.
+				ExecutionStatusMessagesPubSubSchema_TestInstructionExecutionStatusMessage
+			pubSubTestInstructionExecutionsStatus = &fenixExecutionServerGuiGrpcApi.
+				ExecutionStatusMessagesPubSubSchema_TestInstructionExecutionStatusMessage{
+				TestCaseExecutionUuid:           tempPubSubTestInstructionExecutionsStatus.GetTestCaseExecutionUuid(),
+				TestCaseExecutionVersion:        tempPubSubTestInstructionExecutionsStatus.GetTestCaseExecutionVersion(),
+				TestInstructionExecutionUuid:    tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionUuid(),
+				TestInstructionExecutionVersion: tempPubSubTestInstructionExecutionsStatus.GetTestCaseExecutionVersion(),
+				TestInstructionExecutionStatus: fenixExecutionServerGuiGrpcApi.
+					ExecutionStatusMessagesPubSubSchema_TestInstructionExecutionStatusEnum(
+						tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionStatus()),
+				BroadcastTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+					Seconds: tempPubSubTestInstructionExecutionsStatus.GetBroadcastTimeStamp().GetSeconds(),
+					Nanos:   tempPubSubTestInstructionExecutionsStatus.GetBroadcastTimeStamp().GetNanos(),
+				},
+				PreviousBroadcastTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+					Seconds: tempPubSubTestInstructionExecutionsStatus.GetPreviousBroadcastTimeStamp().GetSeconds(),
+					Nanos:   tempPubSubTestInstructionExecutionsStatus.GetPreviousBroadcastTimeStamp().GetNanos(),
+				},
+				TestInstructionExecutionsStatusInformation: &fenixExecutionServerGuiGrpcApi.
+					ExecutionStatusMessagesPubSubSchema_TestInstructionExecutionsInformationMessage{
+					SentTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+						Seconds: tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionsStatusInformation().
+							GetSentTimeStamp().GetSeconds(),
+						Nanos: tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionsStatusInformation().
+							GetSentTimeStamp().GetNanos(),
+					},
+					ExpectedExecutionEndTimeStamp: &fenixExecutionServerGuiGrpcApi.
+						ExecutionStatusMessagesPubSubSchema_Timestamp{
+						Seconds: tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionsStatusInformation().
+							GetExpectedExecutionEndTimeStamp().GetSeconds(),
+						Nanos: tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionsStatusInformation().
+							GetExpectedExecutionEndTimeStamp().GetNanos(),
+					},
+					TestInstructionExecutionStatus: fenixExecutionServerGuiGrpcApi.
+						ExecutionStatusMessagesPubSubSchema_TestInstructionExecutionStatusEnum(
+							tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionsStatusInformation().
+								GetTestInstructionExecutionStatus()),
+					TestInstructionExecutionEndTimeStamp: &fenixExecutionServerGuiGrpcApi.
+						ExecutionStatusMessagesPubSubSchema_Timestamp{
+						Seconds: tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionsStatusInformation().
+							GetTestInstructionExecutionEndTimeStamp().GetSeconds(),
+						Nanos: tempPubSubTestInstructionExecutionsStatus.GetTestInstructionExecutionsStatusInformation().
+							GetTestInstructionExecutionEndTimeStamp().GetNanos(),
+					},
+					TestInstructionExecutionHasFinished: tempPubSubTestInstructionExecutionsStatus.
+						GetTestInstructionExecutionsStatusInformation().GetTestInstructionExecutionHasFinished(),
+					UniqueDatabaseRowCounter: tempPubSubTestInstructionExecutionsStatus.
+						GetTestInstructionExecutionsStatusInformation().GetUniqueDatabaseRowCounter(),
+					TestInstructionCanBeReExecuted: tempPubSubTestInstructionExecutionsStatus.
+						GetTestInstructionExecutionsStatusInformation().GetTestInstructionCanBeReExecuted(),
+					ExecutionStatusUpdateTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+						Seconds: tempPubSubTestInstructionExecutionsStatus.
+							GetTestInstructionExecutionsStatusInformation().GetExecutionStatusUpdateTimeStamp().GetSeconds(),
+						Nanos: tempPubSubTestInstructionExecutionsStatus.
+							GetTestInstructionExecutionsStatusInformation().GetExecutionStatusUpdateTimeStamp().GetNanos(),
+					},
+				},
+			}
+
+			pubSubTestInstructionExecutionsStatusSlice = append(pubSubTestInstructionExecutionsStatusSlice, pubSubTestInstructionExecutionsStatus)
 		}
 
-		// Loop subscribers channels and put message on channels
-		var messageToTesterGuiForwardChannel *MessageToTesterGuiForwardChannelType
-		for _, messageToTesterGuiForwardChannel = range messageToTesterGuiForwardChannels {
-			// Send Message over 'MessageChannel'
-			*messageToTesterGuiForwardChannel <- messageToTestGuiForwardChannel
-
-			common_config.Logger.WithFields(logrus.Fields{
-				"Id":                             "b248f8b4-e610-4986-8f7d-2688eaf282cf",
-				"messageToTestGuiForwardChannel": messageToTestGuiForwardChannel,
-			}).Debug("ExecutionStatusMessage was put on channel")
-
+		// Build the full PubSub-ExecutionStatus-message
+		var executionStatusMessagesPubSubMessage fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema
+		executionStatusMessagesPubSubMessage = fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema{
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			OriginalMessageCreationTimeStamp: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_Timestamp{
+				Seconds: originalMessageCreationTimeStampForGrpc.GetSeconds(),
+				Nanos:   originalMessageCreationTimeStampForGrpc.GetNanos(),
+			},
+			IsKeepAliveMessage: false,
+			ExecutionsStatus: &fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_TestCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage{
+				ProtoFileVersionUsedByClient:    fenixExecutionServerGuiGrpcApi.ExecutionStatusMessagesPubSubSchema_CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+				TestCaseExecutionsStatus:        pubSubTestCaseExecutionsStatusSlice,
+				TestInstructionExecutionsStatus: pubSubTestInstructionExecutionsStatusSlice,
+			},
 		}
+		// Convert gPubSub-ExecutionStatus-message into json-string
+		var processTestInstructionExecutionRequestAsJsonString string
+		processTestInstructionExecutionRequestAsJsonString = protojson.Format(&executionStatusMessagesPubSubMessage)
+
+		// Loop PubSub-targets and send message over PubSub
+		var topicId string
+		var returnMessageAckNack bool
+		var returnMessageString string
+		var err error
+		for _, guiExecutionServerResponsibility := range guiExecutionServerResponsibilities {
+			topicId = testerGuiOwnerEngine.GeneratePubSubTopicForExecutionStatusUpdates(guiExecutionServerResponsibility.UserId)
+			returnMessageAckNack, returnMessageString, err = outgoingPubSubMessages.PublishExecutionStatusOnPubSub(
+				topicId, processTestInstructionExecutionRequestAsJsonString)
+
+			// Something went wrong
+			if returnMessageAckNack == false || err != nil {
+				common_config.Logger.WithFields(logrus.Fields{
+					"ID":      "2c62eb43-12ff-4cdd-aebf-b312b8201a12",
+					"topicId": topicId,
+					"processTestInstructionExecutionRequestAsJsonString": processTestInstructionExecutionRequestAsJsonString,
+					"err":                 err,
+					"returnMessageString": returnMessageString,
+				}).Error("Something went wrong when sending pubsub-ExecutionStatus-message to TesterGui")
+
+				continue
+			}
+		}
+
+		/*
+			// The 'subscribeToMessagesStreamResponse' that will be added into Channel message
+			var subscribeToMessagesStreamResponse *fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse
+			subscribeToMessagesStreamResponse = &fenixExecutionServerGuiGrpcApi.SubscribeToMessagesStreamResponse{
+				ProtoFileVersionUsedByClient:     fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+				IsKeepAliveMessage:               false,
+				ExecutionsStatus:                 testCaseExecutionsStatusAndTestInstructionExecutionsStatusMessage,
+				OriginalMessageCreationTimeStamp: originalMessageCreationTimeStampForGrpc,
+			}
+
+
+			// Create channel Message to be sent over channel, and later sent to TesterGui
+			var messageToTestGuiForwardChannel MessageToTestGuiForwardChannelStruct
+			messageToTestGuiForwardChannel = MessageToTestGuiForwardChannelStruct{
+				SubscribeToMessagesStreamResponse: subscribeToMessagesStreamResponse,
+				IsKeepAliveMessage:                false,
+			}
+
+			// Loop subscribers channels and put message on channels
+			var messageToTesterGuiForwardChannel *MessageToTesterGuiForwardChannelType
+			for _, messageToTesterGuiForwardChannel = range messageToTesterGuiForwardChannels {
+				// Send Message over 'MessageChannel'
+				*messageToTesterGuiForwardChannel <- messageToTestGuiForwardChannel
+
+				common_config.Logger.WithFields(logrus.Fields{
+					"Id":                             "b248f8b4-e610-4986-8f7d-2688eaf282cf",
+					"messageToTestGuiForwardChannel": messageToTestGuiForwardChannel,
+				}).Debug("ExecutionStatusMessage was put on channel")
+
+			}
+		*/
 
 	}
 }

@@ -91,7 +91,7 @@ func reInformOtherGuiExecutionServersAboutThatThisGuiExecutionServersStartingUpS
 }
 
 // Create the PubSub-topic from TesterGui-ApplicationUuid
-func generatePubSubTopicForExecutionStatusUpdates(testerGuiUserId string) (statusExecutionTopic string) {
+func GeneratePubSubTopicForExecutionStatusUpdates(testerGuiUserId string) (statusExecutionTopic string) {
 
 	var pubSubTopicBase string
 	pubSubTopicBase = common_config.TestExecutionStatusPubSubTopicBase

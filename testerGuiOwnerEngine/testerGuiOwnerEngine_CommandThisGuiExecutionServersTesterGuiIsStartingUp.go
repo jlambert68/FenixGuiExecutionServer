@@ -11,7 +11,7 @@ func commandThisGuiExecutionServersTesterGuiIsStartingUp(
 
 	// Create PubSub-Topic
 	var pubSubTopicToLookFor string
-	pubSubTopicToLookFor = generatePubSubTopicForExecutionStatusUpdates(testerGuiIsStartingUp.UserId)
+	pubSubTopicToLookFor = GeneratePubSubTopicForExecutionStatusUpdates(testerGuiIsStartingUp.UserId)
 
 	// Secure that PubSub Topic, DeadLetteringTopic and their Subscriptions exist
 	var err error

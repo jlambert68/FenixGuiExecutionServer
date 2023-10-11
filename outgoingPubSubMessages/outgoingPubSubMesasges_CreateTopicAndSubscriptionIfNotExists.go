@@ -1,6 +1,7 @@
 package outgoingPubSubMessages
 
 import (
+	"FenixGuiExecutionServer/common_config"
 	"cloud.google.com/go/pubsub"
 )
 
@@ -85,7 +86,7 @@ func CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToVerify string
 
 	// if the Topic was not found then create the Topic
 	if topicExists == false {
-		_, err = createTopic(pubSubTopicToVerify)
+		_, err = createTopicWithSchema(pubSubTopicToVerify, common_config.TestExecutionStatusPubSubTopicSchema)
 		if err != nil {
 			return err
 		}

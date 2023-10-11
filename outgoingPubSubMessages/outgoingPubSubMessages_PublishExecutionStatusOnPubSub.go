@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-func Publish(msg string) (returnMessageAckNack bool, returnMessageString string, err error) {
+func PublishExecutionStatusOnPubSub(topicID string, msg string) (
+	returnMessageAckNack bool, returnMessageString string, err error) {
 	projectID := common_config.GcpProject
-	topicID := common_config.TestExecutionStatusPubSubTopicBase
 
 	// Remove any unwanted characters
 	// Remove '\n'
