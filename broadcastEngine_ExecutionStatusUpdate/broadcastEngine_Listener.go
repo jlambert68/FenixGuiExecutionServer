@@ -2,13 +2,13 @@ package broadcastEngine_ExecutionStatusUpdate
 
 import (
 	"FenixGuiExecutionServer/common_config"
-	"FenixGuiExecutionServer/outgoingPubSubMessages"
 	"FenixGuiExecutionServer/testerGuiOwnerEngine"
 	"context"
 	"encoding/json"
 	"errors"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
+	"github.com/jlambert68/FenixSyncShared/pubSubHelpers"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -924,7 +924,7 @@ func convertToChannelMessageAndPutOnChannels(broadcastingMessageForExecutions Br
 		var err error
 		for _, guiExecutionServerResponsibility := range guiExecutionServerResponsibilities {
 			topicId = testerGuiOwnerEngine.GeneratePubSubTopicForExecutionStatusUpdates(guiExecutionServerResponsibility.UserId)
-			returnMessageAckNack, returnMessageString, err = outgoingPubSubMessages.PublishExecutionStatusOnPubSub(
+			returnMessageAckNack, returnMessageString, err = pubSubHelpers.PublishExecutionStatusOnPubSub(
 				topicId, processTestInstructionExecutionRequestAsJsonString)
 
 			// Something went wrong

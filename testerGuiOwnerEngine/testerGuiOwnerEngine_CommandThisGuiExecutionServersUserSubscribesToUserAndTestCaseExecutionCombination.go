@@ -38,7 +38,7 @@ func commandThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombi
 				userSubscribesToUserAndTestCaseExecutionCombination.UserId)
 
 			// Secure that PubSub exist, if not then create both PubSubTopic and PubSubTopic-Subscription
-			outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)
+			pubSubHelpers.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)
 		*/
 
 		// Inform other GuiExecutionServers to remove this Key from their maps because this one takes control

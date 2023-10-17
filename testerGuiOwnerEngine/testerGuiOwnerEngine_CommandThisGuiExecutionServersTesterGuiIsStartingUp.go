@@ -2,7 +2,7 @@ package testerGuiOwnerEngine
 
 import (
 	"FenixGuiExecutionServer/common_config"
-	"FenixGuiExecutionServer/outgoingPubSubMessages"
+	"github.com/jlambert68/FenixSyncShared/pubSubHelpers"
 )
 
 // Process the actual command 'ChannelCommand_ThisGuiExecutionServersTesterGuiIsStartingUp'
@@ -15,7 +15,8 @@ func commandThisGuiExecutionServersTesterGuiIsStartingUp(
 
 	// Secure that PubSub Topic, DeadLetteringTopic and their Subscriptions exist
 	var err error
-	err = outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists(pubSubTopicToLookFor)
+	err = pubSubHelpers.CreateTopicDeadLettingAndSubscriptionIfNotExists(
+		pubSubTopicToLookFor, common_config.TestExecutionStatusPubSubTopicSchema)
 	if err != nil {
 		return
 	}

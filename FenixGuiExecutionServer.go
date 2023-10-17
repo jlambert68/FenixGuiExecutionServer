@@ -5,12 +5,12 @@ import (
 	"FenixGuiExecutionServer/common_config"
 	"FenixGuiExecutionServer/gcp"
 	"FenixGuiExecutionServer/messagesToExecutionServer"
-	"FenixGuiExecutionServer/outgoingPubSubMessages"
 	"FenixGuiExecutionServer/testerGuiOwnerEngine"
 	"context"
 	"fmt"
 	uuidGenerator "github.com/google/uuid"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
+	pubSubHelpers "github.com/jlambert68/FenixSyncShared/pubSubHelpers"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -64,8 +64,8 @@ func fenixGuiExecutionServerMain() {
 	//pubsub.MyTestPubSubFunctions()
 	//log.Println("Start PubSub")
 	cloudProject := "mycloud-run-project"
-	outgoingPubSubMessages.InitiatePubSubFunctionality(cloudProject)
-	//_ = outgoingPubSubMessages.CreateTopicDeadLettingAndSubscriptionIfNotExists("FENIXTOPIC")
+	pubSubHelpers.InitiatePubSubFunctionality(cloudProject, common_config.Logger)
+	//_ = pubSubHelpers.CreateTopicDeadLettingAndSubscriptionIfNotExists("FENIXTOPIC")
 	//log.Println("End PubSub")
 
 	//os.Exit(0)
