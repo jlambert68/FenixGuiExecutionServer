@@ -61,10 +61,8 @@ func fenixGuiExecutionServerMain() {
 	// Clean up when leaving. Is placed after logger because shutdown logs information
 	defer cleanup()
 
-	//pubsub.MyTestPubSubFunctions()
-	//log.Println("Start PubSub")
-	cloudProject := "mycloud-run-project"
-	pubSubHelpers.InitiatePubSubFunctionality(cloudProject, common_config.Logger)
+	// Inititate PubSUb-helpers
+	pubSubHelpers.InitiatePubSubFunctionality(common_config.GcpProject, common_config.Logger)
 	//_ = pubSubHelpers.CreateTopicDeadLettingAndSubscriptionIfNotExists("FENIXTOPIC")
 	//log.Println("End PubSub")
 
