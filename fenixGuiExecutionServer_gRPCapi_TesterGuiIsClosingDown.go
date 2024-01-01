@@ -25,11 +25,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsClosingDown(
 	}).Debug("Outgoing 'gRPC - TesterGuiIsClosingDown'")
 
 	// Current user
-	userID := userAndApplicationRunTimeIdentificationMessage.UserId
+	userIdOnComputer := userAndApplicationRunTimeIdentificationMessage.GetUserIdOnComputer()
 
 	// Check if Client is using correct proto files version
 	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
-		userID,
+		userIdOnComputer,
 		userAndApplicationRunTimeIdentificationMessage.ProtoFileVersionUsedByClient)
 	if returnMessage != nil {
 		// Exiting
@@ -40,7 +40,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsClosingDown(
 	var tempTesterGuiIsClosingDown common_config.TesterGuiIsClosingDownStruct
 	tempTesterGuiIsClosingDown = common_config.TesterGuiIsClosingDownStruct{
 		TesterGuiApplicationId:          userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid,
-		UserId:                          userID,
+		UserId:                          userIdOnComputer,
 		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
 		MessageTimeStamp:                time.Now(),
 	}

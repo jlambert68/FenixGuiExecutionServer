@@ -24,11 +24,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) GetSingleTestCaseExecution(
 	}).Debug("Outgoing 'gRPC - GetSingleTestCaseExecution'")
 
 	// Current user
-	userID := getSingleTestCaseExecutionRequest.UserAndApplicationRunTimeIdentification.UserId
+	userIdOnComputer := getSingleTestCaseExecutionRequest.UserAndApplicationRunTimeIdentification.UserIdOnComputer
 
 	// Check if Client is using correct proto files version
 	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
-		userID,
+		userIdOnComputer,
 		fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(
 			getSingleTestCaseExecutionRequest.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient))
 	if returnMessage != nil {

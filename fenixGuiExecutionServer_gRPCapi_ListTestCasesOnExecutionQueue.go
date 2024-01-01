@@ -24,11 +24,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesOnExecutionQueu
 	}).Debug("Outgoing 'gRPC - ListTestCasesOnExecutionQueue'")
 
 	// Current user
-	userID := listTestCasesInExecutionQueueRequest.UserAndApplicationRunTimeIdentification.UserId
+	userIdOnComputer := listTestCasesInExecutionQueueRequest.UserAndApplicationRunTimeIdentification.GetUserIdOnComputer()
 
 	// Check if Client is using correct proto files version
 	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
-		userID,
+		userIdOnComputer,
 		fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(
 			listTestCasesInExecutionQueueRequest.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient))
 	if returnMessage != nil {
@@ -78,7 +78,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesOnExecutionQueu
 	var testCaseExecutionBasicInformation []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage
 
 	// Get TestCasesOnExecutionQueue from CloudDB
-	testCaseExecutionBasicInformation, err = fenixGuiExecutionServerObject.listTestCasesOnExecutionQueueLoadFromCloudDB(txn, userID, listTestCasesInExecutionQueueRequest.DomainUuids)
+	testCaseExecutionBasicInformation, err = fenixGuiExecutionServerObject.listTestCasesOnExecutionQueueLoadFromCloudDB(txn, userIdOnComputer, listTestCasesInExecutionQueueRequest.DomainUuids)
 	if err != nil {
 		// Something went wrong so return an error to caller
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesInExecutionQueueResponse{

@@ -28,7 +28,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 	}).Debug("Outgoing 'gRPC - InitiateTestCaseExecution'")
 
 	// Check if Client is using correct proto files version
-	ackNackRespons := common_config.IsClientUsingCorrectTestDataProtoFileVersion(initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.UserId, initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient)
+	ackNackRespons := common_config.IsClientUsingCorrectTestDataProtoFileVersion(initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.GetUserIdOnComputer(), initiateSingleTestCaseExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient)
 	if ackNackRespons != nil {
 		// Not correct proto-file version is used
 		// Exiting
@@ -66,7 +66,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 		TesterGuiApplicationId: initiateSingleTestCaseExecutionRequestMessage.
 			UserAndApplicationRunTimeIdentification.GetApplicationRunTimeUuid(),
 		UserId: initiateSingleTestCaseExecutionRequestMessage.
-			UserAndApplicationRunTimeIdentification.GetUserId(),
+			UserAndApplicationRunTimeIdentification.GetGCPAuthenticatedUser(),
 		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
 		TestCaseExecutionUuid: initiateSingleTestCaseExecutionResponseMessage.TestCasesInExecutionQueue.
 			GetTestCaseExecutionUuid(),

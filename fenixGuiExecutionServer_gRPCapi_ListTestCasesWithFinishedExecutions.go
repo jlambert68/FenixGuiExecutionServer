@@ -24,11 +24,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExe
 	}).Debug("Outgoing 'gRPC - ListTestCasesWithFinishedExecutions'")
 
 	// Current user
-	userID := listTestCasesWithFinishedExecutionsRequest.UserAndApplicationRunTimeIdentification.UserId
+	userIdOnComputer := listTestCasesWithFinishedExecutionsRequest.UserAndApplicationRunTimeIdentification.GetUserIdOnComputer()
 
 	// Check if Client is using correct proto files version
 	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
-		userID,
+		userIdOnComputer,
 		fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(
 			listTestCasesWithFinishedExecutionsRequest.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient))
 	if returnMessage != nil {
@@ -78,7 +78,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) ListTestCasesWithFinishedExe
 	var listTestCasesWithFinishedExecutionsResponse []*fenixExecutionServerGuiGrpcApi.TestCaseWithFinishedExecutionMessage
 
 	// Get users ImmatureTestInstruction-data from CloudDB
-	listTestCasesWithFinishedExecutionsResponse, err = fenixGuiExecutionServerObject.listTestCasesWithFinishedExecutionsLoadFromCloudDB(txn, userID, listTestCasesWithFinishedExecutionsRequest.DomainUuids)
+	listTestCasesWithFinishedExecutionsResponse, err = fenixGuiExecutionServerObject.listTestCasesWithFinishedExecutionsLoadFromCloudDB(txn, userIdOnComputer, listTestCasesWithFinishedExecutionsRequest.DomainUuids)
 	if err != nil {
 		// Something went wrong so return an error to caller
 		responseMessage = &fenixExecutionServerGuiGrpcApi.ListTestCasesWithFinishedExecutionsResponse{

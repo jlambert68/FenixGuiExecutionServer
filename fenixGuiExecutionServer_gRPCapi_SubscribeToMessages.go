@@ -25,11 +25,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessages(
 	}).Debug("Outgoing 'gRPC - SubscribeToMessages'")
 
 	// Current user
-	userID := subscribeToMessagesRequest.ApplicationRunTimeIdentification.UserId
+	userIdOnComputer := subscribeToMessagesRequest.ApplicationRunTimeIdentification.GetUserIdOnComputer()
 
 	// Check if Client is using correct proto files version
 	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
-		userID,
+		userIdOnComputer,
 		subscribeToMessagesRequest.ApplicationRunTimeIdentification.ProtoFileVersionUsedByClient)
 	if returnMessage != nil {
 		// Exiting
@@ -45,7 +45,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) SubscribeToMessages(
 			UserSubscribesToUserAndTestCaseExecutionCombinationStruct{
 			TesterGuiApplicationId: subscribeToMessagesRequest.
 				ApplicationRunTimeIdentification.ApplicationRunTimeUuid,
-			UserId:                          userID,
+			UserId:                          userIdOnComputer,
 			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
 			TestCaseExecutionUuid:           tempTestCaseExecutionsStatusSubscriptions.GetTestCaseExecutionUuid(),
 			TestCaseExecutionVersion:        tempTestCaseExecutionsStatusSubscriptions.GetTestCaseExecutionVersion(),

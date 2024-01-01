@@ -25,11 +25,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsStartingUp(
 	}).Debug("Outgoing 'gRPC - TesterGuiIsStartingUp'")
 
 	// Current user
-	userID := userAndApplicationRunTimeIdentificationMessage.UserId
+	userIdOnComputer := userAndApplicationRunTimeIdentificationMessage.GetUserIdOnComputer()
 
 	// Check if Client is using correct proto files version
 	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
-		userID,
+		userIdOnComputer,
 		userAndApplicationRunTimeIdentificationMessage.ProtoFileVersionUsedByClient)
 	if returnMessage != nil {
 		// Exiting
@@ -40,7 +40,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) TesterGuiIsStartingUp(
 	var tempTesterGuiIsStartingUp common_config.TesterGuiIsStartingUpStruct
 	tempTesterGuiIsStartingUp = common_config.TesterGuiIsStartingUpStruct{
 		TesterGuiApplicationId:          userAndApplicationRunTimeIdentificationMessage.ApplicationRunTimeUuid,
-		UserId:                          userID,
+		UserId:                          userAndApplicationRunTimeIdentificationMessage.GetGCPAuthenticatedUser(),
 		GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
 		MessageTimeStamp:                time.Now(),
 	}

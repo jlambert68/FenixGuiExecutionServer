@@ -25,11 +25,11 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) UnSubscribeToMessages(
 	}).Debug("Outgoing 'gRPC - UnSubscribeToMessages'")
 
 	// Current user
-	userID := unSubscribeToMessagesRequest.ApplicationRunTimeIdentification.UserId
+	userIdOnComputer := unSubscribeToMessagesRequest.ApplicationRunTimeIdentification.GetUserIdOnComputer()
 
 	// Check if Client is using correct proto files version
 	returnMessage := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
-		userID,
+		userIdOnComputer,
 		unSubscribeToMessagesRequest.ApplicationRunTimeIdentification.ProtoFileVersionUsedByClient)
 	if returnMessage != nil {
 		// Exiting
@@ -44,7 +44,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) UnSubscribeToMessages(
 		tempThisGuiExecutionServerTakesThisUserAndTestCaseExecutionCombination = common_config.
 			UserUnsubscribesToUserAndTestCaseExecutionCombinationStruct{
 			TesterGuiApplicationId:          unSubscribeToMessagesRequest.ApplicationRunTimeIdentification.ApplicationRunTimeUuid,
-			UserId:                          userID,
+			UserId:                          unSubscribeToMessagesRequest.ApplicationRunTimeIdentification.GetGCPAuthenticatedUser(),
 			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
 			TestCaseExecutionUuid:           tempTestCaseExecutionsStatusUnSubscriptions.GetTestCaseExecutionUuid(),
 			TestCaseExecutionVersion:        tempTestCaseExecutionsStatusUnSubscriptions.GetTestCaseExecutionVersion(),
