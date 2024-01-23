@@ -35,6 +35,10 @@ func BroadcastListener_GuiExecutionServersInternalCommunicationChannel() error {
 	var err error
 	var broadcastMessageForGuiExecutionServersInternalCommunicationChannel BroadcastMessageForGuiExecutionServersInternalCommunicationChannelStruct
 
+	common_config.Logger.WithFields(logrus.Fields{
+		"Id": "5b140d8f-4450-4af5-864c-5c6b114321d1",
+	}).Info("Trying to start Broadcast-listener")
+
 	if fenixSyncShared.DbPool == nil {
 		common_config.Logger.WithFields(logrus.Fields{
 			"Id":  "09901ce4-2d84-4282-983d-1f99ffe5bf91",
