@@ -2,6 +2,7 @@ package testerGuiOwnerEngine
 
 import (
 	"FenixGuiExecutionServer/common_config"
+	"strings"
 	"time"
 )
 
@@ -99,6 +100,9 @@ func GeneratePubSubTopicForExecutionStatusUpdates(testerGuiUserId string) (statu
 	// Get the first 8 characters from TesterGui-ApplicationUuid
 	// var shortedAppUuid string
 	// shortedAppUuid = testerGuiApplicationUuid[0:8]
+
+	// Remove characters that aren't allowed
+	testerGuiUserId = strings.ReplaceAll(testerGuiUserId, "@", ".")
 
 	// Build PubSub-topic
 	statusExecutionTopic = pubSubTopicBase + "-" + testerGuiUserId

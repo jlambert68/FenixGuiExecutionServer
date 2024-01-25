@@ -620,6 +620,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempUniqueCounter,
 			&testInstructionExecutionBasicInformation.TestInstructionOriginalUuid,
 			&tempExecutionStatusReportLevel,
+			&testInstructionExecutionBasicInformation.ExecutionDomainUuid,
+			&testInstructionExecutionBasicInformation.ExecutionDomainName,
 		)
 
 		if err != nil {
@@ -800,6 +802,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempExecutionPriority,
 			&tempTestInstructionSendCounter,
 			&tempExecutionStatusReportLevel,
+			&tempTestInstructionExecutionBasicInformation.ExecutionDomainUuid,
+			&tempTestInstructionExecutionBasicInformation.ExecutionDomainName,
 		)
 
 		if err != nil {
