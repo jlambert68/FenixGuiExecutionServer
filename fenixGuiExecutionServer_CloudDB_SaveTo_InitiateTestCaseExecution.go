@@ -274,7 +274,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	if suiteInformationExists == true {
 		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionUuid)
 	} else {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseExecutionUuid)
+		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, common_config.ZeroUuid)
 	}
 
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionVersion)
@@ -397,7 +397,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	if suiteInformationExists == true {
 		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionUuid)
 	} else {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseExecutionUuid)
+		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, common_config.ZeroUuid)
 	}
 
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionVersion)
