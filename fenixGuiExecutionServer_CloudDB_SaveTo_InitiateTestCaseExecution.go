@@ -13,6 +13,7 @@ import (
 	fenixTestCaseBuilderServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixTestCaseBuilderServer/fenixTestCaseBuilderServerGrpcApi/go_grpc_api"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
@@ -162,6 +163,43 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	}
 
+	// Save the TestData to be used for of a new TestCaseExecution in the CloudDB
+	err = fenixGuiTestCaseBuilderServerObject.saveTestDataForTestCaseExecutionToCloudDB(
+		txn,
+		&testCaseExecutionToBeSaved,
+		initiateSingleTestCaseExecutionRequestMessage.TestDataForTestCaseExecution)
+	if err != nil {
+
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"id":    "98502463-3670-45bd-be5a-29b8157fdd78",
+			"error": err,
+		}).Error("Couldn't Save TestData in CloudDB")
+
+		// Rollback any SQL transactions
+		txn.Rollback(context.Background())
+
+		// Set Error codes to return message
+		var errorCodes []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+		var errorCode fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+
+		errorCode = fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM
+		errorCodes = append(errorCodes, errorCode)
+
+		// Create Return message
+		initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
+			TestCasesInExecutionQueue: nil,
+			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+				AckNack:                      false,
+				Comments:                     "Problem when saving testdata to database",
+				ErrorCodes:                   errorCodes,
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			},
+		}
+
+		return initiateSingleTestCaseExecutionResponseMessage
+
+	}
+
 	initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
 		TestCasesInExecutionQueue: &testCaseExecutionToBeSaved,
 		AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
@@ -211,7 +249,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	dataRowToBeInsertedMultiType = nil
 
-	// Check if this is a SingleTestCase-execution. Then use UUIDs from TestCase in Suite-uuid-parts
+	// Check if this is a SingleTestCase-execution. Then use ZeroUUid in Suite-uuid-parts
 	var suiteInformationExists bool
 	if testCaseExecutionToBeSaved.ExecutionPriority == fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTCASE ||
 		testCaseExecutionToBeSaved.ExecutionPriority == fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_MEDIUM_MULTIPLE_TESTCASES {
@@ -227,7 +265,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	if suiteInformationExists == true {
 		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteUuid)
 	} else {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseUuid)
+		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, common_config.ZeroUuid)
 	}
 
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteName)
@@ -284,6 +322,127 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Log response from CloudDB
 	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
 		"Id":                       "dcb110c2-822a-4dde-8bc6-9ebbe9fcbdb0",
+		"comandTag.Insert()":       comandTag.Insert(),
+		"comandTag.Delete()":       comandTag.Delete(),
+		"comandTag.Select()":       comandTag.Select(),
+		"comandTag.Update()":       comandTag.Update(),
+		"comandTag.RowsAffected()": comandTag.RowsAffected(),
+		"comandTag.String()":       comandTag.String(),
+	}).Debug("Return data for SQL executed in database")
+
+	// No errors occurred
+	return nil
+
+}
+
+// Save the TestData, in the database, to be used when doing the TestExecution
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) saveTestDataForTestCaseExecutionToCloudDB(
+	dbTransaction pgx.Tx,
+	testCaseExecutionToBeSaved *fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage,
+	testDataForTestCaseExecutionMessage *fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage) (
+	err error) {
+
+	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		"Id": "d17a8d3e-72a3-439b-9d74-1f63341a3414",
+	}).Debug("Entering: saveTestDataForTestCaseExecutionToCloudDB()")
+
+	defer func() {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id": "b51778ea-83ba-4cd3-a84e-75032f317d63",
+		}).Debug("Exiting: saveTestDataForTestCaseExecutionToCloudDB()")
+	}()
+
+	// Get a common dateTimeStamp to use
+	//currentDataTimeStamp := fenixSyncShared.GenerateDatetimeTimeStampForDB()
+
+	var dataRowToBeInsertedMultiType []interface{}
+	var dataRowsToBeInsertedMultiType [][]interface{}
+
+	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
+
+	sqlToExecute := ""
+
+	// Create Insert Statement for TestCaseExecution that will be put on ExecutionQueue
+	// Data to be inserted in the DB-table
+	dataRowsToBeInsertedMultiType = nil
+
+	dataRowToBeInsertedMultiType = nil
+
+	// Convert TestDataForTestCaseExecution into json to be later stored as jsonb
+	var tempTestDataForTestCaseExecutionAsJsonb string
+	tempTestDataForTestCaseExecutionAsJsonb = protojson.Format(testDataForTestCaseExecutionMessage)
+
+	// Check if this is a SingleTestCase-execution. Then use ZeroUUid in Suite-uuid-parts
+	var suiteInformationExists bool
+	if testCaseExecutionToBeSaved.ExecutionPriority == fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTCASE ||
+		testCaseExecutionToBeSaved.ExecutionPriority == fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_MEDIUM_MULTIPLE_TESTCASES {
+
+		suiteInformationExists = false
+	} else {
+		suiteInformationExists = true
+	}
+
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainUuid)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainName)
+
+	if suiteInformationExists == true {
+		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteUuid)
+	} else {
+		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, common_config.ZeroUuid)
+	}
+
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteName)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteVersion)
+
+	if suiteInformationExists == true {
+		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionUuid)
+	} else {
+		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseExecutionUuid)
+	}
+
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionVersion)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseUuid)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseName)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseVersion)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseExecutionUuid)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseExecutionVersion)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.PlacedOnTestExecutionQueueTimeStamp)
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, tempTestDataForTestCaseExecutionAsJsonb)
+
+	dataRowsToBeInsertedMultiType = append(dataRowsToBeInsertedMultiType, dataRowToBeInsertedMultiType)
+
+	sqlToExecute = sqlToExecute + "INSERT INTO \"" + usedDBSchema + "\".\"TestDataForTestCaseExecutionTack, \" "
+	sqlToExecute = sqlToExecute + "(\"DomainUuid\", \"DomainName\", \"TestSuiteUuid\", \"TestSuiteName\", \"TestSuiteVersion\", " +
+		"\"TestSuiteExecutionUuid\", \"TestSuiteExecutionVersion\", \"TestCaseUuid\", \"TestCaseName\", \"TestCaseVersion\"," +
+		" \"TestCaseExecutionUuid\", \"TestCaseExecutionVersion\", \"InsertedTimeStamp\", "
+	sqlToExecute = sqlToExecute + "\"TestDataForTestCaseExecutionAsJsonb\") "
+	sqlToExecute = sqlToExecute + fenixGuiTestCaseBuilderServerObject.generateSQLInsertValues(dataRowsToBeInsertedMultiType)
+	sqlToExecute = sqlToExecute + ";"
+
+	// Log SQL to be executed if Environment variable is true
+	if common_config.LogAllSQLs == true {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "58af29a9-53a0-419b-9cb6-fc9c6c258cca",
+			"sqlToExecute": sqlToExecute,
+		}).Debug("SQL to be executed within 'saveTestDataForTestCaseExecutionToCloudDB'")
+	}
+
+	// Execute Query CloudDB
+	comandTag, err := dbTransaction.Exec(context.Background(), sqlToExecute)
+
+	if err != nil {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "5bfd73be-d0f6-482e-9f75-243028f83b39",
+			"Error":        err,
+			"sqlToExecute": sqlToExecute,
+		}).Error("Something went wrong when executing SQL")
+
+		return err
+	}
+
+	// Log response from CloudDB
+	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		"Id":                       "9afc0f63-c373-4434-850c-7a426414be1a",
 		"comandTag.Insert()":       comandTag.Insert(),
 		"comandTag.Delete()":       comandTag.Delete(),
 		"comandTag.Select()":       comandTag.Select(),
