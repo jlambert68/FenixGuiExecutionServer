@@ -19,28 +19,28 @@ GuiExecutionWorker has the responsibility initiate an execution triggered by Tes
 
 The following environment variable is needed for GuiExecutionServer to be able to run.
 
-| Environment variable                        | Example value                                                     | comment                                                                        |
-|---------------------------------------------|-------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| AuthClientId                                | 46368345345345-au53543bleflkfs03423dfs.apps.googleusercontent.com |                                                                                |
-| AuthClientSecret                            | UYGJIU-KHskjshd7HDK7sdfsdf                                        |                                                                                |
-| DB_HOST                                     | 127.0.0.1                                                         |                                                                                |
-| DB_NAME                                     | fenix_gcp_database                                                |                                                                                |
-| DB_PASS                                     | database password                                                 |                                                                                |
-| DB_POOL_MAX_CONNECTIONS                     | 4                                                                 | The number of connections towards the database that the ExectionServer can use |
-| DB_PORT                                     | 5432                                                              |                                                                                |
-| DB_SCHEMA                                   | Not used                                                          |                                                                                |
-| DB_USER                                     | postgres                                                          |                                                                                |
-| ExecutionLocationForFenixExecutionServer    | GCP                                                               |                                                                                |
-| ExecutionLocationForFenixGuiExecutionServer | GCP                                                               |                                                                                |
-| FenixExecutionServerAddress                 | fenixexecutionserver-must-be-logged-in-ffafweeerg-lz.a.run.app    |                                                                                |
-| FenixExecutionServerPort                    | 443                                                               |                                                                                |
-| FenixGuiExecutionServerAddress              | 127.0.0.1                                                         |                                                                                |
-| FenixGuiExecutionServerPort                 | 6669                                                              |                                                                                |
-| GcpProject                                  | mycloud-run-project                                               |                                                                                |
-| LocalServiceAccountPath                     | #                                                                 |                                                                                |
-| LogAllSQLs                                  | true                                                              |                                                                                |
-| LoggingLevel                                | DebugLevel                                                        |                                                                                |
-| TestExecutionStatusPubSubTopicBase          | TestExecutionStatusTopic                                          |                                                                                |
-| TestExecutionStatusPubSubTopicSchema        | Fenix-ExecutionStatusUpdateMessageSchema                          |                                                                                |
-| UsePubSubWhenSendingExecutionStatus         | true                                                              |                                                                                |
+| Environment variable                        | Example value                            | comment                                                                        |
+|---------------------------------------------|------------------------------------------|--------------------------------------------------------------------------------|
+| AuthClientId                                | #                                        |                                                                                |
+| AuthClientSecret                            | #                                        |                                                                                |
+| DB_HOST                                     | 127.0.0.1                                |                                                                                |
+| DB_NAME                                     | fenix_gcp_database                       |                                                                                |
+| DB_PASS                                     | database password                        |                                                                                |
+| DB_POOL_MAX_CONNECTIONS                     | 4                                        | The number of connections towards the database that the ExectionServer can use |
+| DB_PORT                                     | 5432                                     |                                                                                |
+| DB_SCHEMA                                   | Not used                                 |                                                                                |
+| DB_USER                                     | postgres                                 |                                                                                |
+| ExecutionLocationForFenixExecutionServer    | LOCALHOST_NODOCKER                       |                                                                                |
+| ExecutionLocationForFenixGuiExecutionServer | LOCALHOST_NODOCKER                       |                                                                                |
+| FenixExecutionServerAddress                 | 127.0.01                                 |                                                                                |
+| FenixExecutionServerPort                    | 6672                                      |                                                                                |
+| FenixGuiExecutionServerAddress              | 127.0.0.1                                |                                                                                |
+| FenixGuiExecutionServerPort                 | 6669                                     |                                                                                |
+| GcpProject                                  | mycloud-run-project                      |                                                                                |
+| LocalServiceAccountPath                     | #                                        |                                                                                |
+| LogAllSQLs                                  | true                                     |                                                                                |
+| LoggingLevel                                | DebugLevel                               |                                                                                |
+| TestExecutionStatusPubSubTopicBase          | TestExecutionStatusTopic                 |                                                                                |
+| TestExecutionStatusPubSubTopicSchema        | Fenix-ExecutionStatusUpdateMessageSchema |                                                                                |
+| UsePubSubWhenSendingExecutionStatus         | true                                     |                                                                                |
 
