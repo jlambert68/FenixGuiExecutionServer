@@ -9,6 +9,7 @@ import (
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 	"time"
@@ -304,6 +305,8 @@ func loadRawTestCaseExecutionsList(
 	var tempTestCaseExecutionStatus int
 	var tempExecutionStatusUpdateTimeStamp time.Time
 	var tempExecutionStatusReportLevel int
+	var tempTestCasePreviewAsString string
+	var tempTestInstructionsExecutionStatusPreviewValuesAsString string
 
 	// Extract data from DB result set
 	for rows.Next() {
@@ -312,6 +315,7 @@ func loadRawTestCaseExecutionsList(
 		var rawTestCaseExecutionsListItem fenixExecutionServerGuiGrpcApi.TestCaseExecutionsListMessage
 
 		err := rows.Scan(
+			&rawTestCaseExecutionsListItem.DomainUUID,
 			&rawTestCaseExecutionsListItem.DomainName,
 			&rawTestCaseExecutionsListItem.TestSuiteUuid,
 			&rawTestCaseExecutionsListItem.TestSuiteName,
@@ -333,8 +337,8 @@ func loadRawTestCaseExecutionsList(
 			&rawTestCaseExecutionsListItem.UniqueCounter,
 			&tempExecutionStatusUpdateTimeStamp,
 			&tempExecutionStatusReportLevel,
-			&rawTestCaseExecutionsListItem.TestCasePreview,
-			&rawTestCaseExecutionsListItem.TestInstructionsExecutionStatusPreviewValues,
+			&tempTestCasePreviewAsString,
+			&tempTestInstructionsExecutionStatusPreviewValuesAsString,
 			&rawTestCaseExecutionsListItem.UniqueExecutionCounter,
 		)
 
@@ -356,6 +360,42 @@ func loadRawTestCaseExecutionsList(
 		rawTestCaseExecutionsListItem.TestCaseExecutionStatus = fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum(tempTestCaseExecutionStatus)
 		rawTestCaseExecutionsListItem.ExecutionStatusUpdateTimeStamp = timestamppb.New(tempExecutionStatusUpdateTimeStamp)
 		rawTestCaseExecutionsListItem.ExecutionStatusReportLevel = fenixExecutionServerGuiGrpcApi.ExecutionStatusReportLevelEnum(tempExecutionStatusReportLevel)
+
+		var tempTestCasePreviewStructureMessage fenixExecutionServerGuiGrpcApi.TestCasePreviewStructureMessage
+		err = protojson.Unmarshal([]byte(tempTestCasePreviewAsString), &tempTestCasePreviewStructureMessage)
+
+		if err != nil {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                          "929056f6-0cd0-417a-aab2-3e1caab22baf",
+				"Error":                       err,
+				"tempTestCasePreviewAsString": tempTestCasePreviewAsString,
+			}).Error("Something went wrong when converting 'tempTestCasePreviewAsString' into proto-message")
+
+			// Drop this message and continue with next message
+			return nil, false, err
+		}
+
+		rawTestCaseExecutionsListItem.TestCasePreview = &tempTestCasePreviewStructureMessage
+
+		if tempTestInstructionsExecutionStatusPreviewValuesAsString != "{}" {
+			var tempTestInstructionsExecutionStatusPreviewValuesMessage fenixExecutionServerGuiGrpcApi.
+				TestInstructionsExecutionStatusPreviewValuesMessage
+
+			err = protojson.Unmarshal([]byte(tempTestInstructionsExecutionStatusPreviewValuesAsString), &tempTestInstructionsExecutionStatusPreviewValuesMessage)
+
+			if err != nil {
+				common_config.Logger.WithFields(logrus.Fields{
+					"Id":    "b366c05c-1d84-42fb-b0a6-5a864950a857",
+					"Error": err,
+					"tempTestInstructionsExecutionStatusPreviewValuesAsString": tempTestInstructionsExecutionStatusPreviewValuesAsString,
+				}).Error("Something went wrong when converting 'tempTestInstructionsExecutionStatusPreviewValuesAsString' into proto-message")
+
+				// Drop this message and continue with next message
+				return nil, false, err
+			}
+
+			rawTestCaseExecutionsListItem.TestInstructionsExecutionStatusPreviewValues = &tempTestInstructionsExecutionStatusPreviewValuesMessage
+		}
 
 		// Add 'rawTestCaseExecutionsListItem' to 'rawTestCaseExecutionsList'
 		rawTestCaseExecutionsList = append(rawTestCaseExecutionsList, &rawTestCaseExecutionsListItem)
