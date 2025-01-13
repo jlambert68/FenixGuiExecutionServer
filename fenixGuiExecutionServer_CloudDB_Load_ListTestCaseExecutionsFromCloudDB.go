@@ -361,7 +361,7 @@ func loadRawTestCaseExecutionsList(
 		rawTestCaseExecutionsListItem.ExecutionStatusUpdateTimeStamp = timestamppb.New(tempExecutionStatusUpdateTimeStamp)
 		rawTestCaseExecutionsListItem.ExecutionStatusReportLevel = fenixExecutionServerGuiGrpcApi.ExecutionStatusReportLevelEnum(tempExecutionStatusReportLevel)
 
-		var tempTestCasePreviewStructureMessage fenixExecutionServerGuiGrpcApi.TestCasePreviewStructureMessage
+		var tempTestCasePreviewStructureMessage fenixExecutionServerGuiGrpcApi.TestCaseExecutionsListMessage
 		err = protojson.Unmarshal([]byte(tempTestCasePreviewAsString), &tempTestCasePreviewStructureMessage)
 
 		if err != nil {
@@ -375,7 +375,7 @@ func loadRawTestCaseExecutionsList(
 			return nil, false, err
 		}
 
-		rawTestCaseExecutionsListItem.TestCasePreview = &tempTestCasePreviewStructureMessage
+		rawTestCaseExecutionsListItem.TestCasePreview = tempTestCasePreviewStructureMessage.TestCasePreview
 
 		if tempTestInstructionsExecutionStatusPreviewValuesAsString != "{}" {
 			var tempTestInstructionsExecutionStatusPreviewValuesMessage fenixExecutionServerGuiGrpcApi.
