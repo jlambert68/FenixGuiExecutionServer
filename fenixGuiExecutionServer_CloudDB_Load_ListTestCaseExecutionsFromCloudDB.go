@@ -58,6 +58,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Load Domains that User has access to
 	var domainAndAuthorizations []DomainAndAuthorizationsStruct
 	domainAndAuthorizations, err = fenixGuiTestCaseBuilderServerObject.PrepareLoadUsersDomains(
+		txn,
 		listTestCaseExecutionsRequest.GetUserAndApplicationRunTimeIdentification().GetGCPAuthenticatedUser())
 
 	// If user doesn't have access to any domains then exit with warning in log
@@ -213,7 +214,7 @@ func loadRawTestCaseExecutionsList(
 
 	sqlToExecute := ""
 	sqlToExecute = sqlToExecute + "SELECT TCEQL.* "
-	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestCasesExecutionsForListings\" TCEQL,  \"FenixBuilder\".\"TestCases\" TC"
+	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestCasesExecutionsForListings\" TCEQL,  \"FenixBuilder\".\"TestCases\" TC "
 
 	// if domainList has domains then add that as Where-statement
 	if domainList != nil {
@@ -246,14 +247,14 @@ func loadRawTestCaseExecutionsList(
 	nullTimeStamp = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Add filter criteria in SQL: 'testCaseExecutionFromTimeStamp'
-	if testCaseExecutionFromTimeStamp.AsTime().Equal(nullTimeStamp) {
+	if !testCaseExecutionFromTimeStamp.AsTime().Equal(nullTimeStamp) {
 
 		sqlToExecute = sqlToExecute + fmt.Sprintf(" AND TCEQL.\"ExecutionStartTimeStamp\" > '%s' ",
 			testCaseExecutionFromTimeStamp.String())
 	}
 
 	// Add filter criteria in SQL: 'testCaseExecutionToTimeStamp'
-	if testCaseExecutionFromTimeStamp.AsTime().Equal(nullTimeStamp) {
+	if !testCaseExecutionFromTimeStamp.AsTime().Equal(nullTimeStamp) {
 
 		sqlToExecute = sqlToExecute + fmt.Sprintf(" AND TCEQL.\"ExecutionStopTimeStamp\" < '%s' ",
 			testCaseExecutionToTimeStamp.String())

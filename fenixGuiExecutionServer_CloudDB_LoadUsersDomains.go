@@ -12,24 +12,10 @@ import (
 // PrepareLoadUsersDomains
 // Do initial preparations to be able to load all domains for a specific user
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) PrepareLoadUsersDomains(
+	txn pgx.Tx,
 	gCPAuthenticatedUser string) (
 	domainAndAuthorizations []DomainAndAuthorizationsStruct,
 	err error) {
-
-	// Begin SQL Transaction
-	txn, err := fenixSyncShared.DbPool.Begin(context.Background())
-
-	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
-			"id":    "83825df6-2678-4d33-94f5-3c3a0e7cd74a",
-			"error": err,
-		}).Error("Problem to do 'DbPool.Begin'  in 'prepareLoadUsersDomains'")
-
-		return nil, err
-
-	}
-
-	defer txn.Commit(context.Background())
 
 	// Concatenate Users specific Domains and Domains open for every one to use
 	domainAndAuthorizations, err = fenixGuiTestCaseBuilderServerObject.concatenateUsersDomainsAndDomainOpenToEveryOneToUse(
