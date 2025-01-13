@@ -8,22 +8,22 @@ require (
 	github.com/gorilla/pat v1.0.2
 	github.com/gorilla/sessions v1.2.2
 	github.com/jackc/pgx/v4 v4.18.2
-	github.com/jlambert68/FenixGrpcApi v0.0.0-20240820072830-75f89a7f88f4
-	github.com/jlambert68/FenixSyncShared v0.0.0-20240215140904-db0840b5d70a
-	github.com/markbates/goth v1.79.0
+	github.com/jlambert68/FenixGrpcApi v0.0.0-20250109134739-2219cbc53872
+	github.com/jlambert68/FenixSyncShared v0.0.0-20240911064419-da3d922610cb
+	github.com/markbates/goth v1.80.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/toqueteos/webbrowser v1.2.0
 	golang.org/x/net v0.24.0
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/oauth2 v0.25.0
 	google.golang.org/api v0.172.0
 	google.golang.org/grpc v1.63.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.36.2
 )
 
 require (
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute v1.24.0 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.6 // indirect
 	cloud.google.com/go/pubsub v1.36.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
