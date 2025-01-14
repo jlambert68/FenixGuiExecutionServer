@@ -269,9 +269,9 @@ func loadRawTestCaseExecutionsList(
 	// Add Limit number of rows if requested
 	if onlyRetrieveLimitedSizedBatch == true {
 		if batchSize < 1 {
-			sqlToExecute = sqlToExecute + fmt.Sprintf("LIMIT %s;", numberOfTestCaseExecutionsToRetrieveWhenNotSpecified+1)
+			sqlToExecute = sqlToExecute + fmt.Sprintf("LIMIT %d;", numberOfTestCaseExecutionsToRetrieveWhenNotSpecified+1)
 		} else {
-			sqlToExecute = sqlToExecute + fmt.Sprintf("LIMIT %s;", batchSize+1)
+			sqlToExecute = sqlToExecute + fmt.Sprintf("LIMIT %d;", batchSize+1)
 		}
 
 	} else {
