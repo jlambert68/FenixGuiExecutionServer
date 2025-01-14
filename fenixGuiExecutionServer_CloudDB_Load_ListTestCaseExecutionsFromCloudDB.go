@@ -97,10 +97,11 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	rawTestCaseExecutionsList, moreRowsExistInDatabase, err = loadRawTestCaseExecutionsList(
 		txn,
-		listTestCaseExecutionsRequest.LatestUniqueTestCaseExecutionDatabaseRowId,
-		listTestCaseExecutionsRequest.OnlyRetrieveLimitedSizedBatch,
-		listTestCaseExecutionsRequest.TestCaseExecutionFromTimeStamp,
-		listTestCaseExecutionsRequest.TestCaseExecutionToTimeStamp,
+		listTestCaseExecutionsRequest.GetLatestUniqueTestCaseExecutionDatabaseRowId(),
+		listTestCaseExecutionsRequest.GetOnlyRetrieveLimitedSizedBatch(),
+		listTestCaseExecutionsRequest.GetBatchSize(),
+		listTestCaseExecutionsRequest.GetTestCaseExecutionFromTimeStamp(),
+		listTestCaseExecutionsRequest.GetTestCaseExecutionToTimeStamp(),
 		domainAndAuthorizations)
 
 	// Loop TestCaseExecutions and add TestInstructionsExecutions for the one that doesn't have end status for the TestCaseExecution
@@ -150,13 +151,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // The maximum number of TestCaseExecutions to retrieve in one batch, when asked for
-const numberOfTestCaseExecutionsToRetrieve = 10
+const numberOfTestCaseExecutionsToRetrieveWhenNotSpecified = 10
 
 // Get 'raw' TestCase Executions, with or without TestInstructionExecutions
 func loadRawTestCaseExecutionsList(
 	dbTransaction pgx.Tx,
 	latestUniqueTestCaseExecutionDatabaseRowId int32,
 	onlyRetrieveLimitedSizedBatch bool,
+	batchSize int32,
 	testCaseExecutionFromTimeStamp *timestamppb.Timestamp,
 	testCaseExecutionToTimeStamp *timestamppb.Timestamp,
 	domainAndAuthorizations []DomainAndAuthorizationsStruct) (
@@ -266,7 +268,12 @@ func loadRawTestCaseExecutionsList(
 
 	// Add Limit number of rows if requested
 	if onlyRetrieveLimitedSizedBatch == true {
-		sqlToExecute = sqlToExecute + fmt.Sprintf("LIMIT %s;", numberOfTestCaseExecutionsToRetrieve+1)
+		if batchSize < 1 {
+			sqlToExecute = sqlToExecute + fmt.Sprintf("LIMIT %s;", numberOfTestCaseExecutionsToRetrieveWhenNotSpecified+1)
+		} else {
+			sqlToExecute = sqlToExecute + fmt.Sprintf("LIMIT %s;", batchSize+1)
+		}
+
 	} else {
 		sqlToExecute = sqlToExecute + ";"
 	}
@@ -402,15 +409,26 @@ func loadRawTestCaseExecutionsList(
 
 	}
 
-	// Check if batch size should be applied
+	// Check if batch size should be applied when checking if there are more data for client to retrieve
 	if onlyRetrieveLimitedSizedBatch == true {
+		if batchSize < 1 {
 
-		// Yes, so check if max batch size was achieved
-		if len(rawTestCaseExecutionsList) > numberOfTestCaseExecutionsToRetrieve {
+			// Yes, so check if max batch size was achieved
+			if len(rawTestCaseExecutionsList) > numberOfTestCaseExecutionsToRetrieveWhenNotSpecified {
 
-			// More rows exists
-			moreRowsExistInDatabase = true
-			rawTestCaseExecutionsList = rawTestCaseExecutionsList[:numberOfTestCaseExecutionsToRetrieve]
+				// More rows exists
+				moreRowsExistInDatabase = true
+				rawTestCaseExecutionsList = rawTestCaseExecutionsList[:numberOfTestCaseExecutionsToRetrieveWhenNotSpecified]
+			}
+		} else {
+
+			// Yes, so check if max batch size was achieved
+			if len(rawTestCaseExecutionsList) > int(batchSize) {
+
+				// More rows exists
+				moreRowsExistInDatabase = true
+				rawTestCaseExecutionsList = rawTestCaseExecutionsList[:batchSize]
+			}
 		}
 	}
 
