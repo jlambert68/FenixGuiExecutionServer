@@ -4,6 +4,7 @@ import (
 	"FenixGuiExecutionServer/common_config"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v4"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
@@ -102,7 +103,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		listTestCaseExecutionsRequest.GetBatchSize(),
 		listTestCaseExecutionsRequest.GetTestCaseExecutionFromTimeStamp(),
 		listTestCaseExecutionsRequest.GetTestCaseExecutionToTimeStamp(),
-		domainAndAuthorizations)
+		domainAndAuthorizations,
+		listTestCaseExecutionsRequest.GetRetrieveAllExecutionsForSpecificTestCaseUuid(),
+		listTestCaseExecutionsRequest.GetSpecificTestCaseUuid())
 
 	// Loop TestCaseExecutions and add TestInstructionsExecutions for the one that doesn't have end status for the TestCaseExecution
 	var maxUniqueExecutionCounter int32
@@ -115,15 +118,31 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 			// Load all TestInstructionExecutions for TestCase
 			testInstructionsExecutionStatusPreviewValuesMessage, err = fenixGuiTestCaseBuilderServerObject.
-				loadTestInstructionsExecutionStatusPreviewValues(txn, tempRawTestCaseExecution)
+				loadTestInstructionsExecutionStatusPreviewValues(
+					txn, tempRawTestCaseExecution)
 
-			// Exit when there was a problem updating the database
+			// Exit when there was a problem reading the database
+			if err != nil {
+				return nil, err
+			}
+
+			// Load TestCaseExecution-status
+			var testCaseExecutionStatus int32
+			testCaseExecutionStatus, err = fenixGuiTestCaseBuilderServerObject.
+				loadTestCaseExecutionStatus(
+					txn, tempRawTestCaseExecution)
+
+			// Exit when there was a problem reading the database
 			if err != nil {
 				return nil, err
 			}
 
 			// Add "ExecutionStatusPreviewValues" to 'Raw TestCaseExecution'
 			tempRawTestCaseExecution.TestInstructionsExecutionStatusPreviewValues = testInstructionsExecutionStatusPreviewValuesMessage
+
+			// Add TestCaseExecution-status to 'Raw TestCaseExecution'
+			tempRawTestCaseExecution.TestCaseExecutionStatus = fenixExecutionServerGuiGrpcApi.
+				TestCaseExecutionStatusEnum(testCaseExecutionStatus)
 
 			// Exit when there was a problem updating the database
 			if err != nil {
@@ -141,7 +160,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Create the 'ListTestCaseExecutionsResponse'
 	listTestCaseExecutionsResponse = &fenixExecutionServerGuiGrpcApi.ListTestCaseExecutionsResponse{
-		AckNackResponse:                            nil,
+		AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+			AckNack:                      true,
+			Comments:                     "",
+			ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
+			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+		},
 		TestCaseExecutionsList:                     rawTestCaseExecutionsList,
 		LatestUniqueTestCaseExecutionDatabaseRowId: maxUniqueExecutionCounter,
 		MoreRowsExists:                             moreRowsExistInDatabase,
@@ -161,7 +185,9 @@ func loadRawTestCaseExecutionsList(
 	batchSize int32,
 	testCaseExecutionFromTimeStamp *timestamppb.Timestamp,
 	testCaseExecutionToTimeStamp *timestamppb.Timestamp,
-	domainAndAuthorizations []DomainAndAuthorizationsStruct) (
+	domainAndAuthorizations []DomainAndAuthorizationsStruct,
+	retrieveAllExecutionsForSpecificTestCaseUuid bool,
+	specificTestCaseUuid string) (
 	rawTestCaseExecutionsList []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionsListMessage,
 	moreRowsExistInDatabase bool,
 	err error) {
@@ -214,10 +240,61 @@ func loadRawTestCaseExecutionsList(
 
 		return nil, false, err
 	}
+	/*
+		WITH EC AS (
+		    SELECT "TestCaseUuid", COUNT(*) AS "ExecutionCount"
+		    FROM "FenixExecution"."TestCasesExecutionsForListings"
+		    GROUP BY "TestCaseUuid"
+		)
+		SELECT *
+		FROM (
+		    --SELECT DISTINCT ON (TCEQL."TestCaseUuid") TCEQL.*, EC."ExecutionCount"
+		    SELECT TCEQL.*, EC."ExecutionCount"
+		    FROM "FenixExecution"."TestCasesExecutionsForListings" TCEQL
+		    JOIN EC ON TCEQL."TestCaseUuid" = EC."TestCaseUuid"  -- ✅ JOIN EC HERE
+		    JOIN "FenixBuilder"."TestCases" TC
+		        ON TC."TestCaseUuid" = TCEQL."TestCaseUuid"
+		        AND TC."TestCaseVersion" = TCEQL."TestCaseVersion"
+		    WHERE TCEQL."DomainUuid" IN ('16458c6c-4f4f-4011-8bd6-34750490c8c1',
+		                                 '7edf2269-a8d3-472c-aed6-8cdcc4a8b6ae',
+		                                 'e81b9734-5dce-43c9-8d77-3368940cf126')
+		    AND (TC."CanListAndViewTestCaseAuthorizationLevelOwnedByDomain" & 11) =
+		        TC."CanListAndViewTestCaseAuthorizationLevelOwnedByDomain"
+		    AND (TC."CanListAndViewTestCaseAuthorizationLevelHavingTiAndTicWithDomai" & 11) =
+		        TC."CanListAndViewTestCaseAuthorizationLevelHavingTiAndTicWithDomai"
+		    AND TC."TestCaseUuid" = '1fe0caf6-0bbf-4470-8aa5-34123896c697'
+		    AND TCEQL."UniqueExecutionCounter" > 26
+		    -- ORDER BY TCEQL."TestCaseUuid", TCEQL."UniqueExecutionCounter" DESC
+		) sub
+		ORDER BY sub."UniqueExecutionCounter" ASC
+		LIMIT 5;
+	*/
 
 	sqlToExecute := ""
-	sqlToExecute = sqlToExecute + "SELECT TCEQL.* "
-	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestCasesExecutionsForListings\" TCEQL,  \"FenixBuilder\".\"TestCases\" TC "
+	sqlToExecute = sqlToExecute + "WITH EC AS ( "
+	sqlToExecute = sqlToExecute + "SELECT \"TestCaseUuid\", COUNT(*) AS \"ExecutionCount\" "
+	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestCasesExecutionsForListings\" "
+	sqlToExecute = sqlToExecute + "GROUP BY \"TestCaseUuid\""
+	sqlToExecute = sqlToExecute + ") "
+
+	sqlToExecute = sqlToExecute + "SELECT *"
+	sqlToExecute = sqlToExecute + "FROM ( "
+
+	// Should we retrieve one execution per TestCaseUuid or should we retrieve all executions for one TestCaseUuid
+	if retrieveAllExecutionsForSpecificTestCaseUuid == false {
+		// Retrieve one execution TestCaseUuid
+		sqlToExecute = sqlToExecute + "SELECT DISTINCT ON (TCEQL.\"TestCaseUuid\") TCEQL.* , EC.\"ExecutionCount\" "
+	} else {
+		// Retrieve all executions for one TestCaseUuid
+		sqlToExecute = sqlToExecute + "SELECT TCEQL.* , EC.\"ExecutionCount\" "
+
+	}
+
+	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestCasesExecutionsForListings\" TCEQL "
+	sqlToExecute = sqlToExecute + "JOIN EC ON TCEQL.\"TestCaseUuid\" = EC.\"TestCaseUuid\" "
+	sqlToExecute = sqlToExecute + "JOIN \"FenixBuilder\".\"TestCases\" TC " +
+		"ON TC.\"TestCaseUuid\" = TCEQL.\"TestCaseUuid\" AND " +
+		"TC.\"TestCaseVersion\" = TCEQL.\"TestCaseVersion\" "
 
 	// if domainList has domains then add that as Where-statement
 	if domainList != nil {
@@ -230,14 +307,33 @@ func loadRawTestCaseExecutionsList(
 		return nil, false, err
 	}
 
-	sqlToExecute = sqlToExecute + " TC.\"TestCaseUuid\" =  TCEQL.\"TestCaseUuid\" AND "
-	sqlToExecute = sqlToExecute + " TC.\"TestCaseVersion\" =  TCEQL.\"TestCaseVersion\" AND "
-
 	sqlToExecute = sqlToExecute + "(TC.\"CanListAndViewTestCaseAuthorizationLevelOwnedByDomain\" & " + tempCanListAndViewTestCaseOwnedByThisDomainAsString + ")"
 	sqlToExecute = sqlToExecute + "= TC.\"CanListAndViewTestCaseAuthorizationLevelOwnedByDomain\" "
 	sqlToExecute = sqlToExecute + "AND "
 	sqlToExecute = sqlToExecute + "(TC.\"CanListAndViewTestCaseAuthorizationLevelHavingTiAndTicWithDomai\" & " + tempCanListAndViewTestCaseHavingTIandTICfromThisDomainAsString + ")"
 	sqlToExecute = sqlToExecute + "= TC.\"CanListAndViewTestCaseAuthorizationLevelHavingTiAndTicWithDomai\" "
+
+	// Should we retrieve one execution per TestCaseUuid or should we retrieve all executions for one TestCaseUuid
+	if retrieveAllExecutionsForSpecificTestCaseUuid == false {
+		// Retrieve one execution TestCaseUuid
+
+	} else {
+
+		// Retrieve all executions for one TestCaseUuid
+		if len(specificTestCaseUuid) != 34 {
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                   "5c832e3f-f9de-442f-86c6-50652d7af977",
+				"specificTestCaseUuid": specificTestCaseUuid,
+			}).Error("The TestCaseUuid doesn't seem to be a UUID")
+
+			err = errors.New(fmt.Sprintf("the TestCaseUuid (%s) doesn't seem to be a UUID ", specificTestCaseUuid))
+
+			return nil, false, err
+		}
+
+		sqlToExecute = sqlToExecute + "AND TC.\"TestCaseUuid\" = " + specificTestCaseUuid + " "
+
+	}
 
 	// Add filter criteria in SQL: 'latestUniqueTestCaseExecutionDatabaseRowId'
 	if latestUniqueTestCaseExecutionDatabaseRowId > 0 {
@@ -263,8 +359,20 @@ func loadRawTestCaseExecutionsList(
 			testCaseExecutionToTimeStamp.String())
 	}
 
-	// Add Ordering for SQL
-	sqlToExecute = sqlToExecute + "ORDER BY TCEQL.\"UniqueExecutionCounter\" ASC "
+	// Add Ordering for inner SQL
+	// Should we retrieve one execution per TestCaseUuid or should we retrieve all executions for one TestCaseUuid
+	if retrieveAllExecutionsForSpecificTestCaseUuid == false {
+		// Retrieve one execution TestCaseUuid
+		sqlToExecute = sqlToExecute + "ORDER BY TCEQL.\"TestCaseUuid\", TCEQL.\"UniqueExecutionCounter\" DESC "
+	} else {
+		// Retrieve all executions for one TestCaseUuid
+
+	}
+
+	sqlToExecute = sqlToExecute + ") sub "
+
+	// Add Ordering for outer SQL
+	sqlToExecute = sqlToExecute + "ORDER BY sub.\"UniqueExecutionCounter\" ASC "
 
 	// Add Limit number of rows if requested
 	if onlyRetrieveLimitedSizedBatch == true {
@@ -347,6 +455,7 @@ func loadRawTestCaseExecutionsList(
 			&tempTestCasePreviewAsString,
 			&tempTestInstructionsExecutionStatusPreviewValuesAsString,
 			&rawTestCaseExecutionsListItem.UniqueExecutionCounter,
+			&rawTestCaseExecutionsListItem.NumberOfTestCaseExecutionForTestCase,
 		)
 
 		if err != nil {
@@ -572,5 +681,86 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		TestInstructionExecutionStatusPreviewValues: testCasePreviewAndExecutionStatusPreviewValues}
 
 	return testInstructionsExecutionStatusPreviewValuesMessage, err
+
+}
+
+// Retrieve "TestCaseExecutionStatus" for one TestCaseExecution
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseExecutionStatus(
+	dbTransaction pgx.Tx,
+	rawTestCaseExecution *fenixExecutionServerGuiGrpcApi.TestCaseExecutionsListMessage) (
+	testCaseExecutionStatus int32,
+	err error) {
+
+	// Load 'ExecutionStatusPreviewValues'
+
+	sqlToExecute := ""
+	sqlToExecute = sqlToExecute + "SELECT TIUE.\"TestCaseExecutionStatus\" "
+	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestInstructionsUnderExecution\" TIUE "
+	sqlToExecute = sqlToExecute + "WHERE "
+	sqlToExecute = sqlToExecute + fmt.Sprintf("\"TestCaseExecutionUuid\" = '%s' AND \"TestCaseExecutionVersion\" = %d ",
+		rawTestCaseExecution.TestCaseExecutionUuid,
+		rawTestCaseExecution.TestCaseExecutionVersion)
+	sqlToExecute = sqlToExecute + ";"
+
+	// Query DB
+	ctx, timeOutCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer timeOutCancel()
+
+	rows, err := dbTransaction.Query(ctx, sqlToExecute)
+	defer rows.Close()
+
+	if err != nil {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":           "fc0b2088-798c-48f1-8dc3-373c0d58c636",
+			"Error":        err,
+			"sqlToExecute": sqlToExecute,
+		}).Error("Something went wrong when executing SQL")
+
+		return 0, err
+	}
+
+	// Number of rows
+	var numberOfRowFromDB int32
+	numberOfRowFromDB = 0
+
+	// Extract data from DB result set
+	for rows.Next() {
+
+		numberOfRowFromDB = numberOfRowFromDB + 1
+
+		err := rows.Scan(
+			&testCaseExecutionStatus,
+		)
+
+		if err != nil {
+
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                "41ee1994-5a0a-43a6-ac3c-d3eb4ed46137",
+				"Error":             err,
+				"sqlToExecute":      sqlToExecute,
+				"numberOfRowFromDB": numberOfRowFromDB,
+			}).Error("Something went wrong when processing result from database")
+
+			return 0, err
+		}
+
+	}
+
+	// If number of rows <> 1 then there is a problem
+	if numberOfRowFromDB != 1 {
+
+		err = errors.New("number of rows in database response was not exact 1 row")
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":                "a0a0b95e-42c6-4b64-a671-668ccdc0de52",
+			"Error":             err,
+			"sqlToExecute":      sqlToExecute,
+			"numberOfRowFromDB": numberOfRowFromDB,
+		}).Error("Something went wrong when processing result from database")
+
+		return 0, err
+	}
+
+	return testCaseExecutionStatus, err
 
 }

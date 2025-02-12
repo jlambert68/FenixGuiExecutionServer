@@ -10,13 +10,13 @@ require (
 	github.com/gorilla/pat v1.0.2
 	github.com/gorilla/sessions v1.2.2
 	github.com/jackc/pgx/v4 v4.18.2
-	github.com/jlambert68/FenixGrpcApi v0.0.0-20250114063146-bad1bcdc4fde
+	github.com/jlambert68/FenixGrpcApi v0.0.0-20250210125238-192f9d8695e5
 	github.com/jlambert68/FenixSyncShared v0.0.0-20240911064419-da3d922610cb
 	github.com/markbates/goth v1.80.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/toqueteos/webbrowser v1.2.0
 	golang.org/x/net v0.34.0
-	golang.org/x/oauth2 v0.25.0
+	golang.org/x/oauth2 v0.26.0
 	google.golang.org/api v0.216.0
 	google.golang.org/grpc v1.69.4
 	google.golang.org/protobuf v1.36.2
