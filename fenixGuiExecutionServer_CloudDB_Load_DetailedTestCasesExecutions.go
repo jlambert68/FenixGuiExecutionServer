@@ -17,6 +17,7 @@ type workObjectForTestInstructionExecutionsMessageStruct struct {
 	TestInstructionExecutionBasicInformation *fenixExecutionServerGuiGrpcApi.TestInstructionExecutionBasicInformationMessage
 	TestInstructionExecutionsInformation     []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsInformationMessage
 	ExecutionLogPostsAndValues               []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+	RunTimeUpdatedAttributes                 []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
 }
 
 // Temporary structure for handling TestCaseExecutions and references to TestInstructionExecutions
@@ -685,6 +686,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				TestInstructionExecutionBasicInformation: &testInstructionExecutionBasicInformation,
 				TestInstructionExecutionsInformation:     tempTestInstructionExecutions,
 				ExecutionLogPostsAndValues:               nil,
+				RunTimeUpdatedAttributes:                 nil,
 			}
 
 			// Add 'tempWorkObjectForTestInstructionExecutionsMessage' to 'TestInstructionExecutionsMap'
@@ -928,6 +930,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				TestInstructionExecutionBasicInformation: &tempTestInstructionExecutionBasicInformation,
 				TestInstructionExecutionsInformation:     tempTestInstructionExecutions,
 				ExecutionLogPostsAndValues:               nil,
+				RunTimeUpdatedAttributes:                 nil,
 			}
 
 			// Add back to Map
@@ -948,6 +951,109 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	return numberOfRows, err
+}
+
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseExecutionLogs(
+	dbTransaction pgx.Tx,
+	testCaseExecutionUuid string) (
+	runTimeUpdatedAttributes []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage,
+	err error) {
+
+	sqlToExecute := ""
+	sqlToExecute = sqlToExecute + "SELECT ELP.* "
+	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"ExecutionLogPosts\" ELP "
+	sqlToExecute = sqlToExecute + "WHERE  ELP.\"TestCaseExecutionUuid\" = '" + testCaseExecutionUuid + "' "
+	sqlToExecute = sqlToExecute + "; "
+
+	// Query DB
+	var ctx context.Context
+	ctx, timeOutCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer timeOutCancel()
+
+	rows, err := dbTransaction.Query(ctx, sqlToExecute)
+	defer rows.Close()
+
+	if err != nil {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "e174dc5f-bc65-4ead-b9f0-530e1631e565",
+			"Error":        err,
+			"sqlToExecute": sqlToExecute,
+		}).Error("Something went wrong when executing SQL")
+
+		return []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage{}, err
+	}
+
+	// Variables to used when extract data from result set
+	var (
+		tempUpdatedTimeStamp *time.Time
+		tempUniqueId         int
+	)
+
+	// Extract data from DB result set
+	for rows.Next() {
+
+		// Initiate a new variable to store the data
+		var tempRunTimeUpdatedAttribute *fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
+
+		/*
+			create table "FenixExecution"."ExecutionLogPosts"
+			(
+			    "DomainUuid"                      uuid      not null,
+			    "TestCaseExecutionUuid"           uuid      not null,
+			    "TestCaseExecutionVersion"        integer   not null,
+			    "TestInstructionExecutionUuid"    uuid      not null,
+			    "TestInstructionExecutionVersion" integer   not null,
+			    "TestInstructionExecutionStatus"  integer
+			        constraint executionlogposts_testcaseexecutionstatusenum_grpc_id_fk
+			            references "FenixExecution"."TestCaseExecutionStatusEnum",
+			    "LogPostUuid"                     uuid      not null
+			        primary key,
+			    "LogPostTimeStamp"                timestamp not null,
+			    "LogPostStatus"                   integer
+			        constraint executionlogposts_logpoststatusenum_grpc_id_fk
+			            references "FenixExecution"."LogPostStatusEnum",
+			    "LogPostText"                     varchar,
+			    "FoundVsExpectedValuesAsJsonb"    jsonb     not null
+			);
+
+		*/
+
+		err = rows.Scan(
+			&tempRunTimeUpdatedAttribute.TestInstructionExecutionUuid,
+			&tempRunTimeUpdatedAttribute.TestInstructionAttributeType,
+			&tempRunTimeUpdatedAttribute.TestInstructionAttributeUuid,
+			&tempRunTimeUpdatedAttribute.TestInstructionAttributeName,
+			&tempRunTimeUpdatedAttribute.AttributeValueAsString,
+			&tempRunTimeUpdatedAttribute.AttributeValueUuid,
+			&tempRunTimeUpdatedAttribute.TestInstructionAttributeTypeUuid,
+			&tempRunTimeUpdatedAttribute.TestInstructionAttributeTypeName,
+			&tempRunTimeUpdatedAttribute.TestInstructionExecutionVersion,
+			&tempUpdatedTimeStamp,
+			&tempUniqueId,
+		)
+
+		if err != nil {
+			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+				"Id":           "b68560d1-3019-4771-84c4-fc24dc208cca",
+				"Error":        err,
+				"sqlToExecute": sqlToExecute,
+			}).Error("Something went wrong when processing result from database")
+
+			return []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage{}, err
+		}
+
+		// Convert temp-variables into gRPC-variables
+		if tempUpdatedTimeStamp != nil {
+			tempRunTimeUpdatedAttribute.UpdateTimeStamp =
+				timestamppb.New(*tempUpdatedTimeStamp)
+		}
+
+		// Add the attribute to the slice of attributes
+		runTimeUpdatedAttributes = append(runTimeUpdatedAttributes, tempRunTimeUpdatedAttribute)
+
+	}
+
+	return runTimeUpdatedAttributes, err
 }
 
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
@@ -974,6 +1080,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				TestInstructionExecutionBasicInformation: testInstructionExecution.TestInstructionExecutionBasicInformation,
 				TestInstructionExecutionsInformation:     testInstructionExecution.TestInstructionExecutionsInformation,
 				ExecutionLogPostsAndValues:               nil,
+				RunTimeUpdatedAttributes:                 nil,
 			}
 
 			// Append TestInstructionExecution to Slice of all TestInstructionExecutions fur current TestCaseExecution
