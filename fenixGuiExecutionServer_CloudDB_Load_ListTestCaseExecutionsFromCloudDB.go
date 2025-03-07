@@ -277,7 +277,7 @@ func loadRawTestCaseExecutionsList(
 	sqlToExecute = sqlToExecute + "GROUP BY \"TestCaseUuid\""
 	sqlToExecute = sqlToExecute + ") "
 
-	sqlToExecute = sqlToExecute + "SELECT *"
+	sqlToExecute = sqlToExecute + "SELECT * "
 	sqlToExecute = sqlToExecute + "FROM ( "
 
 	// Should we retrieve one execution per TestCaseUuid or should we retrieve all executions for one TestCaseUuid
@@ -320,7 +320,7 @@ func loadRawTestCaseExecutionsList(
 	} else {
 
 		// Retrieve all executions for one TestCaseUuid
-		if len(specificTestCaseUuid) != 34 {
+		if len(specificTestCaseUuid) != 36 {
 			common_config.Logger.WithFields(logrus.Fields{
 				"Id":                   "5c832e3f-f9de-442f-86c6-50652d7af977",
 				"specificTestCaseUuid": specificTestCaseUuid,
@@ -331,7 +331,7 @@ func loadRawTestCaseExecutionsList(
 			return nil, false, err
 		}
 
-		sqlToExecute = sqlToExecute + "AND TC.\"TestCaseUuid\" = " + specificTestCaseUuid + " "
+		sqlToExecute = sqlToExecute + "AND TC.\"TestCaseUuid\" = '" + specificTestCaseUuid + "' "
 
 	}
 
