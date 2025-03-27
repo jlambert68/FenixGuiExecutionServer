@@ -1080,6 +1080,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		tempLogPostTimeStamp                     *time.Time
 		tempFoundVsExpectedValuesAsJsonbAsString string
 		tempTestCaseExecutionMapKey              string
+		numberOfRows                             int
 	)
 
 	// Extract data from DB result set
@@ -1112,6 +1113,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 			return err
 		}
+
+		// One more row found in database
+		numberOfRows = numberOfRows + 1
 
 		// Convert temp-variables into gRPC-variables - LogPostTimeStamp
 		if tempLogPostTimeStamp != nil {
@@ -1176,6 +1180,17 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	}
 
+	// Check if any logpost were found
+	if numberOfRows == 0 {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":                          "1d2c1775-eb46-40e1-83b3-05d33b9830b2",
+			"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
+		}).Debug("No Log-post were found in database")
+
+		return nil
+
+	}
+
 	// Store log-posts and values in overall response object
 
 	// Extract TestCaseExecution-object
@@ -1183,7 +1198,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempTestCaseExecution workObjectForTestCaseExecutionResponseMessageStruct
 	tempTestCaseExecutionPtr, existInMap = tempTestCaseExecutionResponseMessagesMap[tempTestCaseExecutionMapKey]
 
-	if existInMap == false {
+	if numberOfRows > 0 && existInMap == false {
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
 			"Id":                          "e0cb4f9d-8a3c-46d7-8aaf-9303a8df5031",
 			"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
@@ -1304,6 +1319,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		tempUpdatedTimeStamp        *time.Time
 		tempUniqueId                int
 		tempTestCaseExecutionMapKey string
+		numberOfRows                int
 	)
 
 	// Extract data from DB result set
@@ -1336,6 +1352,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 			return err
 		}
+
+		// One more row found in database
+		numberOfRows = numberOfRows + 1
 
 		// Convert temp-variables into gRPC-variables
 		if tempUpdatedTimeStamp != nil {
@@ -1370,6 +1389,17 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	}
 
+	// Check if any RunTimeUpdated attributes were found
+	if numberOfRows == 0 {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":                          "b71e44be-ed23-4992-9f46-e35cd0be0b1d",
+			"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
+		}).Debug("No RunTimeUpdated variables were found in database")
+
+		return nil
+
+	}
+
 	// Store log-posts and values in overall response object
 
 	// Extract TestCaseExecution-object
@@ -1377,7 +1407,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempTestCaseExecution workObjectForTestCaseExecutionResponseMessageStruct
 	tempTestCaseExecutionPtr, existInMap = tempTestCaseExecutionResponseMessagesMap[tempTestCaseExecutionMapKey]
 
-	if existInMap == false {
+	if numberOfRows > 0 && existInMap == false {
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
 			"Id":                          "81234875-1951-4eb8-b007-cd6de8725b57",
 			"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
@@ -1527,8 +1557,30 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			tempTestInstructionExecutionsMessage = &fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage{
 				TestInstructionExecutionBasicInformation: testInstructionExecution.TestInstructionExecutionBasicInformation,
 				TestInstructionExecutionsInformation:     *testInstructionExecution.TestInstructionExecutionsInformation,
-				ExecutionLogPostsAndValues:               *testInstructionExecution.ExecutionLogPostsAndValues,
-				RunTimeUpdatedAttributes:                 *testInstructionExecution.RunTimeUpdatedAttributes,
+				ExecutionLogPostsAndValues:               nil,
+				RunTimeUpdatedAttributes:                 nil,
+			}
+
+			// Check if there is an initiated value for 'Logposts'
+			if testInstructionExecution.ExecutionLogPostsAndValues == nil {
+				// No initiated value
+				var tempExecutionLogPostsAndValues []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+				tempExecutionLogPostsAndValues = []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage{}
+				tempTestInstructionExecutionsMessage.ExecutionLogPostsAndValues = tempExecutionLogPostsAndValues
+			} else {
+				// Initiated value exists
+				tempTestInstructionExecutionsMessage.ExecutionLogPostsAndValues = *testInstructionExecution.ExecutionLogPostsAndValues
+			}
+
+			// Check if there is an initiated value for 'RunTimeUpdated variables'
+			if testInstructionExecution.ExecutionLogPostsAndValues == nil {
+				// No initiated value
+				var tempRunTimeUpdatedAttributes []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
+				tempRunTimeUpdatedAttributes = []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage{}
+				tempTestInstructionExecutionsMessage.RunTimeUpdatedAttributes = tempRunTimeUpdatedAttributes
+			} else {
+				// Initiated value exists
+				tempTestInstructionExecutionsMessage.RunTimeUpdatedAttributes = *testInstructionExecution.RunTimeUpdatedAttributes
 			}
 
 			// Append TestInstructionExecution to Slice of all TestInstructionExecutions fur current TestCaseExecution
