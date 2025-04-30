@@ -3,12 +3,12 @@ package main
 import (
 	"FenixGuiExecutionServer/common_config"
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/jackc/pgx/v4"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 	"time"
@@ -1083,6 +1083,27 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		numberOfRows                             int
 	)
 
+	// FoundVersusExpectedValueStruct within 'LogPostStruct'
+	// Holds one variables and its expected value vs found value
+	type FoundVersusExpectedValueStruct struct {
+		FoundValue    string `json:"FoundValue"`
+		ExpectedValue string `json:"ExpectedValue"`
+	}
+
+	// FoundVersusExpectedValueForVariableStruct within 'LogPostStruct'
+	// Holds one variables and its expected value vs found value
+	type FoundVersusExpectedValueForVariableStruct struct {
+		VariableName              string                         `json:"VariableName"`
+		VariableDescription       string                         `json:"VariableDescription"`
+		FoundVersusExpectedValues FoundVersusExpectedValueStruct `json:"FoundVersusExpectedValues"`
+	}
+
+	// FoundVersusExpectedValueStruct within 'LogPostStruct'
+	// Holds one variables and its expected value vs found value
+	type FoundVersusExpectedValuesStruct struct {
+		FoundVersusExpectedValue []FoundVersusExpectedValueForVariableStruct `json:"FoundVersusExpectedValue"`
+	}
+
 	// Extract data from DB result set
 	for rows.Next() {
 
@@ -1123,33 +1144,51 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				timestamppb.New(*tempLogPostTimeStamp)
 		}
 
-		// Convert temp-variables into gRPC-variables - FoundVsExpectedValuesAsJsonbAsString
-		// Unmarshal (cast) JSON into the struct.
-		var foundVsExpectedValues fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
-
 		// Clean 'tempFoundVsExpectedValuesAsJsonbAsString'
-		tempFoundVsExpectedValuesAsJsonbAsString = tempFoundVsExpectedValuesAsJsonbAsString[1 : len(tempFoundVsExpectedValuesAsJsonbAsString)-1]
+		//tempFoundVsExpectedValuesAsJsonbAsString = tempFoundVsExpectedValuesAsJsonbAsString[1 : len(tempFoundVsExpectedValuesAsJsonbAsString)-1]
+
+		var tempFoundVsExpectedValue FoundVersusExpectedValuesStruct
 
 		// Check if this an empty json; "{}" or not
-		if len(tempFoundVsExpectedValuesAsJsonbAsString) > 2 {
+		if len(tempFoundVsExpectedValuesAsJsonbAsString) > 4 {
 			// There are Found vs Expected values, so add name 'FoundVersusExpectedValue' to the json
-			tempFoundVsExpectedValuesAsJsonbAsString = tempFoundVsExpectedValuesAsJsonbAsString[:1] +
-				"\"FoundVersusExpectedValue\":" + tempFoundVsExpectedValuesAsJsonbAsString[1:]
+			tempFoundVsExpectedValuesAsJsonbAsString = "{\"FoundVersusExpectedValue\":" + tempFoundVsExpectedValuesAsJsonbAsString + "}"
+
+			// Unmarshal (cast) JSON into the struct.
+			err = json.Unmarshal([]byte(tempFoundVsExpectedValuesAsJsonbAsString), &tempFoundVsExpectedValue)
+			if err != nil {
+				fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+					"Id":    "68d920d6-656a-485e-8d31-9ad6fc4d9507",
+					"Error": err,
+					"tempFoundVsExpectedValuesAsJsonbAsString": tempFoundVsExpectedValuesAsJsonbAsString,
+				}).Error("Couldn't unmarshal 'tempFoundVsExpectedValuesAsJsonbAsString' into proto-structure")
+
+				return err
+			}
 		}
 
-		err = protojson.Unmarshal([]byte(tempFoundVsExpectedValuesAsJsonbAsString), &foundVsExpectedValues)
-		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
-				"Id":    "68d920d6-656a-485e-8d31-9ad6fc4d9507",
-				"Error": err,
-				"tempFoundVsExpectedValuesAsJsonbAsString": tempFoundVsExpectedValuesAsJsonbAsString,
-			}).Error("Couldn't unmarshal 'tempFoundVsExpectedValuesAsJsonbAsString' into proto-structure")
+		// Convert local message, from json, into proto-message
+		var tempFoundVersusExpectedValues []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage_FoundVersusExpectedValueMessage
 
-			return err
+		// Loop all Found vs Expected values and convert to proto-message
+
+		for _, extractedFoundVersusExpectedValue := range tempFoundVsExpectedValue.FoundVersusExpectedValue {
+			var tempFoundVersusExpectedValue *fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage_FoundVersusExpectedValueMessage
+
+			tempFoundVersusExpectedValue = &fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage_FoundVersusExpectedValueMessage{
+				VariableName:        extractedFoundVersusExpectedValue.VariableName,
+				VariableDescription: extractedFoundVersusExpectedValue.VariableDescription,
+				FoundValue:          extractedFoundVersusExpectedValue.FoundVersusExpectedValues.FoundValue,
+				ExpectedValue:       extractedFoundVersusExpectedValue.FoundVersusExpectedValues.ExpectedValue,
+			}
+
+			// Add to slice of Expected vs Found slice
+			tempFoundVersusExpectedValues = append(tempFoundVersusExpectedValues, tempFoundVersusExpectedValue)
+
 		}
 
 		// Extract the pure Found vs Expected values array and store in the main Log-object
-		tempLogPostAndValues.FoundVersusExpectedValue = foundVsExpectedValues.FoundVersusExpectedValue
+		tempLogPostAndValues.FoundVersusExpectedValue = tempFoundVersusExpectedValues
 
 		// Extract RunTimeUpdatedAttributeSlice from map for certain
 		var logPostAndValuesMessageSlicePtr *[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
@@ -1316,8 +1355,10 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Variables to used when extract data from result set
 	var (
-		tempUpdatedTimeStamp        *time.Time
-		tempUniqueId                int
+		tempUpdatedTimeStamp *time.Time
+		tempUniqueId         int
+		tempUniqueIdNew      int
+
 		tempTestCaseExecutionMapKey string
 		numberOfRows                int
 	)
@@ -1340,6 +1381,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempRunTimeUpdatedAttribute.TestInstructionExecutionVersion,
 			&tempUpdatedTimeStamp,
 			&tempUniqueId,
+			&tempUniqueIdNew,
 			&tempTestCaseExecutionMapKey,
 		)
 
@@ -1573,7 +1615,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			}
 
 			// Check if there is an initiated value for 'RunTimeUpdated variables'
-			if testInstructionExecution.ExecutionLogPostsAndValues == nil {
+			if testInstructionExecution.RunTimeUpdatedAttributes == nil {
 				// No initiated value
 				var tempRunTimeUpdatedAttributes []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
 				tempRunTimeUpdatedAttributes = []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage{}
