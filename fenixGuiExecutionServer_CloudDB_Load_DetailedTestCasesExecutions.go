@@ -1355,9 +1355,11 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Variables to used when extract data from result set
 	var (
-		tempUpdatedTimeStamp *time.Time
-		tempUniqueId         int
-		tempUniqueIdNew      int
+		tempUpdatedTimeStamp      *time.Time
+		tempUniqueId              int
+		tempUniqueIdNew           int
+		tempTestCaseExecutionUuid string
+		tempTestInstructionName   string
 
 		tempTestCaseExecutionMapKey string
 		numberOfRows                int
@@ -1380,6 +1382,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			&tempRunTimeUpdatedAttribute.TestInstructionAttributeTypeName,
 			&tempRunTimeUpdatedAttribute.TestInstructionExecutionVersion,
 			&tempUpdatedTimeStamp,
+			&tempTestCaseExecutionUuid,
+			&tempTestInstructionName,
 			&tempUniqueId,
 			&tempUniqueIdNew,
 			&tempTestCaseExecutionMapKey,
