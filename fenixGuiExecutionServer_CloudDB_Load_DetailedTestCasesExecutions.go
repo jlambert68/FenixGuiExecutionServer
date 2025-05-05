@@ -1320,20 +1320,76 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		}
 
 	}
+	/*
+		WITH values AS
+		(SELECT
+		CONCAT(TIAUECH."TestInstructionExecutionUuid", TIAUECH."TestInstructionExecutionVersion", TIAUECH."TestInstructionAttributeUuid") AS key,
+			max(TIAUECH."UniqueId_New") AS id
+
+		FROM "FenixExecution"."TestInstructionAttributesUnderExecutionChangeHistory" TIAUECH
+
+		WHERE CONCAT(TIAUECH."TestInstructionExecutionUuid", TIAUECH."TestInstructionExecutionVersion") IN (
+			'fc200d71-375e-48c2-b479-b16abff70f4a1',
+			'45a90d6e-fc49-4dff-ba75-4f0966f0c2181',
+			'b4251d19-2a8f-4e9a-8e9b-153b6b6dc8351',
+			'df77db68-7a94-45b1-869a-4961f29d981e1',
+			'915bd3d6-c2ce-4f69-814e-7b375cc5b4fb1',
+			'6b484bb4-6a6f-48fc-8de2-f9163a3a8ec31'
+		)
+		GROUP BY
+		TIAUECH."TestInstructionExecutionUuid",
+			TIAUECH."TestInstructionExecutionVersion",
+			TIAUECH."TestInstructionAttributeUuid"
+
+		HAVING  COUNT(*) > 1 )
+
+		SELECT  TIAUECH.* , CONCAT(TIUE."TestCaseExecutionUuid", TIUE."TestCaseExecutionVersion")
+		FROM "FenixExecution"."TestInstructionAttributesUnderExecutionChangeHistory" TIAUECH,  "FenixExecution"."TestInstructionsUnderExecution" TIUE
+		WHERE TIAUECH."UniqueId_New" IN (SELECT id FROM values) AND
+		TIUE."TestInstructionExecutionUuid" = TIAUECH."TestInstructionExecutionUuid" AND  TIUE."TestInstructionInstructionExecutionVersion" = TIAUECH."TestInstructionExecutionVersion";
+
+		sqlToExecute := ""
+		sqlToExecute = sqlToExecute + "SELECT DISTINCT ON (TIAUECH.\"TestInstructionExecutionUuid\") TIAUECH.*, " +
+			"CONCAT(TIUE.\"TestCaseExecutionUuid\", TIUE.\"TestCaseExecutionVersion\") "
+		sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestInstructionAttributesUnderExecutionChangeHistory\" TIAUECH, " +
+			" \"FenixExecution\".\"TestInstructionsUnderExecution\" TIUE "
+		sqlToExecute = sqlToExecute + "WHERE CONCAT(TIAUECH.\"TestInstructionExecutionUuid\", " +
+			"TIAUECH.\"TestInstructionExecutionVersion\") IN " +
+			fenixGuiTestCaseBuilderServerObject.generateSQLINArray(testInstructionExecutionUuidList)
+		sqlToExecute = sqlToExecute + " AND "
+		sqlToExecute = sqlToExecute + " TIUE.\"TestInstructionExecutionUuid\" = TIAUECH.\"TestInstructionExecutionUuid\" AND "
+		sqlToExecute = sqlToExecute + " TIUE.\"TestInstructionInstructionExecutionVersion\" = TIAUECH.\"TestInstructionExecutionVersion\" "
+		sqlToExecute = sqlToExecute + "ORDER BY TIAUECH.\"TestInstructionExecutionUuid\", TIAUECH.\"UniqueId\" DESC "
+		sqlToExecute = sqlToExecute + "; "
+	*/
 
 	sqlToExecute := ""
-	sqlToExecute = sqlToExecute + "SELECT DISTINCT ON (TIAUECH.\"TestInstructionExecutionUuid\") TIAUECH.*, " +
-		"CONCAT(TIUE.\"TestCaseExecutionUuid\", TIUE.\"TestCaseExecutionVersion\") "
+	sqlToExecute = sqlToExecute + "WITH values AS "
+	sqlToExecute = sqlToExecute + "(SELECT " +
+		"CONCAT(TIAUECH.\"TestInstructionExecutionUuid\", TIAUECH.\"TestInstructionExecutionVersion\", " +
+		"TIAUECH.\"TestInstructionAttributeUuid\") AS key, 	MAX(TIAUECH.\"UniqueId_New\") AS id "
+	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestInstructionAttributesUnderExecutionChangeHistory\" TIAUECH "
+	sqlToExecute = sqlToExecute + "WHERE CONCAT(TIAUECH.\"TestInstructionExecutionUuid\", TIAUECH.\"TestInstructionExecutionVersion\") IN " +
+		fenixGuiTestCaseBuilderServerObject.generateSQLINArray(testInstructionExecutionUuidList) + " "
+	sqlToExecute = sqlToExecute + "GROUP BY "
+	sqlToExecute = sqlToExecute + "TIAUECH.\"TestInstructionExecutionUuid\", TIAUECH.\"TestInstructionExecutionVersion\", " +
+		"TIAUECH.\"TestInstructionAttributeUuid\" "
+	sqlToExecute = sqlToExecute + "HAVING  COUNT(*) > 1 ) "
+
+	sqlToExecute = sqlToExecute + "SELECT  TIAUECH.* , CONCAT(TIUE.\"TestCaseExecutionUuid\", TIUE.\"TestCaseExecutionVersion\") "
 	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestInstructionAttributesUnderExecutionChangeHistory\" TIAUECH, " +
-		" \"FenixExecution\".\"TestInstructionsUnderExecution\" TIUE "
-	sqlToExecute = sqlToExecute + "WHERE CONCAT(TIAUECH.\"TestInstructionExecutionUuid\", " +
-		"TIAUECH.\"TestInstructionExecutionVersion\") IN " +
-		fenixGuiTestCaseBuilderServerObject.generateSQLINArray(testInstructionExecutionUuidList)
-	sqlToExecute = sqlToExecute + " AND "
-	sqlToExecute = sqlToExecute + " TIUE.\"TestInstructionExecutionUuid\" = TIAUECH.\"TestInstructionExecutionUuid\" AND "
-	sqlToExecute = sqlToExecute + " TIUE.\"TestInstructionInstructionExecutionVersion\" = TIAUECH.\"TestInstructionExecutionVersion\" "
-	sqlToExecute = sqlToExecute + "ORDER BY TIAUECH.\"TestInstructionExecutionUuid\", TIAUECH.\"UniqueId\" DESC "
+		"\"FenixExecution\".\"TestInstructionsUnderExecution\" TIUE "
+	sqlToExecute = sqlToExecute + "WHERE TIAUECH.\"UniqueId_New\" IN (SELECT id FROM values) AND "
+	sqlToExecute = sqlToExecute + "TIUE.\"TestInstructionExecutionUuid\" = TIAUECH.\"TestInstructionExecutionUuid\" AND  " +
+		"TIUE.\"TestInstructionInstructionExecutionVersion\" = TIAUECH.\"TestInstructionExecutionVersion\" "
 	sqlToExecute = sqlToExecute + "; "
+
+	if common_config.LogAllSQLs == true {
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"Id":           "0160ec19-ba83-49b7-9892-a56d24895898",
+			"sqlToExecute": sqlToExecute,
+		}).Info("SQL to be executed")
+	}
 
 	// Query DB
 	var ctx context.Context
