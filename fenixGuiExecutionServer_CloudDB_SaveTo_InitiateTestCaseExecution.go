@@ -30,7 +30,10 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Prepare for Saving the Initiation of a new TestCaseExecution in the CloudDB
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) prepareInitiateTestCaseExecutionSaveToCloudDB(initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (initiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage) {
+func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) prepareInitiateTestCaseExecutionSaveToCloudDB(
+	txnToUse pgx.Tx,
+	initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (
+	initiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage) {
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"id": "2a2009f9-af78-4216-b1d8-b1a0519e7041",
@@ -41,38 +44,50 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		"id": "1efe7107-888d-487b-8445-9f81fe1a2c62",
 	}).Debug("Outgoing 'prepareInitiateTestCaseExecutionSaveToCloudDB'")
 
+	var err error
+	var txn pgx.Tx
+
 	// Begin SQL Transaction
-	txn, err := fenixSyncShared.DbPool.Begin(context.Background())
-	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
-			"id":    "306edce0-7a5a-4a0f-992b-5c9b69b0bcc6",
-			"error": err,
-		}).Error("Problem to do 'DbPool.Begin'  in 'prepareInitiateTestCaseExecutionSaveToCloudDB'")
+	if txnToUse != nil {
+		// WHen called from Create TestSuiteExecution then use incoming 'sql-txn'
+		txn = txnToUse
+	} else {
+		txn, err = fenixSyncShared.DbPool.Begin(context.Background())
+		if err != nil {
+			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+				"id":    "306edce0-7a5a-4a0f-992b-5c9b69b0bcc6",
+				"error": err,
+			}).Error("Problem to do 'DbPool.Begin'  in 'prepareInitiateTestCaseExecutionSaveToCloudDB'")
 
-		// Set Error codes to return message
-		var errorCodes []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
-		var errorCode fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+			// Set Error codes to return message
+			var errorCodes []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
+			var errorCode fenixExecutionServerGuiGrpcApi.ErrorCodesEnum
 
-		errorCode = fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM
-		errorCodes = append(errorCodes, errorCode)
+			errorCode = fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM
+			errorCodes = append(errorCodes, errorCode)
 
-		// Create Return message
-		initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
-			TestCasesInExecutionQueue: nil,
-			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
-				AckNack:                      false,
-				Comments:                     "Problem when saving to database",
-				ErrorCodes:                   errorCodes,
-				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
-			},
+			// Create Return message
+			initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
+				TestCasesInExecutionQueue: nil,
+				AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+					AckNack:                      false,
+					Comments:                     "Problem when saving to database",
+					ErrorCodes:                   errorCodes,
+					ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+				},
+			}
+
+			return initiateSingleTestCaseExecutionResponseMessage
 		}
-
-		return initiateSingleTestCaseExecutionResponseMessage
 	}
 
 	// Standard is to do a Rollback
 	doCommitNotRoleBack = false
-	defer fenixGuiTestCaseBuilderServerObject.commitOrRoleBack(txn) //txn.Commit(context.Background())
+	// Begin SQL Transaction
+	if txnToUse == nil {
+		// WHen called from Create TestSuiteExecution then use incoming 'sql-txn':s Commit/Rollback
+		defer fenixGuiTestCaseBuilderServerObject.commitOrRoleBack(txn) //txn.Commit(context.Background())
+	}
 
 	// Generate a new TestCaseExecution-UUID
 	testCaseExecutionUuid := uuidGenerator.New().String()

@@ -42,7 +42,8 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestCaseExecution(ct
 
 	// Save TestCaseExecution in Cloud DB
 	var initiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage
-	initiateSingleTestCaseExecutionResponseMessage = fenixGuiExecutionServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(initiateSingleTestCaseExecutionRequestMessage)
+	initiateSingleTestCaseExecutionResponseMessage = fenixGuiExecutionServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(
+		nil, initiateSingleTestCaseExecutionRequestMessage)
 
 	// Exit due to error in saving TestCaseExecution in database
 	if initiateSingleTestCaseExecutionResponseMessage.AckNackResponse.AckNack == false {
