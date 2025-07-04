@@ -29,10 +29,21 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 }
 
+// Holds the specific TestSuiteInformation when 'InitiateTestCaseExecution' is started from a TestSuite
+type testSuiteInformationStruct struct {
+	suiteUuid             string
+	suiteName             string
+	suiteVersion          uint32
+	suiteExecutionUuid    string
+	suiteExecutionVersion uint32
+}
+
 // Prepare for Saving the Initiation of a new TestCaseExecution in the CloudDB
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) prepareInitiateTestCaseExecutionSaveToCloudDB(
 	txnToUse pgx.Tx,
-	initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage) (
+	initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage,
+	executionPriority fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum,
+	testSuiteInformation testSuiteInformationStruct) (
 	initiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage) {
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
@@ -97,7 +108,10 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Extract TestCase-information to be added to TestCaseExecution-data
 	//testCaseToExecuteBasicInformation := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
-	testCaseToExecuteBasicInformation, err := fenixGuiTestCaseBuilderServerObject.loadTestCaseBasicInformation(txn, initiateSingleTestCaseExecutionRequestMessage.TestCaseUuid)
+	testCaseToExecuteBasicInformation, err := fenixGuiTestCaseBuilderServerObject.loadTestCaseBasicInformation(
+		txn,
+		initiateSingleTestCaseExecutionRequestMessage.TestCaseUuid)
+
 	if err != nil {
 
 		// Set Error codes to return message
@@ -122,23 +136,126 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 	//TODO Load TestCase-data  from Database
 
-	// Prepare TestDataExecution-data to be saved in database
-	testCaseExecutionToBeSaved := fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage{
-		DomainUuid:                          testCaseToExecuteBasicInformation.domainUuid,
-		DomainName:                          testCaseToExecuteBasicInformation.domainName,
-		TestSuiteUuid:                       "",
-		TestSuiteName:                       "",
-		TestSuiteVersion:                    0,
-		TestSuiteExecutionUuid:              "",
-		TestSuiteExecutionVersion:           0,
-		TestCaseUuid:                        testCaseToExecuteBasicInformation.testCaseUuid,
-		TestCaseName:                        testCaseToExecuteBasicInformation.testCaseName,
-		TestCaseVersion:                     uint32(testCaseToExecuteBasicInformation.testCaseVersion),
-		TestCaseExecutionUuid:               testCaseExecutionUuid,
-		TestCaseExecutionVersion:            1,
-		PlacedOnTestExecutionQueueTimeStamp: timestamppb.New(placedOnTestExecutionQueueTimeStamp),
-		TestDataSetUuid:                     initiateSingleTestCaseExecutionRequestMessage.TestDataSetUuid,
-		ExecutionPriority:                   fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTCASE,
+	var testCaseExecutionToBeSaved fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage
+
+	// Prepare TestDataExecution-data to be saved in database based in priority which depends on what initiated it
+	switch executionPriority {
+	case fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_ExecutionPriorityEnum_DEFAULT_NOT_SET:
+
+		errMsg := "ExecutionPriority is not set: " + executionPriority.String()
+
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"id":    "642415a7-e53f-43ff-8c24-5566340e4d4c",
+			"error": err,
+		}).Error(errMsg)
+
+		// Create Return message
+		initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
+			TestCasesInExecutionQueue: nil,
+			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+				AckNack:                      false,
+				Comments:                     errMsg,
+				ErrorCodes:                   nil,
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			},
+		}
+
+		return initiateSingleTestCaseExecutionResponseMessage
+
+	case fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGHEST_PROBES,
+		fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_MEDIUM_MULTIPLE_TESTSUITES,
+		fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_LOW_SCHEDULED_TESTSUITES:
+
+		// Secure that TestSuiteInformation exists
+		if len(testSuiteInformation.suiteUuid) != 36 ||
+			len(testSuiteInformation.suiteName) == 0 ||
+			testSuiteInformation.suiteVersion == 0 ||
+			len(testSuiteInformation.suiteExecutionUuid) != 36 ||
+			testSuiteInformation.suiteExecutionVersion == 0 {
+
+			errMsg := "TestSuiteInformation is not correct set"
+
+			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+				"id":                   "b101b5c7-6636-403e-b136-ccd426377e3e",
+				"testSuiteInformation": testSuiteInformation,
+			}).Error(errMsg)
+
+			// Create Return message
+			initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
+				TestCasesInExecutionQueue: nil,
+				AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+					AckNack:                      false,
+					Comments:                     errMsg,
+					ErrorCodes:                   nil,
+					ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+				},
+			}
+
+			return initiateSingleTestCaseExecutionResponseMessage
+
+		}
+
+		testCaseExecutionToBeSaved = fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage{
+			DomainUuid:                          testCaseToExecuteBasicInformation.domainUuid,
+			DomainName:                          testCaseToExecuteBasicInformation.domainName,
+			TestSuiteUuid:                       testSuiteInformation.suiteUuid,
+			TestSuiteName:                       testSuiteInformation.suiteName,
+			TestSuiteVersion:                    testSuiteInformation.suiteVersion,
+			TestSuiteExecutionUuid:              testSuiteInformation.suiteExecutionUuid,
+			TestSuiteExecutionVersion:           testSuiteInformation.suiteExecutionVersion,
+			TestCaseUuid:                        testCaseToExecuteBasicInformation.testCaseUuid,
+			TestCaseName:                        testCaseToExecuteBasicInformation.testCaseName,
+			TestCaseVersion:                     uint32(testCaseToExecuteBasicInformation.testCaseVersion),
+			TestCaseExecutionUuid:               testCaseExecutionUuid,
+			TestCaseExecutionVersion:            1,
+			PlacedOnTestExecutionQueueTimeStamp: timestamppb.New(placedOnTestExecutionQueueTimeStamp),
+			TestDataSetUuid:                     initiateSingleTestCaseExecutionRequestMessage.TestDataSetUuid,
+			ExecutionPriority:                   executionPriority,
+		}
+
+	case fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTCASE,
+		fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_MEDIUM_MULTIPLE_TESTCASES:
+
+		testCaseExecutionToBeSaved = fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage{
+			DomainUuid:                          testCaseToExecuteBasicInformation.domainUuid,
+			DomainName:                          testCaseToExecuteBasicInformation.domainName,
+			TestSuiteUuid:                       common_config.ZeroUuid,
+			TestSuiteName:                       "",
+			TestSuiteVersion:                    0,
+			TestSuiteExecutionUuid:              common_config.ZeroUuid,
+			TestSuiteExecutionVersion:           0,
+			TestCaseUuid:                        testCaseToExecuteBasicInformation.testCaseUuid,
+			TestCaseName:                        testCaseToExecuteBasicInformation.testCaseName,
+			TestCaseVersion:                     uint32(testCaseToExecuteBasicInformation.testCaseVersion),
+			TestCaseExecutionUuid:               testCaseExecutionUuid,
+			TestCaseExecutionVersion:            1,
+			PlacedOnTestExecutionQueueTimeStamp: timestamppb.New(placedOnTestExecutionQueueTimeStamp),
+			TestDataSetUuid:                     initiateSingleTestCaseExecutionRequestMessage.TestDataSetUuid,
+			ExecutionPriority:                   executionPriority,
+		}
+
+	default:
+
+		errMsg := "Unknown ExecutionPriority: " + executionPriority.String()
+
+		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			"id":    "cd67ded8-3f7f-410f-8964-b4dad0197d31",
+			"error": err,
+		}).Error(errMsg)
+
+		// Create Return message
+		initiateSingleTestCaseExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage{
+			TestCasesInExecutionQueue: nil,
+			AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+				AckNack:                      false,
+				Comments:                     errMsg,
+				ErrorCodes:                   nil,
+				ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+			},
+		}
+
+		return initiateSingleTestCaseExecutionResponseMessage
+
 	}
 
 	// Save the Initiation of a new TestCaseExecution in the CloudDB
@@ -264,35 +381,16 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	dataRowToBeInsertedMultiType = nil
 
-	// Check if this is a SingleTestCase-execution. Then use ZeroUUid in Suite-uuid-parts
-	var suiteInformationExists bool
-	if testCaseExecutionToBeSaved.ExecutionPriority == fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTCASE ||
-		testCaseExecutionToBeSaved.ExecutionPriority == fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_MEDIUM_MULTIPLE_TESTCASES {
-
-		suiteInformationExists = false
-	} else {
-		suiteInformationExists = true
-	}
-
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainName)
 
-	if suiteInformationExists == true {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteUuid)
-	} else {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, common_config.ZeroUuid)
-	}
-
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteName)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteVersion)
 
-	if suiteInformationExists == true {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionUuid)
-	} else {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, common_config.ZeroUuid)
-	}
-
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionVersion)
+
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseName)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseVersion)

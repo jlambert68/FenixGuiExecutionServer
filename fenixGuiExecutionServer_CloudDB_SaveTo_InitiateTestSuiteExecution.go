@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	uuidGenerator "github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixTestCaseBuilderServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixTestCaseBuilderServer/fenixTestCaseBuilderServerGrpcApi/go_grpc_api"
@@ -75,7 +76,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Load TestCases from TestSuite
 	var testCasesInTestSuite *fenixTestCaseBuilderServerGrpcApi.TestCasesInTestSuiteMessage
-	testCasesInTestSuite, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesForTestSuite(
+	var tempTestSuiteBasicInformation tempTestSuiteBasicInformationStruct
+	testCasesInTestSuite, tempTestSuiteBasicInformation, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesForTestSuite(
 		txn,
 		initiateSingleTestSuiteExecutionRequestMessage.TestSuiteUuid)
 
@@ -143,6 +145,19 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		},
 	}
 
+	// Generate a new TestSuiteExecution-UUID
+	testSuiteExecutionUuid := uuidGenerator.New().String()
+
+	// Populate the TestSuite-information to be used when creating the TestCasesExecutions
+	var testSuiteInformation testSuiteInformationStruct
+	testSuiteInformation = testSuiteInformationStruct{
+		suiteUuid:             initiateSingleTestSuiteExecutionRequestMessage.GetTestSuiteUuid(),
+		suiteName:             tempTestSuiteBasicInformation.testSuiteName,
+		suiteVersion:          uint32(tempTestSuiteBasicInformation.testSuiteVersion),
+		suiteExecutionUuid:    testSuiteExecutionUuid,
+		suiteExecutionVersion: 1,
+	}
+
 	// Loop all TestCases and call 'prepareInitiateTestCaseExecutionSaveToCloudDB'
 	for _, tempTestCaseInTestSuite := range testCasesInTestSuite.GetTestCasesInTestSuite() {
 
@@ -158,7 +173,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		var tempInitiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage
 		tempInitiateSingleTestCaseExecutionResponseMessage = fenixGuiTestCaseBuilderServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(
 			txn,
-			initiateSingleTestCaseExecutionRequestMessage)
+			initiateSingleTestCaseExecutionRequestMessage,
+			fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTSUITE,
+			testSuiteInformation)
 
 		if tempInitiateSingleTestCaseExecutionResponseMessage.GetAckNackResponse().GetAckNack() == false {
 
@@ -200,18 +217,26 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	return initiateSingleTestSuiteExecutionResponseMessage
 }
 
-// Load BasicInformation for TestCase to be able to populate the TestCaseExecution
+// Temporary variable for storing temp result from database
+type tempTestSuiteBasicInformationStruct struct {
+	testSuiteName    string
+	testSuiteVersion int
+}
+
+// Load BasicInformation for TestSuite to be able to populate the TestCaseExecution
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesForTestSuite(
 	dbTransaction pgx.Tx,
 	testSuiteUuid string) (
 	_ *fenixTestCaseBuilderServerGrpcApi.TestCasesInTestSuiteMessage,
+	_ tempTestSuiteBasicInformationStruct,
 	err error) {
 
 	sqlToExecute := ""
-	sqlToExecute = sqlToExecute + "SELECT TS.\"TestCasesInTestSuite\" "
+	sqlToExecute = sqlToExecute + "SELECT TS.\"TestCasesInTestSuite\", " +
+		"TS.\"TestSuiteName\", TS.\"TestSuiteVersion\" "
 	sqlToExecute = sqlToExecute + "FROM \"FenixBuilder\".\"TestSuites\" TS "
 	sqlToExecute = sqlToExecute + "WHERE TS.\"TestSuiteUuid\" = '" + testSuiteUuid + "' AND "
-	sqlToExecute = sqlToExecute + "TS.\"TestCaseVersion\" = (SELECT MAX(TS2.\"TestCaseVersion\") "
+	sqlToExecute = sqlToExecute + "TS.\"TestSuiteVersion\" = (SELECT MAX(TS2.\"TestSuiteVersion\") "
 	sqlToExecute = sqlToExecute + "FROM \"FenixBuilder\".\"TestSuites\" TS2 "
 	sqlToExecute = sqlToExecute + "WHERE TS2.\"TestSuiteUuid\" = '" + testSuiteUuid + "');"
 
@@ -238,13 +263,15 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			"sqlToExecute": sqlToExecute,
 		}).Error("Something went wrong when executing SQL")
 
-		return nil, err
+		return nil, tempTestSuiteBasicInformationStruct{}, err
 	}
 
 	// USed to secure that exactly one row was found
 	numberOfRowFromDB := 0
 
 	var (
+		tempTestSuiteBasicInformation tempTestSuiteBasicInformationStruct
+
 		tempTestCasesInTestSuiteAsJson          string
 		tempTestCasesInTestSuiteAsJsonByteArray []byte
 		testCasesInTestSuite                    fenixTestCaseBuilderServerGrpcApi.TestCasesInTestSuiteMessage
@@ -257,6 +284,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		err = rows.Scan(
 			&tempTestCasesInTestSuiteAsJson,
+			&tempTestSuiteBasicInformation.testSuiteName,
+			&tempTestSuiteBasicInformation.testSuiteVersion,
 		)
 
 		if err != nil {
@@ -267,7 +296,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				"sqlToExecute": sqlToExecute,
 			}).Error("Something went wrong when processing result from database")
 
-			return nil, err
+			return nil, tempTestSuiteBasicInformationStruct{}, err
 		}
 
 	}
@@ -280,7 +309,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	case 0:
 		// TestSuite doesn't have any TestCases
 
-		return nil, err
+		return nil, tempTestSuiteBasicInformationStruct{}, err
 
 	case 1:
 
@@ -294,7 +323,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			"sqlToExecute":  sqlToExecute,
 		}).Error("Expected 0 or 1 row but got more then 1 rows")
 
-		return nil, err
+		return nil, tempTestSuiteBasicInformationStruct{}, err
 
 	}
 
@@ -309,9 +338,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			"Error": err,
 		}).Error("Something went wrong when converting 'tempTestCasesInTestSuiteAsJsonByteArray' into proto-message")
 
-		return nil, err
+		return nil, tempTestSuiteBasicInformationStruct{}, err
 	}
 
-	return &testCasesInTestSuite, err
+	return &testCasesInTestSuite, tempTestSuiteBasicInformation, err
 
 }
