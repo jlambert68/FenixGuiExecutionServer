@@ -165,7 +165,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		initiateSingleTestCaseExecutionRequestMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage{
 			UserAndApplicationRunTimeIdentification: initiateSingleTestSuiteExecutionRequestMessage.UserAndApplicationRunTimeIdentification,
 			TestCaseUuid:                            tempTestCaseInTestSuite.GetTestCaseUuid(),
-			TestDataSetUuid:                         "",
+			TestDataSetUuid:                         common_config.ZeroUuid,
 			ExecutionStatusReportLevel:              initiateSingleTestSuiteExecutionRequestMessage.GetExecutionStatusReportLevel(),
 			TestDataForTestCaseExecution:            initiateSingleTestSuiteExecutionRequestMessage.GetTestDataForTestCaseExecution(),
 		}

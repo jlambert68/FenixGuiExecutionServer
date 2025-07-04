@@ -163,6 +163,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		return initiateSingleTestCaseExecutionResponseMessage
 
 	case fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGHEST_PROBES,
+		fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTSUITE,
 		fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_MEDIUM_MULTIPLE_TESTSUITES,
 		fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_LOW_SCHEDULED_TESTSUITES:
 
