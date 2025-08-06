@@ -10,25 +10,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// InitiateTestSuiteExecution - *********************************************************************
-// Initiate a TestExecution from a TestSuite with one TestDataSet
-func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecution(ctx context.Context,
-	initiateSingleTestSuiteExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateTestSuiteExecutionWithOneTestDataSetRequestMessage) (
+// InitiateTestSuiteExecutionWithAllTestDataSets - *********************************************************************
+// Initiate a TestExecution from a TestSuite with all its TestDataSets
+func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecutionWithAllTestDataSets(ctx context.Context,
+	initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateTestSuiteExecutionWithAllTestDataSetsRequestMessage) (
 	*fenixExecutionServerGuiGrpcApi.InitiateSingleTestSuiteExecutionResponseMessage, error) {
 
+	var err error
+
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-		"id": "be8da457-ea3e-472d-9437-60661edefc96",
-		"initiateSingleTestSuiteExecutionRequestMessage": initiateSingleTestSuiteExecutionRequestMessage,
-	}).Debug("Incoming 'gRPC - InitiateTestSuiteExecution'")
+		"id": "fb95f94a-40bb-4a59-8cbc-351a1647e096",
+		"initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage": initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage,
+	}).Debug("Incoming 'gRPC - InitiateTestSuiteExecutionWithAllTestDataSets'")
 
 	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-		"id": "87fd70e3-1815-4712-9d91-94eb7d680937",
-	}).Debug("Outgoing 'gRPC - InitiateTestSuiteExecution'")
+		"id": "18b9bb93-ae89-48c4-9917-1e6a037f7cdd",
+	}).Debug("Outgoing 'gRPC - InitiateTestSuiteExecutionWithAllTestDataSets'")
 
 	// Check if Client is using correct proto files version
 	ackNackRespons := common_config.IsClientUsingCorrectTestDataProtoFileVersion(
-		initiateSingleTestSuiteExecutionRequestMessage.UserAndApplicationRunTimeIdentification.GetUserIdOnComputer(),
-		initiateSingleTestSuiteExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient)
+		initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage.UserAndApplicationRunTimeIdentification.GetUserIdOnComputer(),
+		initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage.UserAndApplicationRunTimeIdentification.ProtoFileVersionUsedByClient)
 	if ackNackRespons != nil {
 		// Not correct proto-file version is used
 		// Exiting
@@ -41,56 +43,29 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecution(c
 		return &initiateSingleSuiteCaseExecutionResponseMessage, nil
 	}
 
-	// Save TestCaseExecution in Cloud DB
+	// Initiate response variable
 	var initiateSingleSuiteCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.
 		InitiateSingleTestSuiteExecutionResponseMessage
+
+	// Load all TestDataSets to be used
+	var testDataForTestCaseExecutionMessages []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage
+	testDataForTestCaseExecutionMessages, err = fenixGuiExecutionServerObject.
+		initiateLoadTestSuitesAllTestDataSetsFromCloudDB(
+			initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage.GetTestSuiteUuid())
+
+	if err != nil {
+		return initiateSingleSuiteCaseExecutionResponseMessage, nil
+	}
+
+	// Save TestCaseExecution in Cloud DB
 	initiateSingleSuiteCaseExecutionResponseMessage = fenixGuiExecutionServerObject.
-		prepareInitiateTestSuiteExecutionSaveToCloudDB(initiateSingleTestSuiteExecutionRequestMessage)
+		prepareInitiateTestSuiteExecutionSaveToCloudDB(initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage)
 
 	// Exit due to error in saving TestCaseExecution in database
 	if initiateSingleSuiteCaseExecutionResponseMessage.AckNackResponse.AckNack == false {
 		return initiateSingleSuiteCaseExecutionResponseMessage, nil
 	}
-	/*
-		// *********
-		// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
-		broadcastEngine_ExecutionStatusUpdate.AddSubscriptionForTestCaseExecutionToTesterGui(
-			broadcastEngine_ExecutionStatusUpdate.ApplicationRunTimeUuidType(
-				initiateSingleTestSuiteExecutionRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
-			broadcastEngine_ExecutionStatusUpdate.TestCaseExecutionUuidType(
-				InitiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
-			1)
 
-		// ******
-		// Add a Subscription, using new the new PubSub-system, on this 'TestCaseExecution' for this 'TesterGui'
-		// Create message to be put on 'testGuiExecutionEngineChannel' to be processed
-		var tempUserSubscribesToUserAndTestCaseExecutionCombination common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct
-		tempUserSubscribesToUserAndTestCaseExecutionCombination = common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct{
-			TesterGuiApplicationId: initiateSingleTestSuiteExecutionRequestMessage.
-				UserAndApplicationRunTimeIdentification.GetApplicationRunTimeUuid(),
-			UserId: initiateSingleTestSuiteExecutionRequestMessage.
-				UserAndApplicationRunTimeIdentification.GetGCPAuthenticatedUser(),
-			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
-			TestCaseExecutionUuid: InitiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue.
-				GetTestCaseExecutionUuid(),
-			TestCaseExecutionVersion: int32(InitiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue.GetTestCaseExecutionVersion()),
-			MessageTimeStamp:         time.Now(),
-		}
-
-		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
-		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination,
-			TesterGuiIsClosingDown:                                nil,
-			GuiExecutionServerIsClosingDown:                       nil,
-			UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
-			GuiExecutionServerIsStartingUp:                        nil,
-			GuiExecutionServerStartedUpTimeStampRefresher:         nil,
-			UserSubscribesToUserAndTestCaseExecutionCombination:   &tempUserSubscribesToUserAndTestCaseExecutionCombination,
-		}
-
-		// Put on GuiOwnerEngineChannel
-		common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
-	*/
 	// Send Execution to ExecutionServer
 	go func() {
 		// Prepare message to be sent to ExecutionServer
@@ -105,7 +80,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecution(c
 				TestCaseExecutionsUuid:   tempTestCaseInExecutionQueue.GetTestCaseExecutionUuid(),
 				TestCaseExecutionVersion: 1,
 				ExecutionStatusReportLevel: fenixExecutionServerGrpcApi.ExecutionStatusReportLevelEnum(
-					initiateSingleTestSuiteExecutionRequestMessage.ExecutionStatusReportLevel),
+					initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage.ExecutionStatusReportLevel),
 			}
 
 			testCaseExecutionsToProcess = append(testCaseExecutionsToProcess, testCaseExecutionToProcess)
@@ -137,7 +112,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecution(c
 
 			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"id": "e5dc557d-d902-421e-8b1f-0c73e71b54c1",
-				"initiateSingleTestSuiteExecutionRequestMessage": initiateSingleTestSuiteExecutionRequestMessage,
+				"initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage": initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage,
 			}).Error("Problem when doing gRPC-call to FenixExecutionServer")
 
 			return //initiateSingleSuiteCaseExecutionResponseMessage, nil
