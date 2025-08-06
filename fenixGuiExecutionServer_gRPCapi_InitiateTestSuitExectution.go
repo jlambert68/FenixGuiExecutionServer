@@ -13,7 +13,7 @@ import (
 // InitiateTestSuiteExecution - *********************************************************************
 // Initiate a TestExecution from a TestSuite with one TestDataSet
 func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecution(ctx context.Context,
-	initiateSingleTestSuiteExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestSuiteExecutionRequestMessage) (
+	initiateSingleTestSuiteExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateTestSuiteExecutionWithOneTestDataSetRequestMessage) (
 	*fenixExecutionServerGuiGrpcApi.InitiateSingleTestSuiteExecutionResponseMessage, error) {
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
