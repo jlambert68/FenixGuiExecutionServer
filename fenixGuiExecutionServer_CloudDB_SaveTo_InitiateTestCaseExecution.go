@@ -486,35 +486,15 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempTestDataForTestCaseExecutionAsJsonb string
 	tempTestDataForTestCaseExecutionAsJsonb = protojson.Format(testDataForTestCaseExecutionMessage)
 
-	// Check if this is a SingleTestCase-execution. Then use ZeroUUid in Suite-uuid-parts
-	var suiteInformationExists bool
-	if testCaseExecutionToBeSaved.ExecutionPriority == fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTCASE ||
-		testCaseExecutionToBeSaved.ExecutionPriority == fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_MEDIUM_MULTIPLE_TESTCASES {
-
-		suiteInformationExists = false
-	} else {
-		suiteInformationExists = true
-	}
-
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.DomainName)
 
-	if suiteInformationExists == true {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteUuid)
-	} else {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, common_config.ZeroUuid)
-	}
-
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteName)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteVersion)
-
-	if suiteInformationExists == true {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionUuid)
-	} else {
-		dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, common_config.ZeroUuid)
-	}
-
+	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestSuiteExecutionVersion)
+
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseUuid)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseName)
 	dataRowToBeInsertedMultiType = append(dataRowToBeInsertedMultiType, testCaseExecutionToBeSaved.TestCaseVersion)
