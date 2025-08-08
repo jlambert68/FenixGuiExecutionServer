@@ -28,12 +28,17 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 // Prepare for Saving the Initiation of a new TestCaseExecution in the CloudDB
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) prepareInitiateTestSuiteExecutionSaveToCloudDB(
-	initiateSingleTestSuiteExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateTestSuiteExecutionWithOneTestDataSetRequestMessage) (
+	userAndApplicationRunTimeIdentification *fenixExecutionServerGuiGrpcApi.UserAndApplicationRunTimeIdentificationMessage,
+	testSuiteUuid string,
+	executionPriority fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum,
+	executionStatusReportLevel fenixExecutionServerGuiGrpcApi.ExecutionStatusReportLevelEnum,
+	testDataForTestCasesExecution []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage) (
 	initiateSingleTestSuiteExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestSuiteExecutionResponseMessage) {
 
 	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
-		"id": "455963ec-77d8-4f99-b279-8a56e644ada1",
-		"initiateSingleTestCaseExecutionRequestMessage": initiateSingleTestSuiteExecutionRequestMessage,
+		"id":                            "455963ec-77d8-4f99-b279-8a56e644ada1",
+		"testSuiteUuid":                 testSuiteUuid,
+		"testDataForTestCasesExecution": testDataForTestCasesExecution,
 	}).Debug("Incoming 'prepareInitiateTestSuiteExecutionSaveToCloudDB'")
 
 	defer fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
@@ -79,7 +84,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	var tempTestSuiteBasicInformation tempTestSuiteBasicInformationStruct
 	testCasesInTestSuite, tempTestSuiteBasicInformation, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesForTestSuite(
 		txn,
-		initiateSingleTestSuiteExecutionRequestMessage.TestSuiteUuid)
+		testSuiteUuid)
 
 	if err != nil {
 
@@ -114,8 +119,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Check if there are no TestCases
 	if testCasesInTestSuite == nil {
 		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
-			"id": "dbf2a735-7d2e-47ad-8ba6-bc7d40b29ec4",
-			"initiateSingleTestSuiteExecutionRequestMessage.TestSuiteUuid": initiateSingleTestSuiteExecutionRequestMessage.TestSuiteUuid,
+			"id":            "dbf2a735-7d2e-47ad-8ba6-bc7d40b29ec4",
+			"TestSuiteUuid": testSuiteUuid,
 		}).Debug("TestSuite has no TestCases")
 
 		// Create Return message
@@ -151,7 +156,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Populate the TestSuite-information to be used when creating the TestCasesExecutions
 	var testSuiteInformation testSuiteInformationStruct
 	testSuiteInformation = testSuiteInformationStruct{
-		suiteUuid:             initiateSingleTestSuiteExecutionRequestMessage.GetTestSuiteUuid(),
+		suiteUuid:             testSuiteUuid,
 		suiteName:             tempTestSuiteBasicInformation.testSuiteName,
 		suiteVersion:          uint32(tempTestSuiteBasicInformation.testSuiteVersion),
 		suiteExecutionUuid:    testSuiteExecutionUuid,
@@ -161,54 +166,58 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Loop all TestCases and call 'prepareInitiateTestCaseExecutionSaveToCloudDB'
 	for _, tempTestCaseInTestSuite := range testCasesInTestSuite.GetTestCasesInTestSuite() {
 
-		var initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage
-		initiateSingleTestCaseExecutionRequestMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage{
-			UserAndApplicationRunTimeIdentification: initiateSingleTestSuiteExecutionRequestMessage.UserAndApplicationRunTimeIdentification,
-			TestCaseUuid:                            tempTestCaseInTestSuite.GetTestCaseUuid(),
-			TestDataSetUuid:                         common_config.ZeroUuid,
-			ExecutionStatusReportLevel:              initiateSingleTestSuiteExecutionRequestMessage.GetExecutionStatusReportLevel(),
-			TestDataForTestCaseExecution:            initiateSingleTestSuiteExecutionRequestMessage.GetTestDataForTestCaseExecution(),
-		}
+		// Loop TestData to be used for TestCaseExecution
+		for _, tempTestDataForTestCaseExecution := range testDataForTestCasesExecution {
 
-		var tempInitiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage
-		tempInitiateSingleTestCaseExecutionResponseMessage = fenixGuiTestCaseBuilderServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(
-			txn,
-			initiateSingleTestCaseExecutionRequestMessage,
-			fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTSUITE,
-			testSuiteInformation)
-
-		if tempInitiateSingleTestCaseExecutionResponseMessage.GetAckNackResponse().GetAckNack() == false {
-
-			errMsg := fmt.Sprintf("Problem when saving TestCase: %s in database, from TestSuite: %s",
-				tempTestCaseInTestSuite.GetTestCaseUuid(),
-				initiateSingleTestSuiteExecutionRequestMessage.GetTestSuiteUuid())
-
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
-				"id": "d5ce79ca-0c62-4f4f-977f-7ffaeabd7536",
-				"initiateSingleTestSuiteExecutionRequestMessage.TestSuiteUuid": initiateSingleTestSuiteExecutionRequestMessage.TestSuiteUuid,
-				"tempTestCaseInTestSuite.TestCaseUuid":                         tempTestCaseInTestSuite.GetTestCaseUuid(),
-				"Comments":                                                     tempInitiateSingleTestCaseExecutionResponseMessage.GetAckNackResponse().GetComments(),
-			}).Error(errMsg)
-
-			// Create Return message
-			initiateSingleTestSuiteExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestSuiteExecutionResponseMessage{
-				TestCasesInExecutionQueue: nil,
-				AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
-					AckNack:    false,
-					Comments:   errMsg,
-					ErrorCodes: nil,
-					ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.
-						CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
-				},
+			var initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage
+			initiateSingleTestCaseExecutionRequestMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage{
+				UserAndApplicationRunTimeIdentification: userAndApplicationRunTimeIdentification,
+				TestCaseUuid:                            tempTestCaseInTestSuite.GetTestCaseUuid(),
+				TestDataSetUuid:                         common_config.ZeroUuid,
+				ExecutionStatusReportLevel:              executionStatusReportLevel,
+				TestDataForTestCaseExecution:            tempTestDataForTestCaseExecution,
 			}
 
-			return initiateSingleTestSuiteExecutionResponseMessage
-		}
+			var tempInitiateSingleTestCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionResponseMessage
+			tempInitiateSingleTestCaseExecutionResponseMessage = fenixGuiTestCaseBuilderServerObject.prepareInitiateTestCaseExecutionSaveToCloudDB(
+				txn,
+				initiateSingleTestCaseExecutionRequestMessage,
+				executionPriority,
+				testSuiteInformation)
 
-		// Append single TestCase-response to main TestSuite-response
-		initiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue = append(
-			initiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue,
-			tempInitiateSingleTestCaseExecutionResponseMessage.GetTestCasesInExecutionQueue())
+			if tempInitiateSingleTestCaseExecutionResponseMessage.GetAckNackResponse().GetAckNack() == false {
+
+				errMsg := fmt.Sprintf("Problem when saving TestCase: %s in database, from TestSuite: %s",
+					tempTestCaseInTestSuite.GetTestCaseUuid(),
+					testSuiteUuid)
+
+				fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+					"id":                                   "d5ce79ca-0c62-4f4f-977f-7ffaeabd7536",
+					"TestSuiteUuid":                        testSuiteUuid,
+					"tempTestCaseInTestSuite.TestCaseUuid": tempTestCaseInTestSuite.GetTestCaseUuid(),
+					"Comments":                             tempInitiateSingleTestCaseExecutionResponseMessage.GetAckNackResponse().GetComments(),
+				}).Error(errMsg)
+
+				// Create Return message
+				initiateSingleTestSuiteExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.InitiateSingleTestSuiteExecutionResponseMessage{
+					TestCasesInExecutionQueue: nil,
+					AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
+						AckNack:    false,
+						Comments:   errMsg,
+						ErrorCodes: nil,
+						ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.
+							CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
+					},
+				}
+
+				return initiateSingleTestSuiteExecutionResponseMessage
+			}
+
+			// Append single TestCase-response to main TestSuite-response
+			initiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue = append(
+				initiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue,
+				tempInitiateSingleTestCaseExecutionResponseMessage.GetTestCasesInExecutionQueue())
+		}
 	}
 
 	// Commit every database change

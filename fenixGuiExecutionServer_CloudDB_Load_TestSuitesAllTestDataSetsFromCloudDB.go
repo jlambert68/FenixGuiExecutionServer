@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v4"
+	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixTestCaseBuilderServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixTestCaseBuilderServer/fenixTestCaseBuilderServerGrpcApi/go_grpc_api"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
@@ -15,7 +16,7 @@ import (
 
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) initiateLoadTestSuitesAllTestDataSetsFromCloudDB(
 	testSuiteUuid string) (
-	testDataFromSimpleTestDataAreaFileMessages []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage,
+	testDataForTestCaseExecutionMessages []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage,
 	err error) {
 
 	// Begin SQL Transaction
@@ -47,7 +48,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Get TestSuites all TestDataSetsValues
-	testDataFromSimpleTestDataAreaFileMessages, err = fenixGuiTestCaseBuilderServerObject.loadTestSuitesAllTestDataSetValuesFromCloudDB(
+	testDataForTestCaseExecutionMessages, err = fenixGuiTestCaseBuilderServerObject.loadTestSuitesAllTestDataSetValuesFromCloudDB(
 		txn,
 		usersChosenTestDataForTestSuiteMessage)
 
@@ -55,7 +56,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		return nil, err
 	}
 
-	return testDataFromSimpleTestDataAreaFileMessages, err
+	return testDataForTestCaseExecutionMessages, err
 }
 
 // Get TestSuites all TestData
@@ -172,7 +173,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestSuitesAllTestDataSetValuesFromCloudDB(
 	dbTransaction pgx.Tx,
 	tempTestSuiteTestDataAsGrpc *fenixTestCaseBuilderServerGrpcApi.UsersChosenTestDataForTestSuiteMessage) (
-	testDataFromSimpleTestDataAreaFileMessages []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage,
+	testDataForTestCaseExecutionMessages []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage,
 	err error) {
 
 	var sqlWhereClause string
@@ -266,7 +267,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	for rows.Next() {
 
 		var oneTestDataFromOneSimpleTestDataAreaFileMessage fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage
-		var oneTestDataFromOneSimpleTestDataAreaFileFullMessage fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage
+		var testDataForTestCaseExecutionMessage fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage
 
 		err = rows.Scan(
 			&oneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataDomainUuid,
@@ -307,7 +308,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsStringAsByteArray = []byte(tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsString)
 
 		// Convert json-byte-array into proto-messages
-		err = protojson.Unmarshal(tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsStringAsByteArray, &oneTestDataFromOneSimpleTestDataAreaFileFullMessage)
+		err = protojson.Unmarshal(tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsStringAsByteArray, &testDataForTestCaseExecutionMessage)
 		if err != nil {
 			common_config.Logger.WithFields(logrus.Fields{
 				"Id":    "5f68c073-a66c-48a1-b2cf-3cfa4be3b28d",
@@ -318,12 +319,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		}
 
 		// Add TemplateRepositoryConnectionParameters to list
-		testDataFromSimpleTestDataAreaFileMessages = append(testDataFromSimpleTestDataAreaFileMessages, &oneTestDataFromOneSimpleTestDataAreaFileFullMessage)
+		testDataForTestCaseExecutionMessages = append(testDataForTestCaseExecutionMessages, &testDataForTestCaseExecutionMessage)
 
 		// Add TemplateRepositoryConnectionParameters to list
-		testDataFromSimpleTestDataAreaFileMessages = append(testDataFromSimpleTestDataAreaFileMessages, &oneTestDataFromOneSimpleTestDataAreaFileFullMessage)
+		testDataForTestCaseExecutionMessages = append(testDataForTestCaseExecutionMessages, &testDataForTestCaseExecutionMessage)
 
 	}
 
-	return testDataFromSimpleTestDataAreaFileMessages, err
+	return testDataForTestCaseExecutionMessages, err
 }

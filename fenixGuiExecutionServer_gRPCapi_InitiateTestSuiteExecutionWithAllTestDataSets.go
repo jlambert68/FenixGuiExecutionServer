@@ -7,7 +7,6 @@ import (
 	"fmt"
 	fenixExecutionServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGrpcApi/go_grpc_api"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
-	fenixTestCaseBuilderServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixTestCaseBuilderServer/fenixTestCaseBuilderServerGrpcApi/go_grpc_api"
 	"github.com/sirupsen/logrus"
 )
 
@@ -49,9 +48,9 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecutionWi
 		InitiateSingleTestSuiteExecutionResponseMessage
 
 	// Load all TestDataSets to be used
-	var testDataFromSimpleTestDataAreaFileMessages []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage,
+	//var testDataFromSimpleTestDataAreaFileMessages []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage
 	var testDataForTestCaseExecutionMessages []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage
-	testDataFromSimpleTestDataAreaFileMessages, err = fenixGuiExecutionServerObject.
+	testDataForTestCaseExecutionMessages, err = fenixGuiExecutionServerObject.
 		initiateLoadTestSuitesAllTestDataSetsFromCloudDB(
 			initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage.GetTestSuiteUuid())
 
@@ -59,55 +58,14 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecutionWi
 		return initiateSingleSuiteCaseExecutionResponseMessage, nil
 	}
 
-	// Convert saved TestDataSets from TestSuite into structure used when triggering TestSuiteExecutions
-	for groupName, testDataPointNameMapPtr := range usersChosenTestDataForTestSuiteMessage.ChosenTestDataPointsPerGroupMap {
-
-		// Get the TestDataRowMap from Ptr
-		var testDataPointNameMap fenixTestCaseBuilderServerGrpcApi.TestDataPointNameMapMessage
-		testDataPointNameMap = *testDataPointNameMapPtr
-
-		// Loop all TestDataRows
-		for testDataRowName, testDataRowsPerTestDataPoint := range testDataPointNameMap.ChosenTestDataRowsPerTestDataPointMap {
-
-			// Loop all TestDataRows
-			for _, testDataRow := range testDataRowsPerTestDataPoint.TestDataRows {
-
-				var testDataValueMap map[string]*fenixExecutionServerGuiGrpcApi.TestDataValueMapValueMessage
-				testDataValueMap = make(map[string]*fenixExecutionServerGuiGrpcApi.TestDataValueMapValueMessage)
-
-				var testDataValueMapValueMessage *fenixExecutionServerGuiGrpcApi.TestDataValueMapValueMessage
-				testDataValueMapValueMessage = &fenixExecutionServerGuiGrpcApi.TestDataValueMapValueMessage{
-					HeaderDataName:                    testDataRow.TestDataPointRowValueSummaryMap,
-					TestDataValue:                     "",
-					TestDataValueIsReplaced:           false,
-					TestDataOriginalValueWhenReplaced: "",
-				}
-
-				// Create the structure needed for the TestSuiteExecution
-				var testDataForTestCaseExecutionMessage *fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage
-				testDataForTestCaseExecutionMessage = &fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage{
-					TestDataDomainUuid:         testDataRow.GetTestDataDomainUuid(),
-					TestDataDomainName:         testDataRow.GetTestDataDomainName(),
-					TestDataDomainTemplateName: "",
-					TestDataAreaUuid:           testDataRow.GetTestDataAreaUuid(),
-					TestDataAreaName:           testDataRow.GetTestDataAreaName(),
-					TestDataValueMap:           nil,
-					TestDataRowIdentifier:      "",
-					TestDataFileSha256Hash:     "",
-				}
-
-			}
-
-		}
-
-	}
-
-	fmt.Println("testDataForTestCaseExecutionMessages: ", testDataForTestCaseExecutionMessages)
-	return initiateSingleSuiteCaseExecutionResponseMessage, nil
-
-	// Save TestCaseExecution in Cloud DB
+	// Save TestCaseExecutions in Cloud DB
 	initiateSingleSuiteCaseExecutionResponseMessage = fenixGuiExecutionServerObject.
-		prepareInitiateTestSuiteExecutionSaveToCloudDB(nil)
+		prepareInitiateTestSuiteExecutionSaveToCloudDB(
+			initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage.UserAndApplicationRunTimeIdentification,
+			initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage.GetTestSuiteUuid(),
+			fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTSUITE,
+			initiateTestSuiteExecutionWithAllTestDataSetsRequestMessage.GetExecutionStatusReportLevel(),
+			testDataForTestCaseExecutionMessages)
 
 	// Exit due to error in saving TestCaseExecution in database
 	if initiateSingleSuiteCaseExecutionResponseMessage.AckNackResponse.AckNack == false {

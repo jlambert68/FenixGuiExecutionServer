@@ -45,52 +45,18 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecutionWi
 	var initiateSingleSuiteCaseExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.
 		InitiateSingleTestSuiteExecutionResponseMessage
 	initiateSingleSuiteCaseExecutionResponseMessage = fenixGuiExecutionServerObject.
-		prepareInitiateTestSuiteExecutionSaveToCloudDB(initiateTestSuiteExecutionWithOneTestDataSetRequestMessage)
+		prepareInitiateTestSuiteExecutionSaveToCloudDB(
+			initiateTestSuiteExecutionWithOneTestDataSetRequestMessage.UserAndApplicationRunTimeIdentification,
+			initiateTestSuiteExecutionWithOneTestDataSetRequestMessage.GetTestSuiteUuid(),
+			fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum_HIGH_SINGLE_TESTSUITE,
+			initiateTestSuiteExecutionWithOneTestDataSetRequestMessage.GetExecutionStatusReportLevel(),
+			[]*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage{initiateTestSuiteExecutionWithOneTestDataSetRequestMessage.GetTestDataForTestCaseExecution()})
 
 	// Exit due to error in saving TestCaseExecution in database
 	if initiateSingleSuiteCaseExecutionResponseMessage.AckNackResponse.AckNack == false {
 		return initiateSingleSuiteCaseExecutionResponseMessage, nil
 	}
-	/*
-		// *********
-		// Create a Subscription on this 'TestCaseExecution' for this 'TestGui'
-		broadcastEngine_ExecutionStatusUpdate.AddSubscriptionForTestCaseExecutionToTesterGui(
-			broadcastEngine_ExecutionStatusUpdate.ApplicationRunTimeUuidType(
-				initiateTestSuiteExecutionWithOneTestDataSetRequestMessage.UserAndApplicationRunTimeIdentification.ApplicationRunTimeUuid),
-			broadcastEngine_ExecutionStatusUpdate.TestCaseExecutionUuidType(
-				InitiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue.TestCaseExecutionUuid),
-			1)
 
-		// ******
-		// Add a Subscription, using new the new PubSub-system, on this 'TestCaseExecution' for this 'TesterGui'
-		// Create message to be put on 'testGuiExecutionEngineChannel' to be processed
-		var tempUserSubscribesToUserAndTestCaseExecutionCombination common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct
-		tempUserSubscribesToUserAndTestCaseExecutionCombination = common_config.UserSubscribesToUserAndTestCaseExecutionCombinationStruct{
-			TesterGuiApplicationId: initiateTestSuiteExecutionWithOneTestDataSetRequestMessage.
-				UserAndApplicationRunTimeIdentification.GetApplicationRunTimeUuid(),
-			UserId: initiateTestSuiteExecutionWithOneTestDataSetRequestMessage.
-				UserAndApplicationRunTimeIdentification.GetGCPAuthenticatedUser(),
-			GuiExecutionServerApplicationId: common_config.ApplicationRunTimeUuid,
-			TestCaseExecutionUuid: InitiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue.
-				GetTestCaseExecutionUuid(),
-			TestCaseExecutionVersion: int32(InitiateSingleTestSuiteExecutionResponseMessage.TestCasesInExecutionQueue.GetTestCaseExecutionVersion()),
-			MessageTimeStamp:         time.Now(),
-		}
-
-		var testerGuiOwnerEngineChannelCommand common_config.TesterGuiOwnerEngineChannelCommandStruct
-		testerGuiOwnerEngineChannelCommand = common_config.TesterGuiOwnerEngineChannelCommandStruct{
-			TesterGuiOwnerEngineChannelCommand:                    common_config.ChannelCommand_ThisGuiExecutionServersUserSubscribesToUserAndTestCaseExecutionCombination,
-			TesterGuiIsClosingDown:                                nil,
-			GuiExecutionServerIsClosingDown:                       nil,
-			UserUnsubscribesToUserAndTestCaseExecutionCombination: nil,
-			GuiExecutionServerIsStartingUp:                        nil,
-			GuiExecutionServerStartedUpTimeStampRefresher:         nil,
-			UserSubscribesToUserAndTestCaseExecutionCombination:   &tempUserSubscribesToUserAndTestCaseExecutionCombination,
-		}
-
-		// Put on GuiOwnerEngineChannel
-		common_config.TesterGuiOwnerEngineChannelEngineCommandChannel <- &testerGuiOwnerEngineChannelCommand
-	*/
 	// Send Execution to ExecutionServer
 	go func() {
 		// Prepare message to be sent to ExecutionServer
