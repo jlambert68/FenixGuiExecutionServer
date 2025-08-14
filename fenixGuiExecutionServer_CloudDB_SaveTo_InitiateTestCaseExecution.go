@@ -21,7 +21,7 @@ import (
 // After all stuff is done, then Commit or Rollback depending on result
 var doCommitNotRoleBack bool
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) commitOrRoleBack(dbTransaction pgx.Tx) {
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) commitOrRoleBack(dbTransaction pgx.Tx) {
 	if doCommitNotRoleBack == true {
 		dbTransaction.Commit(context.Background())
 	} else {
@@ -39,7 +39,7 @@ type testSuiteInformationStruct struct {
 }
 
 // Prepare for Saving the Initiation of a new TestCaseExecution in the CloudDB
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) prepareInitiateTestCaseExecutionSaveToCloudDB(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) prepareInitiateTestCaseExecutionSaveToCloudDB(
 	txnToUse pgx.Tx,
 	initiateSingleTestCaseExecutionRequestMessage *fenixExecutionServerGuiGrpcApi.InitiateSingleTestCaseExecutionRequestMessage,
 	executionPriority fenixExecutionServerGuiGrpcApi.ExecutionPriorityEnum,
@@ -65,7 +65,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	} else {
 		txn, err = fenixSyncShared.DbPool.Begin(context.Background())
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"id":    "306edce0-7a5a-4a0f-992b-5c9b69b0bcc6",
 				"error": err,
 			}).Error("Problem to do 'DbPool.Begin'  in 'prepareInitiateTestCaseExecutionSaveToCloudDB'")
@@ -97,7 +97,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Begin SQL Transaction
 	if txnToUse == nil {
 		// WHen called from Create TestSuiteExecution then use incoming 'sql-txn':s Commit/Rollback
-		defer fenixGuiTestCaseBuilderServerObject.commitOrRoleBack(txn) //txn.Commit(context.Background())
+		defer fenixGuiExecutionServerObject.commitOrRoleBack(txn) //txn.Commit(context.Background())
 	}
 
 	// Generate a new TestCaseExecution-UUID
@@ -107,8 +107,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	placedOnTestExecutionQueueTimeStamp := time.Now().UTC()
 
 	// Extract TestCase-information to be added to TestCaseExecution-data
-	//testCaseToExecuteBasicInformation := fenixTestCaseBuilderServerGrpcApi.BasicTestCaseInformationMessage{}
-	testCaseToExecuteBasicInformation, err := fenixGuiTestCaseBuilderServerObject.loadTestCaseBasicInformation(
+	//testCaseToExecuteBasicInformation := fenixGuiExecutionServerObject.BasicTestCaseInformationMessage{}
+	testCaseToExecuteBasicInformation, err := fenixGuiExecutionServerObject.loadTestCaseBasicInformation(
 		txn,
 		initiateSingleTestCaseExecutionRequestMessage.TestCaseUuid)
 
@@ -144,7 +144,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		errMsg := "ExecutionPriority is not set: " + executionPriority.String()
 
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"id":    "642415a7-e53f-43ff-8c24-5566340e4d4c",
 			"error": err,
 		}).Error(errMsg)
@@ -176,7 +176,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 			errMsg := "TestSuiteInformation is not correct set"
 
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"id":                   "b101b5c7-6636-403e-b136-ccd426377e3e",
 				"testSuiteInformation": testSuiteInformation,
 			}).Error(errMsg)
@@ -239,7 +239,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		errMsg := "Unknown ExecutionPriority: " + executionPriority.String()
 
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"id":    "cd67ded8-3f7f-410f-8964-b4dad0197d31",
 			"error": err,
 		}).Error(errMsg)
@@ -260,13 +260,13 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Save the Initiation of a new TestCaseExecution in the CloudDB
-	err = fenixGuiTestCaseBuilderServerObject.saveInitiateTestCaseExecutionSaveToCloudDB(
+	err = fenixGuiExecutionServerObject.saveInitiateTestCaseExecutionSaveToCloudDB(
 		txn,
 		&testCaseExecutionToBeSaved,
 		initiateSingleTestCaseExecutionRequestMessage.GetExecutionStatusReportLevel())
 	if err != nil {
 
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"id":    "bc6f1da5-3c8c-493e-9882-0b20e0da9e2e",
 			"error": err,
 		}).Error("Couldn't Save TestCaseExecution in CloudDB")
@@ -297,13 +297,13 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Save the TestData to be used for of a new TestCaseExecution in the CloudDB
-	err = fenixGuiTestCaseBuilderServerObject.saveTestDataForTestCaseExecutionToCloudDB(
+	err = fenixGuiExecutionServerObject.saveTestDataForTestCaseExecutionToCloudDB(
 		txn,
 		&testCaseExecutionToBeSaved,
 		initiateSingleTestCaseExecutionRequestMessage.TestDataForTestCaseExecution)
 	if err != nil {
 
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"id":    "98502463-3670-45bd-be5a-29b8157fdd78",
 			"error": err,
 		}).Error("Couldn't Save TestData in CloudDB")
@@ -350,18 +350,18 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Save the newly created TestExecution in database
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) saveInitiateTestCaseExecutionSaveToCloudDB(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) saveInitiateTestCaseExecutionSaveToCloudDB(
 	dbTransaction pgx.Tx,
 	testCaseExecutionToBeSaved *fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage,
 	executionStatusReportLevel fenixExecutionServerGuiGrpcApi.ExecutionStatusReportLevelEnum) (
 	err error) {
 
-	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"Id": "653795a1-d686-4823-9b5e-909dc37acc7d",
 	}).Debug("Entering: saveInitiateTestCaseExecutionSaveToCloudDB()")
 
 	defer func() {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id": "b24a7105-5057-4ce3-a0bd-bdbbd5e138e0",
 		}).Debug("Exiting: saveInitiateTestCaseExecutionSaveToCloudDB()")
 	}()
@@ -409,12 +409,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		"\"TestSuiteExecutionUuid\", \"TestSuiteExecutionVersion\", \"TestCaseUuid\", \"TestCaseName\", \"TestCaseVersion\"," +
 		" \"TestCaseExecutionUuid\", \"TestCaseExecutionVersion\", \"QueueTimeStamp\", \"TestDataSetUuid\", \"ExecutionPriority\", "
 	sqlToExecute = sqlToExecute + "\"ExecutionStatusReportLevel\") "
-	sqlToExecute = sqlToExecute + fenixGuiTestCaseBuilderServerObject.generateSQLInsertValues(dataRowsToBeInsertedMultiType)
+	sqlToExecute = sqlToExecute + fenixGuiExecutionServerObject.generateSQLInsertValues(dataRowsToBeInsertedMultiType)
 	sqlToExecute = sqlToExecute + ";"
 
 	// Log SQL to be executed if Environment variable is true
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "374c7116-2c1b-4ec8-9318-105d25c08aab",
 			"sqlToExecute": sqlToExecute,
 		}).Debug("SQL to be executed within 'saveInitiateTestCaseExecutionSaveToCloudDB'")
@@ -424,7 +424,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	comandTag, err := dbTransaction.Exec(context.Background(), sqlToExecute)
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "5bfd73be-d0f6-482e-9f75-243028f83b39",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -434,7 +434,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Log response from CloudDB
-	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"Id":                       "dcb110c2-822a-4dde-8bc6-9ebbe9fcbdb0",
 		"comandTag.Insert()":       comandTag.Insert(),
 		"comandTag.Delete()":       comandTag.Delete(),
@@ -450,18 +450,18 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Save the TestData, in the database, to be used when doing the TestExecution
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) saveTestDataForTestCaseExecutionToCloudDB(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) saveTestDataForTestCaseExecutionToCloudDB(
 	dbTransaction pgx.Tx,
 	testCaseExecutionToBeSaved *fenixExecutionServerGuiGrpcApi.TestCaseExecutionBasicInformationMessage,
 	testDataForTestCaseExecutionMessage *fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage) (
 	err error) {
 
-	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"Id": "d17a8d3e-72a3-439b-9d74-1f63341a3414",
 	}).Debug("Entering: saveTestDataForTestCaseExecutionToCloudDB()")
 
 	defer func() {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id": "b51778ea-83ba-4cd3-a84e-75032f317d63",
 		}).Debug("Exiting: saveTestDataForTestCaseExecutionToCloudDB()")
 	}()
@@ -510,12 +510,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		"\"TestSuiteExecutionUuid\", \"TestSuiteExecutionVersion\", \"TestCaseUuid\", \"TestCaseName\", \"TestCaseVersion\"," +
 		" \"TestCaseExecutionUuid\", \"TestCaseExecutionVersion\", \"InsertedTimeStamp\", "
 	sqlToExecute = sqlToExecute + "\"TestDataForTestCaseExecutionAsJsonb\") "
-	sqlToExecute = sqlToExecute + fenixGuiTestCaseBuilderServerObject.generateSQLInsertValues(dataRowsToBeInsertedMultiType)
+	sqlToExecute = sqlToExecute + fenixGuiExecutionServerObject.generateSQLInsertValues(dataRowsToBeInsertedMultiType)
 	sqlToExecute = sqlToExecute + ";"
 
 	// Log SQL to be executed if Environment variable is true
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "58af29a9-53a0-419b-9cb6-fc9c6c258cca",
 			"sqlToExecute": sqlToExecute,
 		}).Debug("SQL to be executed within 'saveTestDataForTestCaseExecutionToCloudDB'")
@@ -525,7 +525,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	comandTag, err := dbTransaction.Exec(context.Background(), sqlToExecute)
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "5bfd73be-d0f6-482e-9f75-243028f83b39",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -535,7 +535,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Log response from CloudDB
-	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"Id":                       "9afc0f63-c373-4434-850c-7a426414be1a",
 		"comandTag.Insert()":       comandTag.Insert(),
 		"comandTag.Delete()":       comandTag.Delete(),
@@ -560,7 +560,7 @@ type tempTestCaseBasicInformationStruct struct {
 }
 
 // Load BasicInformation for TestCase to be able to populate the TestCaseExecution
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseBasicInformation(dbTransaction pgx.Tx, testCaseUuid string) (testCaseBasicInformation tempTestCaseBasicInformationStruct, err error) {
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseBasicInformation(dbTransaction pgx.Tx, testCaseUuid string) (testCaseBasicInformation tempTestCaseBasicInformationStruct, err error) {
 
 	usedDBSchema := "FenixBuilder" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
@@ -574,7 +574,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Log SQL to be executed if Environment variable is true
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "e1955234-00ce-4cfd-a1de-cfae9bf46792",
 			"sqlToExecute": sqlToExecute,
 		}).Debug("SQL to be executed within 'loadTestCaseBasicInformation'")
@@ -589,7 +589,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "79c43b90-7539-4bab-bff9-41acfeb2b5bc",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -616,7 +616,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 		if err != nil {
 
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "9cdde993-689a-4b49-b362-9929007425ae",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -635,7 +635,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	case 0:
 
 		err := errors.New(fmt.Sprintf("expected one row from datavase but got zero rows for testcase: %s", testCaseUuid))
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "91bf8bf6-9c03-433c-8125-e08efe8ccb2d",
 			"testCaseUuid": testCaseUuid,
 			"sqlToExecute": sqlToExecute,
@@ -647,7 +647,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	case 2:
 		err := errors.New(fmt.Sprintf("expected exactly one row from database but got more then one rows for testcase: %s", testCaseUuid))
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "f91489e5-78fe-4cca-95b4-f1a102eaf6cc",
 			"testCaseUuid": testCaseUuid,
 			"sqlToExecute": sqlToExecute,

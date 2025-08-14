@@ -48,7 +48,7 @@ func (s *fenixGuiExecutionServerGrpcServicesServer) InitiateTestSuiteExecutionWi
 		InitiateSingleTestSuiteExecutionResponseMessage
 
 	// Load all TestDataSets to be used
-	//var testDataFromSimpleTestDataAreaFileMessages []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage
+	//var testDataFromSimpleTestDataAreaFileMessages []*fenixGuiExecutionServerObject.TestDataFromOneSimpleTestDataAreaFileMessage
 	var testDataForTestCaseExecutionMessages []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage
 	testDataForTestCaseExecutionMessages, err = fenixGuiExecutionServerObject.
 		initiateLoadTestSuitesAllTestDataSetsFromCloudDB(

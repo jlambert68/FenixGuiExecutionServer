@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCaseExecutionsFromCloudDB(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTestCaseExecutionsFromCloudDB(
 	listTestCaseExecutionsRequest *fenixExecutionServerGuiGrpcApi.ListTestCaseExecutionsRequest) (
 	listTestCaseExecutionsResponse *fenixExecutionServerGuiGrpcApi.ListTestCaseExecutionsResponse,
 	err error) {
@@ -59,7 +59,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Load Domains that User has access to
 	var domainAndAuthorizations []DomainAndAuthorizationsStruct
-	domainAndAuthorizations, err = fenixGuiTestCaseBuilderServerObject.PrepareLoadUsersDomains(
+	domainAndAuthorizations, err = fenixGuiExecutionServerObject.PrepareLoadUsersDomains(
 		txn,
 		listTestCaseExecutionsRequest.GetUserAndApplicationRunTimeIdentification().GetGCPAuthenticatedUser())
 
@@ -117,7 +117,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			var testInstructionsExecutionStatusPreviewValuesMessage *fenixExecutionServerGuiGrpcApi.TestInstructionsExecutionStatusPreviewValuesMessage
 
 			// Load all TestInstructionExecutions for TestCase
-			testInstructionsExecutionStatusPreviewValuesMessage, err = fenixGuiTestCaseBuilderServerObject.
+			testInstructionsExecutionStatusPreviewValuesMessage, err = fenixGuiExecutionServerObject.
 				loadTestInstructionsExecutionStatusPreviewValues(
 					txn, tempRawTestCaseExecution)
 
@@ -128,7 +128,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 			// Load TestCaseExecution-status
 			var testCaseExecutionStatus int32
-			testCaseExecutionStatus, err = fenixGuiTestCaseBuilderServerObject.
+			testCaseExecutionStatus, err = fenixGuiExecutionServerObject.
 				loadTestCaseExecutionStatus(
 					txn, tempRawTestCaseExecution)
 
@@ -573,7 +573,7 @@ func hasTestCaseAnEndStatus(testCaseExecutionStatus int32) (isTestCaseEndStatus 
 }
 
 // Retrieve "ExecutionStatusPreviewValues" for all TestInstructions for one TestCaseExecution
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionStatusPreviewValues(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionStatusPreviewValues(
 	dbTransaction pgx.Tx,
 	testCaseExecutionsListMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionsListMessage) (
 	testInstructionsExecutionStatusPreviewValuesMessage *fenixExecutionServerGuiGrpcApi.TestInstructionsExecutionStatusPreviewValuesMessage,
@@ -684,7 +684,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Retrieve "TestCaseExecutionStatus" for one TestCaseExecution
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseExecutionStatus(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseExecutionStatus(
 	dbTransaction pgx.Tx,
 	rawTestCaseExecution *fenixExecutionServerGuiGrpcApi.TestCaseExecutionsListMessage) (
 	testCaseExecutionStatus int32,

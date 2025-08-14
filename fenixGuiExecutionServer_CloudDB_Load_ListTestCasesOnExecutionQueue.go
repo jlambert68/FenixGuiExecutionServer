@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesOnExecutionQueueLoadFromCloudDB(
 	dbTransaction pgx.Tx,
 	userID string,
 	domainList []string) (
@@ -26,7 +26,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// if domainList has domains then add that as Where-statement
 	if domainList != nil {
 		sqlToExecute = sqlToExecute + "WHERE TCEQ.\"DomainUuid\" IN " +
-			fenixGuiTestCaseBuilderServerObject.generateSQLINArray(domainList)
+			fenixGuiExecutionServerObject.generateSQLINArray(domainList)
 		sqlToExecute = sqlToExecute + " "
 	}
 
@@ -34,7 +34,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Log SQL to be executed if Environment variable is true
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "0102874a-1195-433c-b7fb-4788e32ff832",
 			"sqlToExecute": sqlToExecute,
 		}).Debug("SQL to be executed within 'listTestCasesOnExecutionQueueLoadFromCloudDB'")
@@ -49,7 +49,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "e935a5a5-bed1-445c-8115-1150d59a6301",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -93,7 +93,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "1600d7c4-ce72-430c-9a2f-3b530e5c0f83",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,

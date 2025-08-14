@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesUnderExecutionLoadFromCloudDB(dbTransaction pgx.Tx, GCPuserID string, domainList []string) (testCaseUnderExecutionMessage []*fenixExecutionServerGuiGrpcApi.TestCaseUnderExecutionMessage, err error) {
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTestCasesUnderExecutionLoadFromCloudDB(dbTransaction pgx.Tx, GCPuserID string, domainList []string) (testCaseUnderExecutionMessage []*fenixExecutionServerGuiGrpcApi.TestCaseUnderExecutionMessage, err error) {
 
 	usedDBSchema := "FenixExecution" // TODO should this env variable be used? fenixSyncShared.GetDBSchemaName()
 
@@ -22,7 +22,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// if domainList has domains then add that as Where-statement
 	if domainList != nil {
 		sqlToExecute = sqlToExecute + "AND TCUE.\"DomainUuid\" IN " +
-			fenixGuiTestCaseBuilderServerObject.generateSQLINArray(domainList)
+			fenixGuiExecutionServerObject.generateSQLINArray(domainList)
 		sqlToExecute = sqlToExecute + " "
 	}
 
@@ -30,7 +30,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Log SQL to be executed if Environment variable is true
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "1c8148b3-c65d-4b08-95de-37e1a4cb1022",
 			"sqlToExecute": sqlToExecute,
 		}).Debug("SQL to be executed within 'listTestCasesUnderExecutionLoadFromCloudDB'")
@@ -45,7 +45,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "f5b88d14-dbdb-4cb3-a33a-2b71ab1eeda9",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -105,7 +105,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "a1833e32-5ad5-468d-8e5f-ca6280d58099",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,

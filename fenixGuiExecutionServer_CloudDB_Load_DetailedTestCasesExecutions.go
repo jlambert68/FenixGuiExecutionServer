@@ -29,7 +29,7 @@ type workObjectForTestCaseExecutionResponseMessageStruct struct {
 	TestInstructionExecutionsMap      *map[string]*workObjectForTestInstructionExecutionsMessageStruct // map[TestInstructionExecutionKey]*workObjectForTestInstructionExecutionsMessageStruct
 }
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadFullTestCasesExecutionInformation(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadFullTestCasesExecutionInformation(
 	testCaseExecutionKeys []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionKeyMessage) (
 	testCaseExecutionResponseMessages []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage,
 	err error) {
@@ -55,13 +55,13 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCaseExecutionQueue'
 	var uniqueCountersForTableTestCaseExecutionQueue []int
-	uniqueCountersForTableTestCaseExecutionQueue, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
+	uniqueCountersForTableTestCaseExecutionQueue, err = fenixGuiExecutionServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
 		txn, testCaseExecutionKeys, "TestCaseExecutionQueue")
 
 	// If there are no TestCases under onQueue then ignore this part
 	if uniqueCountersForTableTestCaseExecutionQueue != nil {
 		// Load TestCaseExecutions from table 'TestCaseExecutionQueue'
-		_, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromOnExecutionQueue(
+		_, err = fenixGuiExecutionServerObject.loadTestCasesExecutionsFromOnExecutionQueue(
 			txn,
 			uniqueCountersForTableTestCaseExecutionQueue,
 			&tempTestCaseExecutionResponseMessagesMap)
@@ -73,14 +73,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCasesUnderExecution'
 	var uniqueCountersForTableTTestCasesUnderExecution []int
-	uniqueCountersForTableTTestCasesUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
+	uniqueCountersForTableTTestCasesUnderExecution, err = fenixGuiExecutionServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
 		txn, testCaseExecutionKeys, "TestCasesUnderExecution")
 
 	// If there are no TestCases under Execution then ignore this part
 	if uniqueCountersForTableTTestCasesUnderExecution != nil {
 
 		// Load TestCaseExecutions from table 'TestCasesUnderExecution'
-		_, err = fenixGuiTestCaseBuilderServerObject.loadTestCasesExecutionsFromUnderExecutions(
+		_, err = fenixGuiExecutionServerObject.loadTestCasesExecutionsFromUnderExecutions(
 			txn,
 			uniqueCountersForTableTTestCasesUnderExecution,
 			&tempTestCaseExecutionResponseMessagesMap)
@@ -92,14 +92,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Convert 'TestInstructionExecutionKeys' into slice with 'UniqueCounter' for table 'TestInstructionExecutionQueue'
 	var uniqueCountersForTableTestInstructionExecutionQueue []int
-	uniqueCountersForTableTestInstructionExecutionQueue, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
+	uniqueCountersForTableTestInstructionExecutionQueue, err = fenixGuiExecutionServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
 		txn, testCaseExecutionKeys, "TestInstructionExecutionQueue")
 
 	// Only process when there still are TestInstructionExecution on the ExecutionQueue
 	if len(uniqueCountersForTableTestInstructionExecutionQueue) > 0 {
 
 		// Load TestInstructionExecutions from table 'TestInstructionExecutionQueue'
-		_, err = fenixGuiTestCaseBuilderServerObject.loadTestInstructionsExecutionsFromOnExecutionQueue(
+		_, err = fenixGuiExecutionServerObject.loadTestInstructionsExecutionsFromOnExecutionQueue(
 			txn,
 			uniqueCountersForTableTestInstructionExecutionQueue,
 			&tempTestCaseExecutionResponseMessagesMap)
@@ -111,14 +111,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Convert 'TestInstructionExecutionKeys' into slice with 'UniqueCounter' for table 'TestInstructionsUnderExecution'
 	var uniqueCountersForTableTestInstructionsUnderExecution []int
-	uniqueCountersForTableTestInstructionsUnderExecution, err = fenixGuiTestCaseBuilderServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
+	uniqueCountersForTableTestInstructionsUnderExecution, err = fenixGuiExecutionServerObject.loadUniqueCountersBasedOnTestCaseExecutionKeys(
 		txn, testCaseExecutionKeys, "TestInstructionsUnderExecution")
 
 	// Only process when there still are TestInstructionExecution on the ExecutionQueue
 	if len(uniqueCountersForTableTestInstructionsUnderExecution) > 0 {
 
 		// Load TestInstructionExecutions from table 'TestInstructionsUnderExecution'
-		_, err = fenixGuiTestCaseBuilderServerObject.loadTestInstructionsExecutionsUnderExecution(
+		_, err = fenixGuiExecutionServerObject.loadTestInstructionsExecutionsUnderExecution(
 			txn,
 			uniqueCountersForTableTestInstructionsUnderExecution,
 			&tempTestCaseExecutionResponseMessagesMap)
@@ -130,14 +130,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Load TestCaseExecution-logs
 	//var logPostAndValuesMapPtr *map[string]*[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
-	err = fenixGuiTestCaseBuilderServerObject.loadTestCaseExecutionLogs(
+	err = fenixGuiExecutionServerObject.loadTestCaseExecutionLogs(
 		txn,
 		testCaseExecutionKeys,
 		&tempTestCaseExecutionResponseMessagesMap)
 
 	if err != nil {
 
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":    "1b4ce01f-b7bc-40bf-a87a-99fc2f153543",
 			"Error": err,
 		}).Error("Something went wrong when 'Loading TestCaseExecution-logs'")
@@ -146,14 +146,14 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Load TestInstructionExecution-RunTime Updated Attributes
-	err = fenixGuiTestCaseBuilderServerObject.loadRunTimeUpdatedAttribute(
+	err = fenixGuiExecutionServerObject.loadRunTimeUpdatedAttribute(
 		txn,
 		testCaseExecutionKeys,
 		&tempTestCaseExecutionResponseMessagesMap)
 
 	if err != nil {
 
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":    "06f74681-095b-49ec-938e-2cde1bd15e18",
 			"Error": err,
 		}).Error("Something went wrong when 'Loading TestInstructionExecution-RunTime Updated Attributes'")
@@ -162,7 +162,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Convert 'tempTestCaseExecutionResponseMessagesMap' into gRPC-response object
-	err = fenixGuiTestCaseBuilderServerObject.convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
+	err = fenixGuiExecutionServerObject.convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
 		&tempTestCaseExecutionResponseMessagesMap,
 		&testCaseExecutionResponseMessages)
 
@@ -174,7 +174,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Convert 'TestCaseExecutionKeys' (TestCaseExecutionUuid + TestCaseExecutionVersion) into a slice with 'UniqueCounter' which are unique number for every DB-row in table
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadUniqueCountersBasedOnTestCaseExecutionKeys(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadUniqueCountersBasedOnTestCaseExecutionKeys(
 	dbTransaction pgx.Tx,
 	TestCaseExecutionKeys []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionKeyMessage,
 	databaseTableName string) (
@@ -214,7 +214,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	rows, err := dbTransaction.Query(ctx, sqlToExecute)
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "5c072bd9-da0d-457d-81fa-f6437a6fd81c",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -236,7 +236,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "6edc8e52-0411-4c22-b93f-f608784b85cb",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -253,7 +253,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	return uniqueCounters, err
 }
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionsFromOnExecutionQueue(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionsFromOnExecutionQueue(
 	dbTransaction pgx.Tx,
 	uniqueCounters []int,
 	tempTestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
@@ -272,7 +272,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// if uniqueCounters has values then add that as Where-statement
 	if uniqueCounters != nil {
 		sqlToExecute = sqlToExecute + "WHERE TCEQ.\"UniqueCounter\" IN " +
-			fenixGuiTestCaseBuilderServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
+			fenixGuiExecutionServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
 
 	}
 	sqlToExecute = sqlToExecute + "; "
@@ -286,7 +286,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "b041cb41-8e3b-4f87-922a-09f23fbb253e",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -332,7 +332,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "030eeab7-5bd0-4013-83f4-3a36d9267c64",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -435,7 +435,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	return numberOfRows, err
 }
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionsFromUnderExecutions(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionsFromUnderExecutions(
 	dbTransaction pgx.Tx,
 	uniqueCounters []int,
 	tempTestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
@@ -454,7 +454,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// if uniqueCounters has values then add that as Where-statement
 	if uniqueCounters != nil {
 		sqlToExecute = sqlToExecute + "WHERE TCUE.\"UniqueCounter\" IN " +
-			fenixGuiTestCaseBuilderServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
+			fenixGuiExecutionServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
 
 	}
 	sqlToExecute = sqlToExecute + "; "
@@ -468,7 +468,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "98b552ed-1031-42da-a5a9-287e542abfb1",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -529,7 +529,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "61ca3d9d-bc80-4702-873f-48f62bfcadb1",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -596,7 +596,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	return numberOfRows, err
 }
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionsFromOnExecutionQueue(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionsFromOnExecutionQueue(
 	dbTransaction pgx.Tx,
 	uniqueCounters []int,
 	tempTestCaseExecutionResponseMessagesMapPtr *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
@@ -615,7 +615,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// if uniqueCounters has values then add that as Where-statement
 	if uniqueCounters != nil {
 		sqlToExecute = sqlToExecute + "WHERE TIEQ.\"UniqueCounter\" IN " +
-			fenixGuiTestCaseBuilderServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
+			fenixGuiExecutionServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
 
 	}
 	sqlToExecute = sqlToExecute + "; "
@@ -629,7 +629,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "4ac2c057-1a37-47d1-88ad-a37aa7b1153b",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -678,7 +678,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "dc06a877-53d6-4ef1-bffd-af17f27137e7",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -703,7 +703,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		tempWorkObjectForTestCaseExecutionResponseMessagePtr, existsInMap = tempTestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey]
 
 		if existsInMap == false {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":                             "6ea5ed57-b015-4fca-bee4-26355b2df789",
 				"testInstructionExecutionMapKey": testInstructionExecutionMapKey,
 			}).Error("Couldn't find 'testCaseExecutionMapKey' in 'tempTestCaseExecutionResponseMessagesMap'")
@@ -756,7 +756,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				&tempWorkObjectForTestInstructionExecutionsMessage
 		} else {
 
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":                             "1f02fa15-200e-4cb9-8248-3a57f27242dc",
 				"testInstructionExecutionMapKey": testInstructionExecutionMapKey,
 				"tempWorkObjectForTestCaseExecutionResponseMessage.TestInstructionExecutionsMap": tempWorkObjectForTestCaseExecutionResponseMessage.TestInstructionExecutionsMap,
@@ -771,7 +771,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	return numberOfRows, err
 }
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionsUnderExecution(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionsUnderExecution(
 	dbTransaction pgx.Tx,
 	uniqueCounters []int,
 	tempTestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
@@ -790,7 +790,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// if uniqueCounters has values then add that as Where-statement
 	if uniqueCounters != nil {
 		sqlToExecute = sqlToExecute + "WHERE TIUE.\"UniqueCounter\" IN " +
-			fenixGuiTestCaseBuilderServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
+			fenixGuiExecutionServerObject.generateSQLINArrayForIntegerSlice(uniqueCounters)
 
 	}
 	sqlToExecute = sqlToExecute + "; "
@@ -804,7 +804,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "4ceaee78-77b3-4da1-9e30-32543989403c",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -871,7 +871,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "828b82fb-cce0-42e2-883c-b2011543fb96",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -920,7 +920,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			tempTestCaseExecutionResponseMessagesMap[testCaseExecutionMapKey]
 
 		if existsInMap == false {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":                             "55ff90f3-6ac2-4c8a-ae34-ad008ccb02a8",
 				"testInstructionExecutionMapKey": testInstructionExecutionMapKey,
 				"sqlToExecute":                   sqlToExecute,
@@ -1005,7 +1005,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	return numberOfRows, err
 }
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseExecutionLogs(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseExecutionLogs(
 	dbTransaction pgx.Tx,
 	testCaseExecutionKeys []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionKeyMessage,
 	tempTestCaseExecutionResponseMessagesMapPtr *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
@@ -1041,12 +1041,12 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"ExecutionLogPosts\" ELP "
 	sqlToExecute = sqlToExecute + "WHERE  CONCAT(ELP.\"TestCaseExecutionUuid\", " +
 		"ELP.\"TestCaseExecutionVersion\") IN " +
-		fenixGuiTestCaseBuilderServerObject.generateSQLINArray(testCaseExecutionMapKeys)
+		fenixGuiExecutionServerObject.generateSQLINArray(testCaseExecutionMapKeys)
 	sqlToExecute = sqlToExecute + "ORDER BY ELP.\"LogPostTimeStamp\",  ELP.\"TestInstructionExecutionUuid\" "
 	sqlToExecute = sqlToExecute + "; "
 
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "9a0e1c27-c386-46f7-a05d-c36780ae1953",
 			"sqlToExecute": sqlToExecute,
 		}).Info("SQL to be executed")
@@ -1061,7 +1061,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "e174dc5f-bc65-4ead-b9f0-530e1631e565",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -1126,7 +1126,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "9b7a0d31-cc18-4765-aacf-4f0424a9cccf",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -1157,7 +1157,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			// Unmarshal (cast) JSON into the struct.
 			err = json.Unmarshal([]byte(tempFoundVsExpectedValuesAsJsonbAsString), &tempFoundVsExpectedValue)
 			if err != nil {
-				fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 					"Id":    "68d920d6-656a-485e-8d31-9ad6fc4d9507",
 					"Error": err,
 					"tempFoundVsExpectedValuesAsJsonbAsString": tempFoundVsExpectedValuesAsJsonbAsString,
@@ -1221,7 +1221,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Check if any logpost were found
 	if numberOfRows == 0 {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":                          "1d2c1775-eb46-40e1-83b3-05d33b9830b2",
 			"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
 		}).Debug("No Log-post were found in database")
@@ -1238,7 +1238,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	tempTestCaseExecutionPtr, existInMap = tempTestCaseExecutionResponseMessagesMap[tempTestCaseExecutionMapKey]
 
 	if numberOfRows > 0 && existInMap == false {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":                          "e0cb4f9d-8a3c-46d7-8aaf-9303a8df5031",
 			"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
 		}).Error("Should never happen that TestCaseExecution is missing in map, 'tempTestCaseExecutionResponseMessagesMap'")
@@ -1272,7 +1272,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		tempTestInstructionExecutionObjectPtr, existInMap = tempTestInstructionExecutionsMap[testInstructionExecutionMapKey]
 
 		if existInMap == false {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":                             "aa4eb62d-1132-4aae-9653-6ffecf05c045",
 				"testInstructionExecutionMapKey": testInstructionExecutionMapKey,
 			}).Error("Should never happen that TestInstructionExecution is missing in map, 'tempTestInstructionExecutionsMap'")
@@ -1290,7 +1290,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	return err
 }
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadRunTimeUpdatedAttribute(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadRunTimeUpdatedAttribute(
 	dbTransaction pgx.Tx,
 	testCaseExecutionKeys []*fenixExecutionServerGuiGrpcApi.TestCaseExecutionKeyMessage,
 	tempTestCaseExecutionResponseMessagesMapPtr *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
@@ -1355,7 +1355,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 			" \"FenixExecution\".\"TestInstructionsUnderExecution\" TIUE "
 		sqlToExecute = sqlToExecute + "WHERE CONCAT(TIAUECH.\"TestInstructionExecutionUuid\", " +
 			"TIAUECH.\"TestInstructionExecutionVersion\") IN " +
-			fenixGuiTestCaseBuilderServerObject.generateSQLINArray(testInstructionExecutionUuidList)
+			fenixGuiExecutionServerObject.generateSQLINArray(testInstructionExecutionUuidList)
 		sqlToExecute = sqlToExecute + " AND "
 		sqlToExecute = sqlToExecute + " TIUE.\"TestInstructionExecutionUuid\" = TIAUECH.\"TestInstructionExecutionUuid\" AND "
 		sqlToExecute = sqlToExecute + " TIUE.\"TestInstructionInstructionExecutionVersion\" = TIAUECH.\"TestInstructionExecutionVersion\" "
@@ -1370,7 +1370,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		"TIAUECH.\"TestInstructionAttributeUuid\") AS key, 	MAX(TIAUECH.\"UniqueId_New\") AS id "
 	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestInstructionAttributesUnderExecutionChangeHistory\" TIAUECH "
 	sqlToExecute = sqlToExecute + "WHERE CONCAT(TIAUECH.\"TestInstructionExecutionUuid\", TIAUECH.\"TestInstructionExecutionVersion\") IN " +
-		fenixGuiTestCaseBuilderServerObject.generateSQLINArray(testInstructionExecutionUuidList) + " "
+		fenixGuiExecutionServerObject.generateSQLINArray(testInstructionExecutionUuidList) + " "
 	sqlToExecute = sqlToExecute + "GROUP BY "
 	sqlToExecute = sqlToExecute + "TIAUECH.\"TestInstructionExecutionUuid\", TIAUECH.\"TestInstructionExecutionVersion\", " +
 		"TIAUECH.\"TestInstructionAttributeUuid\" "
@@ -1385,7 +1385,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	sqlToExecute = sqlToExecute + "; "
 
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "0160ec19-ba83-49b7-9892-a56d24895898",
 			"sqlToExecute": sqlToExecute,
 		}).Info("SQL to be executed")
@@ -1400,7 +1400,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "973506e6-92f2-4141-86ce-326c642ef5c9",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -1446,7 +1446,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "a8f86a8c-820d-4443-886a-11ca7e9f7dfe",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -1493,7 +1493,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Check if any RunTimeUpdated attributes were found
 	if numberOfRows == 0 {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":                          "b71e44be-ed23-4992-9f46-e35cd0be0b1d",
 			"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
 		}).Debug("No RunTimeUpdated variables were found in database")
@@ -1510,7 +1510,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	tempTestCaseExecutionPtr, existInMap = tempTestCaseExecutionResponseMessagesMap[tempTestCaseExecutionMapKey]
 
 	if numberOfRows > 0 && existInMap == false {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":                          "81234875-1951-4eb8-b007-cd6de8725b57",
 			"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
 		}).Error("Should never happen that TestCaseExecution is missing in map, 'tempTestCaseExecutionResponseMessagesMap'")
@@ -1544,7 +1544,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		tempTestInstructionExecutionObjectPtr, existInMap = tempTestInstructionExecutionsMap[testInstructionExecutionMapKey]
 
 		if existInMap == false {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":                             "07c4adb5-6be3-4e1a-9b14-71f7b940fc37",
 				"testInstructionExecutionMapKey": testInstructionExecutionMapKey,
 			}).Error("Should never happen that TestInstructionExecution is missing in map, 'tempTestInstructionExecutionsMap'")
@@ -1564,7 +1564,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 /*
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
 	tempTestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct,
 	testCaseExecutionResponseMessagesReference *[]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage) (
 	err error) {
@@ -1633,7 +1633,7 @@ return err
 
 */
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
 	tempTestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct,
 	testCaseExecutionResponseMessagesReference *[]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage) (
 	err error) {

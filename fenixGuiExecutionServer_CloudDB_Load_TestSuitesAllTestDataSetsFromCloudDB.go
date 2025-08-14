@@ -8,13 +8,14 @@ import (
 	"github.com/jackc/pgx/v4"
 	fenixExecutionServerGuiGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixExecutionServer/fenixExecutionServerGuiGrpcApi/go_grpc_api"
 	fenixTestCaseBuilderServerGrpcApi "github.com/jlambert68/FenixGrpcApi/FenixTestCaseBuilderServer/fenixTestCaseBuilderServerGrpcApi/go_grpc_api"
+	"github.com/jlambert68/FenixScriptEngine/testDataEngine"
 	fenixSyncShared "github.com/jlambert68/FenixSyncShared"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 	"time"
 )
 
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) initiateLoadTestSuitesAllTestDataSetsFromCloudDB(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) initiateLoadTestSuitesAllTestDataSetsFromCloudDB(
 	testSuiteUuid string) (
 	testDataForTestCaseExecutionMessages []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage,
 	err error) {
@@ -39,7 +40,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Load the TestDataSet from the database
 	var usersChosenTestDataForTestSuiteMessage *fenixTestCaseBuilderServerGrpcApi.UsersChosenTestDataForTestSuiteMessage
-	usersChosenTestDataForTestSuiteMessage, err = fenixGuiTestCaseBuilderServerObject.loadTestSuitesAllTestDataSetsFromCloudDB(
+	usersChosenTestDataForTestSuiteMessage, err = fenixGuiExecutionServerObject.loadTestSuitesAllTestDataSetsFromCloudDB(
 		txn,
 		testSuiteUuid)
 
@@ -48,7 +49,8 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Get TestSuites all TestDataSetsValues
-	testDataForTestCaseExecutionMessages, err = fenixGuiTestCaseBuilderServerObject.loadTestSuitesAllTestDataSetValuesFromCloudDB(
+	var oneTestDataFromOneSimpleTestDataAreaFileMessages []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage
+	oneTestDataFromOneSimpleTestDataAreaFileMessages, err = fenixGuiExecutionServerObject.loadTestSuitesAllTestDataSetValuesFromCloudDB(
 		txn,
 		usersChosenTestDataForTestSuiteMessage)
 
@@ -56,11 +58,142 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		return nil, err
 	}
 
+	// Create a slice with the used TestDataAreas
+	var testDataAreaUuidSlice []string
+	for _, oneTestDataFromOneSimpleTestDataAreaFileMessage := range oneTestDataFromOneSimpleTestDataAreaFileMessages {
+		testDataAreaUuidSlice = append(testDataAreaUuidSlice, oneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataAreaUuid)
+	}
+
+	if len(testDataAreaUuidSlice) == 0 {
+		return nil, nil
+	}
+
+	// Load base TestData from database
+	var testDataFromSimpleTestDataAreaFileMessages []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage
+	testDataFromSimpleTestDataAreaFileMessages, err = fenixGuiExecutionServerObject.
+		loadTestDataFromSimpleTestDataAreaFile(testDataAreaUuidSlice)
+
+	if err != nil || len(testDataFromSimpleTestDataAreaFileMessages) == 0 {
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":                    "4cda5dd5-94dd-4216-a56a-a377ad08a5a1",
+			"Error":                 err,
+			"testDataAreaUuidSlice": testDataAreaUuidSlice,
+		}).Error("No TestData found in database, shouldn't happen.")
+
+		return nil, err
+	}
+
+	// Store load TestData
+	fenixGuiExecutionServerObject.storeTestData(testDataFromSimpleTestDataAreaFileMessages)
+
+	// Create TestData adapted for TestCaseExecutions
+	var executeWithOutTestData bool
+	//var testDataPointRowUuid string
+	var existInMap bool
+	var testdataPointRowUuid string
+	executeWithOutTestData = false
+
+	tempTestDataModel := *testDataEngine.TestDataModel.TestDataModelMap
+
+	if executeWithOutTestData == true {
+
+		// TestData exist but not chosen
+		testDataForTestCaseExecutionMessages = []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage{}
+
+	} else {
+
+		// Convert retrieved structure from database into structure to be used for TestCaseExecutions
+		for _, chosenTestDataPointsPerGroupMap := range usersChosenTestDataForTestSuiteMessage.ChosenTestDataPointsPerGroupMap {
+
+			for _, chosenTestDataRowsPerTestDataPointMap := range chosenTestDataPointsPerGroupMap.ChosenTestDataRowsPerTestDataPointMap {
+
+				for _, testDataRow := range chosenTestDataRowsPerTestDataPointMap.TestDataRows {
+
+					var tempTestDataAreaMapPtr *testDataEngine.TestDataDomainModelStruct
+					tempTestDataAreaMapPtr, existInMap = tempTestDataModel[testDataEngine.TestDataDomainUuidType(testDataRow.TestDataDomainUuid)]
+					if existInMap == false {
+						return nil, errors.New(fmt.Sprintf("problem to find 'tempTestDataAreaMapPtr' for 'TestDataDomainUuid' [TestDataDomainUuid: %s]", testDataRow.TestDataDomainUuid))
+					}
+
+					tempTestDataAreaMap := *tempTestDataAreaMapPtr.TestDataAreasMap
+
+					var tempTestDataAreaPtr *testDataEngine.TestDataAreaStruct
+					tempTestDataAreaPtr, existInMap = tempTestDataAreaMap[testDataEngine.TestDataAreaUuidType(testDataRow.TestDataAreaUuid)]
+					if existInMap == false {
+						return nil, errors.New(fmt.Sprintf("problem to find 'tempTestDataAreaPtr' for 'TestDataAreaUuid' [TestDataAreaUuid: %s]", testDataRow.TestDataAreaUuid))
+					}
+					tempTestDataArea := *tempTestDataAreaPtr
+
+					var testTestDataValuesForRowsMap map[testDataEngine.TestDataPointRowUuidType]*[]*testDataEngine.TestDataPointValueStruct
+					testTestDataValuesForRowsMap = *tempTestDataArea.TestDataValuesForRowMap
+
+					if testDataRow.TestDataPointRowValueSummaryMap == nil || len(testDataRow.TestDataPointRowValueSummaryMap) == 0 {
+						return nil, errors.New(fmt.Sprintf("problem to find 'testDataRow.TestDataPointRowValueSummaryMap' for 'TestDataRow' [TestDataRow: %s]", testDataRow))
+					}
+
+					// Get 'TestdataPointRowUuid'
+					for tempTestdataPointRowUuid, _ := range testDataRow.TestDataPointRowValueSummaryMap {
+						testdataPointRowUuid = tempTestdataPointRowUuid
+						break
+					}
+
+					// Get TestDataPointValue for testDataRowUuid
+					var tempTestDataValuesForRowPtr *[]*testDataEngine.TestDataPointValueStruct
+					tempTestDataValuesForRowPtr, existInMap = testTestDataValuesForRowsMap[testDataEngine.TestDataPointRowUuidType(testdataPointRowUuid)]
+					if existInMap == false {
+						return nil, errors.New(fmt.Sprintf("problem to find 'tempTestDataValuesForRowPtr' for 'TestDataPointRowUuid' [TestDataPointRowUuid: %s]", testdataPointRowUuid))
+					}
+
+					tempTestDataValuesForRow := *tempTestDataValuesForRowPtr
+
+					// Loop all TestDataPoints and create structure used for TestCaseExecutions
+					var tempTestDataValueMap map[string]*fenixExecutionServerGuiGrpcApi.TestDataValueMapValueMessage
+					var testDataForTestCaseExecution *fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage
+					tempTestDataValueMap = make(map[string]*fenixExecutionServerGuiGrpcApi.TestDataValueMapValueMessage)
+
+					for tempTestDataValuesForRowIndex, oneTestDataPointValue := range tempTestDataValuesForRow {
+						var tempTestDataValueMapValue fenixExecutionServerGuiGrpcApi.TestDataValueMapValueMessage
+						tempTestDataValueMapValue = fenixExecutionServerGuiGrpcApi.TestDataValueMapValueMessage{
+							HeaderDataName:                    string(oneTestDataPointValue.TestDataColumnDataName),
+							TestDataValue:                     string(oneTestDataPointValue.TestDataValue),
+							TestDataValueIsReplaced:           false, // TODO implement this
+							TestDataOriginalValueWhenReplaced: "",    // TODO implement this
+						}
+
+						tempTestDataValueMap[string(oneTestDataPointValue.TestDataColumnDataName)] = &tempTestDataValueMapValue
+
+						if tempTestDataValuesForRowIndex == 0 {
+							testDataForTestCaseExecution = &fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage{
+								TestDataDomainUuid:         string(oneTestDataPointValue.TestDataDomainUuid),
+								TestDataDomainName:         string(oneTestDataPointValue.TestDataDomainName),
+								TestDataDomainTemplateName: string(oneTestDataPointValue.TestDataDomainTemplateName),
+								TestDataAreaUuid:           string(oneTestDataPointValue.TestDataAreaUuid),
+								TestDataAreaName:           string(oneTestDataPointValue.TestDataAreaName),
+								TestDataValueMap:           nil,
+								TestDataRowIdentifier:      string(oneTestDataPointValue.TestDataPointRowUuid),
+								TestDataFileSha256Hash:     string(oneTestDataPointValue.TestDataFileSha256Hash),
+							}
+						}
+					}
+
+					// Add the Map with values the TestDataPoint
+					testDataForTestCaseExecution.TestDataValueMap = tempTestDataValueMap
+
+					// Add TestDataPoint to slice
+					testDataForTestCaseExecutionMessages = append(testDataForTestCaseExecutionMessages, testDataForTestCaseExecution)
+
+				}
+
+			}
+		}
+	}
+
 	return testDataForTestCaseExecutionMessages, err
 }
 
 // Get TestSuites all TestData
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestSuitesAllTestDataSetsFromCloudDB(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestSuitesAllTestDataSetsFromCloudDB(
 	dbTransaction pgx.Tx,
 	testSuiteUuid string) (
 	_ *fenixTestCaseBuilderServerGrpcApi.UsersChosenTestDataForTestSuiteMessage,
@@ -154,7 +287,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		err = protojson.Unmarshal(tempTestSuiteTestDataAsByteArray, &tempTestSuiteTestDataAsGrpc)
 		if err != nil {
 			common_config.Logger.WithFields(logrus.Fields{
-				"Id":    "9546d885-308b-4b72-aa8a-1f19ebe1131e",
+				"Id":    "ef74050a-d52b-4282-a520-32f9ca1ceecf",
 				"Error": err,
 			}).Error("Something went wrong when converting 'tempTestSuiteTestDataAsByteArray' into proto-message")
 
@@ -170,10 +303,10 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Get TestSuites all TestDataSetsValues
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadTestSuitesAllTestDataSetValuesFromCloudDB(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestSuitesAllTestDataSetValuesFromCloudDB(
 	dbTransaction pgx.Tx,
 	tempTestSuiteTestDataAsGrpc *fenixTestCaseBuilderServerGrpcApi.UsersChosenTestDataForTestSuiteMessage) (
-	testDataForTestCaseExecutionMessages []*fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage,
+	oneTestDataFromOneSimpleTestDataAreaFileMessages []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage,
 	err error) {
 
 	var sqlWhereClause string
@@ -248,7 +381,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	if err != nil {
 		common_config.Logger.WithFields(logrus.Fields{
-			"Id":           "9c09b9fb-8702-4aac-8436-519218ef5892",
+			"Id":           "9e2f1178-a182-4768-b414-6b6f0d5e9eb3",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
 		}).Error("Something went wrong when executing SQL")
@@ -266,17 +399,17 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	// Extract data from DB result set
 	for rows.Next() {
 
+		var tempOneTestDataFromOneSimpleTestDataAreaFileMessage fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage
 		var oneTestDataFromOneSimpleTestDataAreaFileMessage fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage
-		var testDataForTestCaseExecutionMessage fenixExecutionServerGuiGrpcApi.TestDataForTestCaseExecutionMessage
 
 		err = rows.Scan(
-			&oneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataDomainUuid,
-			&oneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataDomainName,
-			&oneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataDomainTemplateName,
-			&oneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataAreaUuid,
-			&oneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataAreaName,
-			&oneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataFileSha256Hash,
-			&oneTestDataFromOneSimpleTestDataAreaFileMessage.ImportantDataInFileSha256Hash,
+			&tempOneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataDomainUuid,
+			&tempOneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataDomainName,
+			&tempOneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataDomainTemplateName,
+			&tempOneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataAreaUuid,
+			&tempOneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataAreaName,
+			&tempOneTestDataFromOneSimpleTestDataAreaFileMessage.TestDataFileSha256Hash,
+			&tempOneTestDataFromOneSimpleTestDataAreaFileMessage.ImportantDataInFileSha256Hash,
 			&insertedTimeStampAsTimeStamp,
 			&tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsString,
 		)
@@ -308,7 +441,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsStringAsByteArray = []byte(tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsString)
 
 		// Convert json-byte-array into proto-messages
-		err = protojson.Unmarshal(tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsStringAsByteArray, &testDataForTestCaseExecutionMessage)
+		err = protojson.Unmarshal(tempTestDataFromOneSimpleTestDataAreaFileFullMessageAsStringAsByteArray, &oneTestDataFromOneSimpleTestDataAreaFileMessage)
 		if err != nil {
 			common_config.Logger.WithFields(logrus.Fields{
 				"Id":    "5f68c073-a66c-48a1-b2cf-3cfa4be3b28d",
@@ -319,12 +452,70 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		}
 
 		// Add TemplateRepositoryConnectionParameters to list
-		testDataForTestCaseExecutionMessages = append(testDataForTestCaseExecutionMessages, &testDataForTestCaseExecutionMessage)
-
-		// Add TemplateRepositoryConnectionParameters to list
-		testDataForTestCaseExecutionMessages = append(testDataForTestCaseExecutionMessages, &testDataForTestCaseExecutionMessage)
+		oneTestDataFromOneSimpleTestDataAreaFileMessages = append(oneTestDataFromOneSimpleTestDataAreaFileMessages, &oneTestDataFromOneSimpleTestDataAreaFileMessage)
 
 	}
 
-	return testDataForTestCaseExecutionMessages, err
+	return oneTestDataFromOneSimpleTestDataAreaFileMessages, err
+}
+
+// Store TestData that is used within the TestSuite
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) storeTestData(
+	testDataFromSimpleTestDataAreaFiles []*fenixTestCaseBuilderServerGrpcApi.TestDataFromOneSimpleTestDataAreaFileMessage) {
+
+	// Loop all TestDataFiles for TestData-Areas and add to the TestData-model
+	var testDataFromTestDataArea testDataEngine.TestDataFromSimpleTestDataAreaStruct
+	for _, testDataFromOneSimpleTestDataAreaFile := range testDataFromSimpleTestDataAreaFiles {
+
+		// Convert Headers
+		var header struct {
+			ShouldHeaderActAsFilter bool
+			HeaderName              string
+			HeaderUiName            string
+		}
+		var headers []struct {
+			ShouldHeaderActAsFilter bool
+			HeaderName              string
+			HeaderUiName            string
+		}
+		for _, rawHeader := range testDataFromOneSimpleTestDataAreaFile.HeadersForTestDataFromOneSimpleTestDataAreaFile {
+
+			// Set values to 'header'
+			header.ShouldHeaderActAsFilter = rawHeader.GetShouldHeaderActAsFilter()
+			header.HeaderName = rawHeader.GetHeaderName()
+			header.HeaderUiName = rawHeader.GetHeaderUiName()
+
+			// Add to the slice of headers
+			headers = append(headers, header)
+		}
+
+		// Convert TestDataRows
+		var row []string
+		var rows [][]string
+
+		for _, simpleTestDataRow := range testDataFromOneSimpleTestDataAreaFile.SimpleTestDataRows {
+
+			// Set values to 'row'
+			row = simpleTestDataRow.GetTestDataValue()
+
+			// Add to the slice of headers
+			rows = append(rows, row)
+		}
+
+		// Populate the TestDataFromTestDataArea-structure
+		testDataFromTestDataArea = testDataEngine.TestDataFromSimpleTestDataAreaStruct{
+			TestDataDomainUuid:         testDataFromOneSimpleTestDataAreaFile.GetTestDataDomainUuid(),
+			TestDataDomainName:         testDataFromOneSimpleTestDataAreaFile.GetTestDataDomainName(),
+			TestDataDomainTemplateName: testDataFromOneSimpleTestDataAreaFile.GetTestDataDomainTemplateName(),
+			TestDataAreaUuid:           testDataFromOneSimpleTestDataAreaFile.GetTestDataAreaUuid(),
+			TestDataAreaName:           testDataFromOneSimpleTestDataAreaFile.GetTestDataAreaName(),
+			Headers:                    headers,
+			TestDataRows:               rows,
+			TestDataFileSha256Hash:     testDataFromOneSimpleTestDataAreaFile.GetTestDataFileSha256Hash(),
+		}
+
+		// Add TestData to TestDataModel
+		testDataEngine.AddTestDataToTestDataModel(testDataFromTestDataArea)
+	}
+
 }

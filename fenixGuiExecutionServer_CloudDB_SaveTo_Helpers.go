@@ -10,7 +10,7 @@ import (
 )
 
 // Generates all "VALUES('xxx', 'yyy')..." for insert statements
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) generateSQLInsertValues(testdata [][]interface{}) (sqlInsertValuesString string) {
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) generateSQLInsertValues(testdata [][]interface{}) (sqlInsertValuesString string) {
 
 	sqlInsertValuesString = ""
 
@@ -49,7 +49,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 				sqlInsertValuesString = sqlInsertValuesString + fmt.Sprint(valueAsNumber)
 
 			default:
-				fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+				fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 					"id": "33e11bc9-bfc7-4c2f-8440-30f8d9a89ab0",
 				}).Fatal("Unhandled type, %valueType", valueType)
 			}
@@ -70,7 +70,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Generates incoming values in the following form:  "('monkey', 'tiger'. 'fish')"
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) generateSQLINArray(testdata []string) (sqlInsertValuesString string) {
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) generateSQLINArray(testdata []string) (sqlInsertValuesString string) {
 
 	// Create a list with '' as only element if there are no elements in array
 	if len(testdata) == 0 {
@@ -100,7 +100,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Generates incoming integer values,[3,55,12] in the following form:  "(3, 55, 12)"
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) generateSQLINArrayForIntegerSlice(testdata []int) (sqlInsertValuesString string) {
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) generateSQLINArrayForIntegerSlice(testdata []int) (sqlInsertValuesString string) {
 
 	// Create a list with '' as only element if there are no elements in array
 	if len(testdata) == 0 {

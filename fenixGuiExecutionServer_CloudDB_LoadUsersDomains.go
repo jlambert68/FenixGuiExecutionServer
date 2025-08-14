@@ -11,17 +11,17 @@ import (
 
 // PrepareLoadUsersDomains
 // Do initial preparations to be able to load all domains for a specific user
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) PrepareLoadUsersDomains(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) PrepareLoadUsersDomains(
 	txn pgx.Tx,
 	gCPAuthenticatedUser string) (
 	domainAndAuthorizations []DomainAndAuthorizationsStruct,
 	err error) {
 
 	// Concatenate Users specific Domains and Domains open for every one to use
-	domainAndAuthorizations, err = fenixGuiTestCaseBuilderServerObject.concatenateUsersDomainsAndDomainOpenToEveryOneToUse(
+	domainAndAuthorizations, err = fenixGuiExecutionServerObject.concatenateUsersDomainsAndDomainOpenToEveryOneToUse(
 		txn, gCPAuthenticatedUser)
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"id":                   "e86352e8-29f4-4a32-9e96-22f624254731",
 			"error":                err,
 			"gCPAuthenticatedUser": gCPAuthenticatedUser,
@@ -48,18 +48,18 @@ type DomainAndAuthorizationsStruct struct {
 }
 
 // Concatenate Users specific Domains and Domains open for every one to use
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) concatenateUsersDomainsAndDomainOpenToEveryOneToUse(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) concatenateUsersDomainsAndDomainOpenToEveryOneToUse(
 	dbTransaction pgx.Tx,
 	gCPAuthenticatedUser string) (
 	domainAndAuthorizations []DomainAndAuthorizationsStruct,
 	err error) {
 
-	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"Id": "80cdaa07-6c59-4107-a442-07be0cd826f2",
 	}).Debug("Entering: concatenateUsersDomainsAndDomainOpenToEveryOneToUse()")
 
 	defer func() {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":                      "5985d322-fb4c-4106-940b-2f53433f5bc0",
 			"domainAndAuthorizations": domainAndAuthorizations,
 		}).Debug("Exiting: concatenateUsersDomainsAndDomainOpenToEveryOneToUse()")
@@ -67,9 +67,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Load all domains open for every one to use in some way
 	var domainsOpenForEveryOneToUse []DomainAndAuthorizationsStruct
-	domainsOpenForEveryOneToUse, err = fenixGuiTestCaseBuilderServerObject.loadDomainsOpenForEveryOneToUse(dbTransaction, gCPAuthenticatedUser)
+	domainsOpenForEveryOneToUse, err = fenixGuiExecutionServerObject.loadDomainsOpenForEveryOneToUse(dbTransaction, gCPAuthenticatedUser)
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"id":                   "c3d160ea-9122-46fc-a483-0afa54ba45d2",
 			"error":                err,
 			"GCPAuthenticatedUser": gCPAuthenticatedUser,
@@ -79,9 +79,9 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	}
 
 	// Load all domains for a specific user
-	domainAndAuthorizations, err = fenixGuiTestCaseBuilderServerObject.loadUsersDomains(dbTransaction, gCPAuthenticatedUser)
+	domainAndAuthorizations, err = fenixGuiExecutionServerObject.loadUsersDomains(dbTransaction, gCPAuthenticatedUser)
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"id":                   "b743be52-700b-4d60-b12b-7b873cabac82",
 			"error":                err,
 			"GCPAuthenticatedUser": gCPAuthenticatedUser,
@@ -129,18 +129,18 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Load all domains for a specific user
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadUsersDomains(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadUsersDomains(
 	dbTransaction pgx.Tx,
 	gCPAuthenticatedUser string) (
 	domainAndAuthorizations []DomainAndAuthorizationsStruct,
 	err error) {
 
-	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"Id": "61715721-efc6-4c4e-8856-8157fb6911d5",
 	}).Debug("Entering: loadUsersDomains()")
 
 	defer func() {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":                      "2bb6f88e-892e-47a6-904a-b793ba47df71",
 			"domainAndAuthorizations": domainAndAuthorizations,
 		}).Debug("Exiting: loadUsersDomains()")
@@ -156,7 +156,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Log SQL to be executed if Environment variable is true
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "2ac8169b-bb80-453c-b8db-0d5696459479",
 			"sqlToExecute": sqlToExecute,
 		}).Debug("SQL to be executed within 'loadUsersDomains'")
@@ -171,7 +171,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "68ca4ac8-b33d-4f83-8290-fc270c21a0ea",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -196,7 +196,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "5df1b095-dceb-48d7-81a4-30e285ad5b65",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
@@ -217,18 +217,18 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 }
 
 // Load all domains open for every one to use in some way
-func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) loadDomainsOpenForEveryOneToUse(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadDomainsOpenForEveryOneToUse(
 	dbTransaction pgx.Tx,
 	gCPAuthenticatedUser string) (
 	domainsOpenForEveryOneToUse []DomainAndAuthorizationsStruct,
 	err error) {
 
-	fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+	fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 		"Id": "b157f2c9-b470-4b22-9acd-22bbeb8e70db",
 	}).Debug("Entering: loadDomainsOpenForEveryOneToUse()")
 
 	defer func() {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":                          "c4d893a3-b40d-4fdc-95b2-fbb13add118b",
 			"domainsOpenForEveryOneToUse": domainsOpenForEveryOneToUse,
 		}).Debug("Exiting: loadDomainsOpenForEveryOneToUse()")
@@ -247,7 +247,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 
 	// Log SQL to be executed if Environment variable is true
 	if common_config.LogAllSQLs == true {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "f2e26d20-a462-4690-9207-c305ba5e615f",
 			"sqlToExecute": sqlToExecute,
 		}).Debug("SQL to be executed within 'loadDomainsOpenForEveryOneToUse'")
@@ -262,7 +262,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 	defer rows.Close()
 
 	if err != nil {
-		fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+		fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 			"Id":           "556956bf-90ec-4bfc-a09d-3a22db8c8029",
 			"Error":        err,
 			"sqlToExecute": sqlToExecute,
@@ -289,7 +289,7 @@ func (fenixGuiTestCaseBuilderServerObject *fenixGuiExecutionServerObjectStruct) 
 		)
 
 		if err != nil {
-			fenixGuiTestCaseBuilderServerObject.logger.WithFields(logrus.Fields{
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
 				"Id":           "ef811141-d16f-4e24-bcc2-4be4c6f06a7d",
 				"Error":        err,
 				"sqlToExecute": sqlToExecute,
