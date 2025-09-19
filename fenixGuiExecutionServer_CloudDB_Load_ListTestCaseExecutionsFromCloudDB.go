@@ -118,7 +118,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTe
 
 			// Load all TestInstructionExecutions for TestCase
 			testInstructionsExecutionStatusPreviewValuesMessage, err = fenixGuiExecutionServerObject.
-				loadTestInstructionsExecutionStatusPreviewValues(
+				loadTestInstructionsExecutionStatusPreviewValuesForOneTestCaseExecution(
 					txn, tempRawTestCaseExecution)
 
 			// Exit when there was a problem reading the database
@@ -130,7 +130,8 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTe
 			var testCaseExecutionStatus int32
 			testCaseExecutionStatus, err = fenixGuiExecutionServerObject.
 				loadTestCaseExecutionStatus(
-					txn, tempRawTestCaseExecution)
+					txn,
+					tempRawTestCaseExecution)
 
 			// Exit when there was a problem reading the database
 			if err != nil {
@@ -163,7 +164,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTe
 		AckNackResponse: &fenixExecutionServerGuiGrpcApi.AckNackResponse{
 			AckNack:                      true,
 			Comments:                     "",
-			ErrorCodes:                   []fenixExecutionServerGuiGrpcApi.ErrorCodesEnum{fenixExecutionServerGuiGrpcApi.ErrorCodesEnum_ERROR_DATABASE_PROBLEM},
+			ErrorCodes:                   nil,
 			ProtoFileVersionUsedByClient: fenixExecutionServerGuiGrpcApi.CurrentFenixExecutionGuiProtoFileVersionEnum(common_config.GetHighestFenixGuiExecutionServerProtoFileVersion()),
 		},
 		TestCaseExecutionsList:                     rawTestCaseExecutionsList,
@@ -573,11 +574,175 @@ func hasTestCaseAnEndStatus(testCaseExecutionStatus int32) (isTestCaseEndStatus 
 }
 
 // Retrieve "ExecutionStatusPreviewValues" for all TestInstructions for one TestCaseExecution
-func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionStatusPreviewValues(
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionStatusPreviewValuesForOneTestCaseExecution(
 	dbTransaction pgx.Tx,
 	testCaseExecutionsListMessage *fenixExecutionServerGuiGrpcApi.TestCaseExecutionsListMessage) (
 	testInstructionsExecutionStatusPreviewValuesMessage *fenixExecutionServerGuiGrpcApi.TestInstructionsExecutionStatusPreviewValuesMessage,
+
 	err error) {
+
+	var testInstructionsExecutionStatusPreviewValuesMap map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+	var testInstructionsExecutionStatusPreviewValuesMapKey string
+	var existInMap bool
+	testInstructionsExecutionStatusPreviewValuesMap = make(map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage)
+
+	// Create slice to be used as input to SQL
+	var testCaseExecutionsForLoadTestCasesExecutionStatusSlice []testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct
+	testCaseExecutionsForLoadTestCasesExecutionStatusSlice = append(
+		testCaseExecutionsForLoadTestCasesExecutionStatusSlice,
+		testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct{
+			executionUuid:    testCaseExecutionsListMessage.TestCaseExecutionUuid,
+			executionVersion: testCaseExecutionsListMessage.TestCaseExecutionVersion,
+		})
+
+	// Create the MapKey to be used from response from SQL
+	testInstructionsExecutionStatusPreviewValuesMapKey = testCaseExecutionsListMessage.TestCaseExecutionUuid + strconv.Itoa(int(testCaseExecutionsListMessage.TestCaseExecutionVersion))
+
+	// Get TestCaseExecutionStatus
+	testInstructionsExecutionStatusPreviewValuesMap, err = fenixGuiExecutionServerObject.loadTestInstructionsExecutionStatusPreviewValues(
+		dbTransaction,
+		baseSqlWhereOnTestCaseExecutionUuid,
+		testCaseExecutionsForLoadTestCasesExecutionStatusSlice)
+
+	if err != nil {
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":    "78e95ae2-09ba-4416-9ff8-c7a7b3be7d95",
+			"Error": err,
+			"err":   err,
+		}).Error("Something went wrong when retrieving 'ExecutionStatusPreviewValues' from database for one TestCaseExecution")
+
+		return testInstructionsExecutionStatusPreviewValuesMessage, err
+	}
+
+	if len(testInstructionsExecutionStatusPreviewValuesMap) != 1 {
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id": "c00c9a11-8013-4394-8d33-190f7b7a8a48",
+			"len(testInstructionsExecutionStatusPreviewValuesMap)": len(testInstructionsExecutionStatusPreviewValuesMap),
+		}).Error("Expected exact one 'ExecutionStatusPreviewValues' from database for one TestCaseExecution")
+
+		errId := "1679cc4b-df14-4f56-90fb-749ff4b130a2"
+
+		err = errors.New(fmt.Sprintf("expected exact one 'ExecutionStatusPreviewValues' from database for one TestCaseExecution, but got %d. [ErrorId: %s]",
+			len(testInstructionsExecutionStatusPreviewValuesMap),
+			errId))
+
+		return testInstructionsExecutionStatusPreviewValuesMessage, err
+	}
+
+	// Verify that correct Key exist in response map
+	var TestInstructionExecutionStatusPreviewValueMessageSlice []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage
+	TestInstructionExecutionStatusPreviewValueMessageSlice, existInMap = testInstructionsExecutionStatusPreviewValuesMap[testInstructionsExecutionStatusPreviewValuesMapKey]
+
+	if existInMap == false {
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id": "each45b1-f6bc-4198-922e-51d74c84b728",
+			"testInstructionsExecutionStatusPreviewValuesMap":    testInstructionsExecutionStatusPreviewValuesMap,
+			"testInstructionsExecutionStatusPreviewValuesMapKey": testInstructionsExecutionStatusPreviewValuesMapKey,
+		}).Error("Expected 'testInstructionsExecutionStatusPreviewValuesMapKey' wasn't found in response from database for one TestCaseExecution")
+
+		errId := "7bf5ed4e-e0fe-4041-9d11-aa0115fd5909"
+
+		err = errors.New(fmt.Sprintf("Expected 'testInstructionsExecutionStatusPreviewValuesMapKey'=%s wasn't found in response from database for one TestCaseExecution. [ErrorId: %s]",
+			testInstructionsExecutionStatusPreviewValuesMapKey,
+			errId))
+
+		return testInstructionsExecutionStatusPreviewValuesMessage, err
+	}
+
+	// Build response message
+	testInstructionsExecutionStatusPreviewValuesMessage = &fenixExecutionServerGuiGrpcApi.
+		TestInstructionsExecutionStatusPreviewValuesMessage{
+		TestInstructionExecutionStatusPreviewValues: TestInstructionExecutionStatusPreviewValueMessageSlice}
+
+	return testInstructionsExecutionStatusPreviewValuesMessage, err
+
+}
+
+// Retrieve "ExecutionStatusPreviewValues" for all TestInstructions for multi TestCaseExecutions
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestInstructionsExecutionStatusPreviewValues(
+	dbTransaction pgx.Tx,
+	baseSqlWhereOnTestSuiteExecutionUuid baseSqlWhereOnExecutionUuidTypeType,
+	executionsForLoadTestCasesExecutionStatusSlice []testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct) (
+	testInstructionsExecutionStatusPreviewValuesMap map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage, // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+	err error) {
+
+	// Initiate response Map
+	testInstructionsExecutionStatusPreviewValuesMap = make(map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage)
+	var testInstructionsExecutionStatusPreviewValuesMapKey string
+
+	// Generate WHERE-values to only target correct 'TestCaseExecutionUuid' together with 'TestCaseExecutionVersion'
+	var correctExecutionUuidAndExecutionVersionPars string
+	switch baseSqlWhereOnTestSuiteExecutionUuid {
+
+	case baseSqlWhereOnTestSuiteExecutionUuid:
+		// Base SQL-Where on TestSuiteExecution
+		var correctTestSuiteExecutionUuidAndTestSuiteExecutionVersionPar string
+		for testSuiteExecutionCounter, testSuiteExecution := range executionsForLoadTestCasesExecutionStatusSlice {
+			correctTestSuiteExecutionUuidAndTestSuiteExecutionVersionPar =
+				"(TCUE.\"TestSuiteExecutionUuid\" = '" + testSuiteExecution.executionUuid + "' AND " +
+					"TCUE.\"TestSuiteExecutionVersion\" = " + strconv.Itoa(int(testSuiteExecution.executionVersion)) + ") "
+
+			switch testSuiteExecutionCounter {
+			case 0:
+				// When this is the first then we need to add 'AND before'
+				// *NOT NEEDED* in this Query
+				//correctExecutionUuidAndExecutionVersionPars = "AND "
+
+			default:
+				// When this is not the first then we need to add 'OR' after previous
+				correctExecutionUuidAndExecutionVersionPars =
+					correctExecutionUuidAndExecutionVersionPars + "OR "
+			}
+
+			// Add the WHERE-values
+			correctExecutionUuidAndExecutionVersionPars =
+				correctExecutionUuidAndExecutionVersionPars + correctTestSuiteExecutionUuidAndTestSuiteExecutionVersionPar
+
+		}
+	case baseSqlWhereOnTestCaseExecutionUuid:
+
+		// Base SQL-Where on TestCaseExecution
+		var correctTestCaseExecutionUuidAndTestCaseExecutionVersionPar string
+		for testCaseExecutionCounter, testCaseExecution := range executionsForLoadTestCasesExecutionStatusSlice {
+			correctTestCaseExecutionUuidAndTestCaseExecutionVersionPar =
+				"(TCUE.\"TestCaseExecutionUuid\" = '" + testCaseExecution.executionUuid + "' AND " +
+					"TCUE.\"TestCaseExecutionVersion\" = " + strconv.Itoa(int(testCaseExecution.executionVersion)) + ") "
+
+			switch testCaseExecutionCounter {
+			case 0:
+				// When this is the first then we need to add 'AND before'
+				correctExecutionUuidAndExecutionVersionPars = "AND "
+
+			default:
+				// When this is not the first then we need to add 'OR' after previous
+				correctExecutionUuidAndExecutionVersionPars =
+					correctExecutionUuidAndExecutionVersionPars + "OR "
+			}
+
+			// Add the WHERE-values
+			correctExecutionUuidAndExecutionVersionPars =
+				correctExecutionUuidAndExecutionVersionPars + correctTestCaseExecutionUuidAndTestCaseExecutionVersionPar
+
+		}
+
+	default:
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":                                   "5c300939-5aea-47b6-8382-2289d7a9f979",
+			"baseSqlWhereOnTestSuiteExecutionUuid": baseSqlWhereOnTestSuiteExecutionUuid,
+		}).Error("Unhandled 'baseSqlWhereOnTestSuiteExecutionUuid'")
+
+		errId := "89b8c2e3-6f2b-4447-8c02-9f57ca580fb4"
+
+		err = errors.New(fmt.Sprintf("Unhandled 'baseSqlWhereOnTestSuiteExecutionUuid' = %d [ErrorId: %s]",
+			baseSqlWhereOnTestSuiteExecutionUuid,
+			errId))
+
+		return testInstructionsExecutionStatusPreviewValuesMap, err
+
+	}
 
 	// Load 'ExecutionStatusPreviewValues'
 
@@ -588,11 +753,11 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 	sqlToExecute = sqlToExecute + "TIUE.\"SentTimeStamp\", TIUE.\"TestInstructionExecutionEndTimeStamp\", "
 	sqlToExecute = sqlToExecute + "TIUE.\"TestInstructionExecutionStatus\", "
 	sqlToExecute = sqlToExecute + "TIUE.\"ExecutionDomainUuid\", TIUE.\"ExecutionDomainName\" "
-	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestInstructionsUnderExecution\" TIUE "
+	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestInstructionsUnderExecution\" TIUE, " +
+		"\"FenixExecution\".\"TestCasesUnderExecution\" TCUE "
 	sqlToExecute = sqlToExecute + "WHERE "
-	sqlToExecute = sqlToExecute + fmt.Sprintf("\"TestCaseExecutionUuid\" = '%s' AND \"TestCaseExecutionVersion\" = %d ",
-		testCaseExecutionsListMessage.TestCaseExecutionUuid,
-		testCaseExecutionsListMessage.TestCaseExecutionVersion)
+	sqlToExecute = sqlToExecute + "TIUE.\"TestCaseExecutionUuid\" = TCUE.\"TestCaseExecutionUuid\" AND " +
+		"TIUE.\"TestCaseExecutionVersion\" = TCUE.\"TestCaseExecutionVersion\" "
 	sqlToExecute = sqlToExecute + "ORDER BY TIUE.\"SentTimeStamp\" ASC"
 	sqlToExecute = sqlToExecute + ";"
 
@@ -617,7 +782,8 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 	var numberOfRowFromDB int32
 	numberOfRowFromDB = 0
 
-	var testCasePreviewAndExecutionStatusPreviewValues []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage
+	var existInMap bool
+
 	var sentTimeStampAsTimeStamp time.Time
 	var testInstructionExecutionEndTimeStampAsTimeStamp time.Time
 	var nullableTestInstructionExecutionEndTimeStampAsTimeStamp sql.NullTime
@@ -626,6 +792,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 	for rows.Next() {
 
 		var testCasePreviewAndExecutionStatusPreviewValue fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage
+		var testCasePreviewAndExecutionStatusPreviewValues []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage
 		numberOfRowFromDB = numberOfRowFromDB + 1
 
 		err := rows.Scan(
@@ -669,17 +836,24 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 		testCasePreviewAndExecutionStatusPreviewValue.TestInstructionExecutionEndTimeStamp = timestamppb.
 			New(testInstructionExecutionEndTimeStampAsTimeStamp)
 
-		// Add value to slice of values
-		testCasePreviewAndExecutionStatusPreviewValues = append(testCasePreviewAndExecutionStatusPreviewValues,
-			&testCasePreviewAndExecutionStatusPreviewValue)
+		// Create MapKey
+		testInstructionsExecutionStatusPreviewValuesMapKey = testCasePreviewAndExecutionStatusPreviewValue.TestCaseExecutionUuid + strconv.Itoa(int(testCasePreviewAndExecutionStatusPreviewValue.TestCaseExecutionVersion))
+
+		// Check if slice exist in Map
+		testCasePreviewAndExecutionStatusPreviewValues, existInMap = testInstructionsExecutionStatusPreviewValuesMap[testInstructionsExecutionStatusPreviewValuesMapKey]
+		if existInMap == false {
+			testCasePreviewAndExecutionStatusPreviewValues = []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage{}
+		}
+
+		// Add value slice
+		testCasePreviewAndExecutionStatusPreviewValues = append(testCasePreviewAndExecutionStatusPreviewValues, &testCasePreviewAndExecutionStatusPreviewValue)
+
+		// Add Slice 'back' to map
+		testInstructionsExecutionStatusPreviewValuesMap[testInstructionsExecutionStatusPreviewValuesMapKey] = testCasePreviewAndExecutionStatusPreviewValues
 
 	}
 
-	testInstructionsExecutionStatusPreviewValuesMessage = &fenixExecutionServerGuiGrpcApi.
-		TestInstructionsExecutionStatusPreviewValuesMessage{
-		TestInstructionExecutionStatusPreviewValues: testCasePreviewAndExecutionStatusPreviewValues}
-
-	return testInstructionsExecutionStatusPreviewValuesMessage, err
+	return testInstructionsExecutionStatusPreviewValuesMap, err
 
 }
 
@@ -690,15 +864,182 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 	testCaseExecutionStatus int32,
 	err error) {
 
-	// Load 'ExecutionStatusPreviewValues'
+	var testCasesExecutionStatusMap map[string]int32 // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+	var testCasesExecutionStatusMapKey string
+	var existInMap bool
+	testCasesExecutionStatusMap = make(map[string]int32)
+
+	// Create slice to be used as input to SQL
+	var testCaseExecutionsForLoadTestCasesExecutionStatusSlice []testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct
+	testCaseExecutionsForLoadTestCasesExecutionStatusSlice = append(
+		testCaseExecutionsForLoadTestCasesExecutionStatusSlice,
+		testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct{
+			executionUuid:    rawTestCaseExecution.TestCaseExecutionUuid,
+			executionVersion: rawTestCaseExecution.TestCaseExecutionVersion,
+		})
+
+	// Create the MapKey to be used from response from SQL
+	testCasesExecutionStatusMapKey = rawTestCaseExecution.TestCaseExecutionUuid + strconv.Itoa(int(rawTestCaseExecution.TestCaseExecutionVersion))
+
+	// Get TestCaseExecutionStatus
+	testCasesExecutionStatusMap, err = fenixGuiExecutionServerObject.loadTestCasesExecutionStatus(
+		dbTransaction,
+		baseSqlWhereOnTestCaseExecutionUuid,
+		testCaseExecutionsForLoadTestCasesExecutionStatusSlice)
+
+	if err != nil {
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":    "24e9a45d-3228-4535-89b5-62eafee9549d",
+			"Error": err,
+			"err":   err,
+		}).Error("Something went wrong when retrieving 'TestCasesExecutionStatus' from database for one TestCaseExecution")
+
+		return testCaseExecutionStatus, err
+	}
+
+	if len(testCasesExecutionStatusMap) != 1 {
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":                               "4b02618b-b279-456a-87ed-e0b4e868e32b",
+			"len(testCasesExecutionStatusMap)": len(testCasesExecutionStatusMap),
+		}).Error("Expected exact one 'TestCasesExecutionStatus' from database for one TestCaseExecution")
+
+		errId := "cd75d5cf-f5f9-4441-8bbc-e0d69b53fb7e"
+
+		err = errors.New(fmt.Sprintf("expected exact one 'TestCasesExecutionStatus' from database for one TestCaseExecution, but got %d. [ErrorId: %s]",
+			len(testCasesExecutionStatusMap),
+			errId))
+
+		return testCaseExecutionStatus, err
+	}
+
+	// Verify that correct Key exist in response map
+	testCaseExecutionStatus, existInMap = testCasesExecutionStatusMap[testCasesExecutionStatusMapKey]
+
+	if existInMap == false {
+
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":                             "afcf45b1-f6bc-4198-922e-51d74c84b728",
+			"testCasesExecutionStatusMap":    testCasesExecutionStatusMap,
+			"testCasesExecutionStatusMapKey": testCasesExecutionStatusMapKey,
+		}).Error("Expected 'testCasesExecutionStatusMapKey' wasn't found in response from database for one TestCaseExecution")
+
+		errId := "e11fb333-fb0e-4dfc-b05a-5334009a4dcc"
+
+		err = errors.New(fmt.Sprintf("Expected 'testCasesExecutionStatusMapKey'=%s wasn't found in response from database for one TestCaseExecution. [ErrorId: %s]",
+			testCasesExecutionStatusMapKey,
+			errId))
+
+		return testCaseExecutionStatus, err
+	}
+
+	return testCaseExecutionStatus, err
+}
+
+type testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct struct {
+	executionUuid    string
+	executionVersion int32
+}
+
+type baseSqlWhereOnExecutionUuidTypeType uint8
+
+const (
+	baseSqlWhereOnTestCaseExecutionUuid baseSqlWhereOnExecutionUuidTypeType = iota
+	baseSqlWhereOnTestSuiteExecutionUuid
+)
+
+// Retrieve "TestCasesExecutionStatus" for multiple TestCaseExecution
+func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionStatus(
+	dbTransaction pgx.Tx,
+	baseSqlWhereOnTestSuiteExecutionUuid baseSqlWhereOnExecutionUuidTypeType,
+	executionsForLoadTestCasesExecutionStatusSlice []testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct) (
+	testCasesExecutionStatusMap map[string]int32, // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+	err error) {
+
+	// Initiate response Map
+	testCasesExecutionStatusMap = make(map[string]int32)
+	var testCasesExecutionStatusMapKey string
+
+	// Generate WHERE-values to only target correct 'TestCaseExecutionUuid' together with 'TestCaseExecutionVersion'
+	var correctExecutionUuidAndExecutionVersionPars string
+	switch baseSqlWhereOnTestSuiteExecutionUuid {
+
+	case baseSqlWhereOnTestSuiteExecutionUuid:
+		// Base SQL-Where on TestSuiteExecution
+		var correctTestSuiteExecutionUuidAndTestSuiteExecutionVersionPar string
+		for testSuiteExecutionCounter, testSuiteExecution := range executionsForLoadTestCasesExecutionStatusSlice {
+			correctTestSuiteExecutionUuidAndTestSuiteExecutionVersionPar =
+				"(TCEQ.\"TestSuiteExecutionUuid\" = '" + testSuiteExecution.executionUuid + "' AND " +
+					"TCEQ.\"TestSuiteExecutionVersion\" = " + strconv.Itoa(int(testSuiteExecution.executionVersion)) + ") "
+
+			switch testSuiteExecutionCounter {
+			case 0:
+				// When this is the first then we need to add 'AND before'
+				// *NOT NEEDED* in this Query
+				//correctExecutionUuidAndExecutionVersionPars = "AND "
+
+			default:
+				// When this is not the first then we need to add 'OR' after previous
+				correctExecutionUuidAndExecutionVersionPars =
+					correctExecutionUuidAndExecutionVersionPars + "OR "
+			}
+
+			// Add the WHERE-values
+			correctExecutionUuidAndExecutionVersionPars =
+				correctExecutionUuidAndExecutionVersionPars + correctTestSuiteExecutionUuidAndTestSuiteExecutionVersionPar
+
+		}
+	case baseSqlWhereOnTestCaseExecutionUuid:
+
+		// Base SQL-Where on TestCaseExecution
+		var correctTestCaseExecutionUuidAndTestCaseExecutionVersionPar string
+		for testCaseExecutionCounter, testCaseExecution := range executionsForLoadTestCasesExecutionStatusSlice {
+			correctTestCaseExecutionUuidAndTestCaseExecutionVersionPar =
+				"(TCEQ.\"TestCaseExecutionUuid\" = '" + testCaseExecution.executionUuid + "' AND " +
+					"TCEQ.\"TestCaseExecutionVersion\" = " + strconv.Itoa(int(testCaseExecution.executionVersion)) + ") "
+
+			switch testCaseExecutionCounter {
+			case 0:
+				// When this is the first then we need to add 'AND before'
+				// *NOT NEEDED* in this Query
+				//correctExecutionUuidAndExecutionVersionPars = "AND "
+
+			default:
+				// When this is not the first then we need to add 'OR' after previous
+				correctExecutionUuidAndExecutionVersionPars =
+					correctExecutionUuidAndExecutionVersionPars + "OR "
+			}
+
+			// Add the WHERE-values
+			correctExecutionUuidAndExecutionVersionPars =
+				correctExecutionUuidAndExecutionVersionPars + correctTestCaseExecutionUuidAndTestCaseExecutionVersionPar
+
+		}
+
+	default:
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":                                   "0d40ce55-53a7-4575-9357-f2069fb06926",
+			"baseSqlWhereOnTestSuiteExecutionUuid": baseSqlWhereOnTestSuiteExecutionUuid,
+		}).Error("Unhandled 'baseSqlWhereOnTestSuiteExecutionUuid'")
+
+		errId := "7782aa9d-8dac-4c91-a8f9-8a2880b9916a"
+
+		err = errors.New(fmt.Sprintf("Unhandled 'baseSqlWhereOnTestSuiteExecutionUuid' = %d [ErrorId: %s]",
+			baseSqlWhereOnTestSuiteExecutionUuid,
+			errId))
+
+		return testCasesExecutionStatusMap, err
+
+	}
+
+	// Load 'TestCasesExecutionStatus'
 
 	sqlToExecute := ""
-	sqlToExecute = sqlToExecute + "SELECT TCUE.\"TestCaseExecutionStatus\" "
+	sqlToExecute = sqlToExecute + "SELECT TCUE.\"TestCaseExecutionUuid\", TCUE.\"TestCaseExecutionVersion\", TCUE.\"TestCaseExecutionStatus\" "
 	sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestCasesUnderExecution\" TCUE "
 	sqlToExecute = sqlToExecute + "WHERE "
-	sqlToExecute = sqlToExecute + fmt.Sprintf("\"TestCaseExecutionUuid\" = '%s' AND \"TestCaseExecutionVersion\" = %d ",
-		rawTestCaseExecution.TestCaseExecutionUuid,
-		rawTestCaseExecution.TestCaseExecutionVersion)
+	sqlToExecute = sqlToExecute + correctExecutionUuidAndExecutionVersionPars
 	sqlToExecute = sqlToExecute + ";"
 
 	// Query DB
@@ -715,51 +1056,41 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 			"sqlToExecute": sqlToExecute,
 		}).Error("Something went wrong when executing SQL")
 
-		return 0, err
+		return nil, err
 	}
 
-	// Number of rows
-	var numberOfRowFromDB int32
-	numberOfRowFromDB = 0
+	var (
+		tempTestCaseExecutionUuid    string
+		tempTestCaseExecutionVersion int32
+		tempTestCaseExecutionStatus  int32
+	)
 
 	// Extract data from DB result set
 	for rows.Next() {
 
-		numberOfRowFromDB = numberOfRowFromDB + 1
-
 		err := rows.Scan(
-			&testCaseExecutionStatus,
+			&tempTestCaseExecutionUuid,
+			&tempTestCaseExecutionVersion,
+			&tempTestCaseExecutionStatus,
 		)
 
 		if err != nil {
 
 			common_config.Logger.WithFields(logrus.Fields{
-				"Id":                "41ee1994-5a0a-43a6-ac3c-d3eb4ed46137",
-				"Error":             err,
-				"sqlToExecute":      sqlToExecute,
-				"numberOfRowFromDB": numberOfRowFromDB,
+				"Id":           "41ee1994-5a0a-43a6-ac3c-d3eb4ed46137",
+				"Error":        err,
+				"sqlToExecute": sqlToExecute,
 			}).Error("Something went wrong when processing result from database")
 
-			return 0, err
+			return nil, err
 		}
 
+		// Create MapKey and add to Map
+		testCasesExecutionStatusMapKey = tempTestCaseExecutionUuid + strconv.Itoa(int(tempTestCaseExecutionVersion))
+		testCasesExecutionStatusMap[testCasesExecutionStatusMapKey] = tempTestCaseExecutionStatus
+
 	}
 
-	// If number of rows <> 1 then there is a problem
-	if numberOfRowFromDB != 1 {
-
-		err = errors.New("number of rows in database response was not exact 1 row")
-
-		common_config.Logger.WithFields(logrus.Fields{
-			"Id":                "a0a0b95e-42c6-4b64-a671-668ccdc0de52",
-			"Error":             err,
-			"sqlToExecute":      sqlToExecute,
-			"numberOfRowFromDB": numberOfRowFromDB,
-		}).Error("Something went wrong when processing result from database")
-
-		return 0, err
-	}
-
-	return testCaseExecutionStatus, err
+	return testCasesExecutionStatusMap, err
 
 }
