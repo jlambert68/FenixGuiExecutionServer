@@ -145,7 +145,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTe
 		if hasTestSuiteAnEndStatus(int32(tempRawTestSuiteExecution.TestSuiteExecutionStatus)) == false {
 
 			// Load ExecutionStatuses for the TestCaseExecutions
-			var testCasesExecutionStatusMap map[string]int32 // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+			var testCasesExecutionStatusMap map[string]testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
 			testCasesExecutionStatusMap, err = fenixGuiExecutionServerObject.loadTestCasesExecutionStatus(
 				txn,
 				baseSqlWhereOnTestSuiteExecutionUuid,
@@ -167,49 +167,51 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTe
 
 			}
 
+			// Load all TestInstructionExecutions for TestCaseExecutions in TestSuiteExecution
+			var testInstructionsExecutionStatusPreviewValuesMap map[string][]*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
+			testInstructionsExecutionStatusPreviewValuesMap, err = fenixGuiExecutionServerObject.
+				loadTestInstructionsExecutionStatusPreviewValues(
+					txn,
+					baseSqlWhereOnTestSuiteExecutionUuid,
+					[]testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct{
+						{
+							executionUuid:    tempRawTestSuiteExecution.TestSuiteExecutionUuid,
+							executionVersion: tempRawTestSuiteExecution.TestSuiteExecutionVersion,
+						},
+					})
+
+			// Exit when there was a problem reading the database
+			if err != nil {
+				return nil, err
+			}
+
 			// Loop TestCaseExecutions and add TestInstructionsExecutions for the one that doesn't have end status for the TestCaseExecution
-			for temptestCasesExecutionMapKey, temptestCasesExecutionStatus := range testCasesExecutionStatusMap {
+			for tempTestCasesExecutionMapKey, tempTestCasesExecutionStatus := range testCasesExecutionStatusMap {
 
 				// If TestCaseExecutionStatus is NOT an "End status" then Load all TestInstructionExecutions
-				if hasTestCaseAnEndStatus(int32(temptestCasesExecutionStatus)) == false {
+				if hasTestCaseAnEndStatus(tempTestCasesExecutionStatus.testCaseExecutionStatus) == false {
 
+					// Add "TestInstructionsExecutionStatusPreviewValues" to 'Raw TestSuiteExecution'
 					var testInstructionsExecutionStatusPreviewValuesMessage *fenixExecutionServerGuiGrpcApi.TestInstructionsExecutionStatusPreviewValuesMessage
-
-					// Load all TestInstructionExecutions for TestCase
-					testInstructionsExecutionStatusPreviewValuesMessage, err = fenixGuiExecutionServerObject.
-						loadTestInstructionsExecutionStatusPreviewValues(
-							txn, temptestCasesExecutionStatus)
-
-					// Exit when there was a problem reading the database
-					if err != nil {
-						return nil, err
+					testInstructionsExecutionStatusPreviewValuesMessage = &fenixExecutionServerGuiGrpcApi.
+						TestInstructionsExecutionStatusPreviewValuesMessage{
+						TestCaseExecutionUuid:                       tempTestCasesExecutionStatus.executionUuid,
+						TestCaseExecutionVersion:                    tempTestCasesExecutionStatus.executionVersion,
+						TestCaseExecutionStatus:                     fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum(tempTestCasesExecutionStatus.testCaseExecutionStatus),
+						TestInstructionExecutionStatusPreviewValues: testInstructionsExecutionStatusPreviewValuesMap[tempTestCasesExecutionMapKey],
 					}
 
-					// Load TestCaseExecution-status
-					var testCaseExecutionStatus int32
-					testCaseExecutionStatus, err = fenixGuiExecutionServerObject.
-						loadTestCaseExecutionStatus(
-							txn, temptestCasesExecutionStatus)
-
-					// Exit when there was a problem reading the database
-					if err != nil {
-						return nil, err
-					}
-
-					// Add "ExecutionStatusPreviewValues" to 'Raw TestCaseExecution'
-					temptestCasesExecutionStatus.TestInstructionsExecutionStatusPreviewValues = testInstructionsExecutionStatusPreviewValuesMessage
-
-					// Add TestCaseExecution-status to 'Raw TestCaseExecution'
-					temptestCasesExecutionStatus.TestCaseExecutionStatus = fenixExecutionServerGuiGrpcApi.
-						TestCaseExecutionStatusEnum(testCaseExecutionStatus)
+					tempRawTestSuiteExecution.TestInstructionsExecutionStatusPreviewValues = testInstructionsExecutionStatusPreviewValuesMessage
 
 					// Exit when there was a problem updating the database
 					if err != nil {
 						return nil, err
 					}
 
-					// Store back the updated TestCaseExecution in the slice
-					rawTestCaseExecutionsList[index] = temptestCasesExecutionStatus
+					// Store back the updated TestSuiteExecution in the slice
+					rawTestSuiteExecutionsList[suiteExecutionIndex] = tempRawTestSuiteExecution
+
+				} else {
 
 				}
 
@@ -455,6 +457,7 @@ func loadRawTestSuiteExecutionsList(
 	var tempExecutionStatusReportLevel int
 	var tempTestSuitePreviewAsString string
 	var tempTestInstructionsExecutionStatusPreviewValuesAsString string
+	var tempTestCasesPreviewAsString string
 
 	// Extract data from DB result set
 	for rows.Next() {
@@ -488,6 +491,7 @@ func loadRawTestSuiteExecutionsList(
 			&tempTestSuitePreviewAsString,
 			&tempTestInstructionsExecutionStatusPreviewValuesAsString,
 			&rawTestSuiteExecutionsListItem.UniqueExecutionCounter,
+			&tempTestCasesPreviewAsString,
 			&rawTestSuiteExecutionsListItem.NumberOfTestSuiteExecutionForTestSuite,
 		)
 
@@ -545,6 +549,26 @@ func loadRawTestSuiteExecutionsList(
 			}
 
 			rawTestSuiteExecutionsListItem.TestInstructionsExecutionStatusPreviewValues = &tempTestInstructionsExecutionStatusPreviewValuesMessage
+		}
+
+		if tempTestCasesPreviewAsString != "{}" {
+			var tempTestCasesPreviewMessage fenixExecutionServerGuiGrpcApi.
+				TestCasePreviews
+
+			err = protojson.Unmarshal([]byte(tempTestCasesPreviewAsString), &tempTestCasesPreviewMessage)
+
+			if err != nil {
+				common_config.Logger.WithFields(logrus.Fields{
+					"Id":                           "1c8f48ed-9171-4b5f-b088-6e1439761d86",
+					"Error":                        err,
+					"tempTestCasesPreviewAsString": tempTestCasesPreviewAsString,
+				}).Error("Something went wrong when converting 'tempTestCasesPreviewAsString' into proto-message")
+
+				// Drop this message and continue with next message
+				return nil, false, err
+			}
+
+			rawTestSuiteExecutionsListItem.TestCasesPreviews = &tempTestCasesPreviewMessage
 		}
 
 		// Add 'rawTestSuiteExecutionsListItem' to 'rawTestSuiteExecutionsList'

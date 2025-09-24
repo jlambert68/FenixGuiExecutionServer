@@ -8,7 +8,7 @@ require (
 	github.com/gorilla/pat v1.0.2
 	github.com/gorilla/sessions v1.2.2
 	github.com/jackc/pgx/v4 v4.18.2
-	github.com/jlambert68/FenixGrpcApi v0.0.0-20250916135657-f20f92c744d4
+	github.com/jlambert68/FenixGrpcApi v0.0.0-20250924104934-c0598fce1136
 	github.com/jlambert68/FenixScriptEngine v0.0.0-20241104143504-8f37e95bc346
 	github.com/jlambert68/FenixSyncShared v0.0.0-20240911064419-da3d922610cb
 	github.com/markbates/goth v1.82.0
