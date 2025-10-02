@@ -615,21 +615,24 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 		return testInstructionsExecutionStatusPreviewValuesMessage, err
 	}
 
-	if len(testInstructionsExecutionStatusPreviewValuesMap) != 1 {
+	/*
+		if len(testInstructionsExecutionStatusPreviewValuesMap) != 1 {
 
-		common_config.Logger.WithFields(logrus.Fields{
-			"Id": "c00c9a11-8013-4394-8d33-190f7b7a8a48",
-			"len(testInstructionsExecutionStatusPreviewValuesMap)": len(testInstructionsExecutionStatusPreviewValuesMap),
-		}).Error("Expected exact one 'ExecutionStatusPreviewValues' from database for one TestCaseExecution")
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id": "c00c9a11-8013-4394-8d33-190f7b7a8a48",
+				"len(testInstructionsExecutionStatusPreviewValuesMap)": len(testInstructionsExecutionStatusPreviewValuesMap),
+			}).Error("Expected exact one 'ExecutionStatusPreviewValues' from database for one TestCaseExecution")
 
-		errId := "1679cc4b-df14-4f56-90fb-749ff4b130a2"
+			errId := "1679cc4b-df14-4f56-90fb-749ff4b130a2"
 
-		err = errors.New(fmt.Sprintf("expected exact one 'ExecutionStatusPreviewValues' from database for one TestCaseExecution, but got %d. [ErrorId: %s]",
-			len(testInstructionsExecutionStatusPreviewValuesMap),
-			errId))
+			err = errors.New(fmt.Sprintf("expected exact one 'ExecutionStatusPreviewValues' from database for one TestCaseExecution, but got %d. [ErrorId: %s]",
+				len(testInstructionsExecutionStatusPreviewValuesMap),
+				errId))
 
-		return testInstructionsExecutionStatusPreviewValuesMessage, err
-	}
+			return testInstructionsExecutionStatusPreviewValuesMessage, err
+		}
+
+	*/
 
 	// Verify that correct Key exist in response map
 	var TestInstructionExecutionStatusPreviewValueMessageSlice []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusPreviewValueMessage
@@ -857,7 +860,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 
 }
 
-// Retrieve "TestCaseExecutionStatus" for one TestCaseExecution
+// Retrieve "TestCaseExecutionStatus" for one TestCaseExecution or one TestSuiteExecution
 func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCaseExecutionStatus(
 	dbTransaction pgx.Tx,
 	rawTestCaseExecution *fenixExecutionServerGuiGrpcApi.TestCaseExecutionsListMessage) (
@@ -898,21 +901,25 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 		return testCaseExecutionStatus, err
 	}
 
-	if len(testCasesExecutionStatusMap) != 1 {
+	/*
+		if baseSqlWhereOnTestCaseExecutionUuid == baseSqlWhereOnTestCaseExecutionUuid && len(testCasesExecutionStatusMap) != 1 {
 
-		common_config.Logger.WithFields(logrus.Fields{
-			"Id":                               "4b02618b-b279-456a-87ed-e0b4e868e32b",
-			"len(testCasesExecutionStatusMap)": len(testCasesExecutionStatusMap),
-		}).Error("Expected exact one 'TestCasesExecutionStatus' from database for one TestCaseExecution")
+			common_config.Logger.WithFields(logrus.Fields{
+				"Id":                                  "4b02618b-b279-456a-87ed-e0b4e868e32b",
+				"len(testCasesExecutionStatusMap)":    len(testCasesExecutionStatusMap),
+				"baseSqlWhereOnTestCaseExecutionUuid": baseSqlWhereOnTestCaseExecutionUuid,
+			}).Error("Expected exact one 'TestCasesExecutionStatus' from database for one TestCaseExecution")
 
-		errId := "cd75d5cf-f5f9-4441-8bbc-e0d69b53fb7e"
+			errId := "cd75d5cf-f5f9-4441-8bbc-e0d69b53fb7e"
 
-		err = errors.New(fmt.Sprintf("expected exact one 'TestCasesExecutionStatus' from database for one TestCaseExecution, but got %d. [ErrorId: %s]",
-			len(testCasesExecutionStatusMap),
-			errId))
+			err = errors.New(fmt.Sprintf("expected exact one 'TestCasesExecutionStatus' from database for one TestCaseExecution, but got %d. [ErrorId: %s]",
+				len(testCasesExecutionStatusMap),
+				errId))
 
-		return testCaseExecutionStatus, err
-	}
+			return testCaseExecutionStatus, err
+		}
+
+	*/
 
 	// Verify that correct Key exist in response map
 	var testCaseExecutionStatusStructValue testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct
@@ -956,7 +963,7 @@ const (
 // Retrieve "TestCasesExecutionStatus" for multiple TestCaseExecution or for a TestSuiteExecution
 func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionStatus(
 	dbTransaction pgx.Tx,
-	baseSqlWhereOnTestSuiteExecutionUuid baseSqlWhereOnExecutionUuidTypeType,
+	baseSqlWhereOnTestSuiteExecutionUuidValue baseSqlWhereOnExecutionUuidTypeType,
 	executionsForLoadTestCasesExecutionStatusSlice []testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct) (
 	testCasesExecutionStatusMap map[string]testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct, // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
 	err error) {
@@ -967,7 +974,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 
 	// Generate WHERE-values to only target correct 'TestCaseExecutionUuid' together with 'TestCaseExecutionVersion'
 	var correctExecutionUuidAndExecutionVersionPars string
-	switch baseSqlWhereOnTestSuiteExecutionUuid {
+	switch baseSqlWhereOnTestSuiteExecutionUuidValue {
 
 	case baseSqlWhereOnTestSuiteExecutionUuid:
 		// Base SQL-Where on TestSuiteExecution
@@ -1023,9 +1030,9 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 
 	default:
 		common_config.Logger.WithFields(logrus.Fields{
-			"Id":                                   "0d40ce55-53a7-4575-9357-f2069fb06926",
-			"baseSqlWhereOnTestSuiteExecutionUuid": baseSqlWhereOnTestSuiteExecutionUuid,
-		}).Error("Unhandled 'baseSqlWhereOnTestSuiteExecutionUuid'")
+			"Id": "0d40ce55-53a7-4575-9357-f2069fb06926",
+			"baseSqlWhereOnTestSuiteExecutionUuidValue": baseSqlWhereOnTestSuiteExecutionUuidValue,
+		}).Error("Unhandled 'baseSqlWhereOnTestSuiteExecutionUuidValue'")
 
 		errId := "7782aa9d-8dac-4c91-a8f9-8a2880b9916a"
 
@@ -1107,7 +1114,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 // Retrieve "TestCasesExecutionPreview" for multiple TestCaseExecution  or for a TestSuiteExecution
 func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTestCasesExecutionPreview(
 	dbTransaction pgx.Tx,
-	baseSqlWhereOnTestSuiteExecutionUuid baseSqlWhereOnExecutionUuidTypeType,
+	baseSqlWhereOnTestSuiteExecutionUuidValue baseSqlWhereOnExecutionUuidTypeType,
 	executionsForLoadTestCasesExecutionStatusSlice []testCaseOrTestSuiteExecutionsForLoadTestCasesExecutionStatusStruct) (
 	testCasesExecutionPreviewMap map[string]*fenixExecutionServerGuiGrpcApi.TestCasePreviewStructureMessage, // Key is 'TestCaseExecutionUuid' + 'TestCaseExecutionVersion'
 	err error) {
@@ -1118,7 +1125,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 
 	// Generate WHERE-values to only target correct 'TestCaseExecutionUuid' together with 'TestCaseExecutionVersion'
 	var correctExecutionUuidAndExecutionVersionPars string
-	switch baseSqlWhereOnTestSuiteExecutionUuid {
+	switch baseSqlWhereOnTestSuiteExecutionUuidValue {
 
 	case baseSqlWhereOnTestSuiteExecutionUuid:
 		// Base SQL-Where on TestSuiteExecution
@@ -1174,9 +1181,9 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 
 	default:
 		common_config.Logger.WithFields(logrus.Fields{
-			"Id":                                   "85154f7f-945d-4331-a547-cf5121e8848c",
-			"baseSqlWhereOnTestSuiteExecutionUuid": baseSqlWhereOnTestSuiteExecutionUuid,
-		}).Error("Unhandled 'baseSqlWhereOnTestSuiteExecutionUuid'")
+			"Id": "85154f7f-945d-4331-a547-cf5121e8848c",
+			"baseSqlWhereOnTestSuiteExecutionUuidValue": baseSqlWhereOnTestSuiteExecutionUuidValue,
+		}).Error("Unhandled 'baseSqlWhereOnTestSuiteExecutionUuidValue'")
 
 		errId := "9adda838-b5a3-48d1-96ad-1d5cb1ab2fed"
 
