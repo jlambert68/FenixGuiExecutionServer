@@ -343,18 +343,20 @@ func loadRawTestCaseExecutionsList(
 	}
 
 	// TimeStamp is NULL
-	var nullTimeStamp time.Time
-	nullTimeStamp = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	//var nullTimeStampV1 time.Time
+	var nullTimeStampV2 time.Time
+	//nullTimeStampV1 = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	nullTimeStampV2 = time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// Add filter criteria in SQL: 'testCaseExecutionFromTimeStamp'
-	if !testCaseExecutionFromTimeStamp.AsTime().Equal(nullTimeStamp) {
+	if !(testCaseExecutionFromTimeStamp.AsTime().UTC().Nanosecond() == nullTimeStampV2.UTC().Nanosecond()) {
 
 		sqlToExecute = sqlToExecute + fmt.Sprintf(" AND TCEQL.\"ExecutionStartTimeStamp\" > '%s' ",
 			testCaseExecutionFromTimeStamp.String())
 	}
 
 	// Add filter criteria in SQL: 'testCaseExecutionToTimeStamp'
-	if !testCaseExecutionFromTimeStamp.AsTime().Equal(nullTimeStamp) {
+	if !(testCaseExecutionToTimeStamp.AsTime().UTC().Nanosecond() == nullTimeStampV2.UTC().Nanosecond()) {
 
 		sqlToExecute = sqlToExecute + fmt.Sprintf(" AND TCEQL.\"ExecutionStopTimeStamp\" < '%s' ",
 			testCaseExecutionToTimeStamp.String())

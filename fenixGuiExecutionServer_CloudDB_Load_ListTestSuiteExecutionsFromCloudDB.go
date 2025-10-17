@@ -104,7 +104,8 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTe
 		listTestSuiteExecutionsRequest.GetTestSuiteExecutionToTimeStamp(),
 		domainAndAuthorizations,
 		listTestSuiteExecutionsRequest.GetRetrieveAllExecutionsForSpecificTestSuiteUuid(),
-		listTestSuiteExecutionsRequest.GetSpecificTestSuiteUuid())
+		listTestSuiteExecutionsRequest.GetSpecificTestSuiteUuid(),
+		[]string{})
 
 	if err != nil {
 		common_config.Logger.WithFields(logrus.Fields{
@@ -251,7 +252,8 @@ func loadRawTestSuiteExecutionsList(
 	testSuiteExecutionToTimeStamp *timestamppb.Timestamp,
 	domainAndAuthorizations []DomainAndAuthorizationsStruct,
 	retrieveAllExecutionsForSpecificTestSuiteUuid bool,
-	specificTestSuiteUuid string) (
+	specificTestSuiteUuid string,
+	specificTestSuiteExecutionsKeys []string) (
 	rawTestSuiteExecutionsList []*fenixExecutionServerGuiGrpcApi.TestSuiteExecutionsListMessage,
 	moreRowsExistInDatabase bool,
 	err error) {
@@ -377,21 +379,33 @@ func loadRawTestSuiteExecutionsList(
 	}
 
 	// TimeStamp is NULL
-	var nullTimeStamp time.Time
-	nullTimeStamp = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	//var nullTimeStampV1 time.Time
+	var nullTimeStampV2 time.Time
+	//nullTimeStampV1 = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	nullTimeStampV2 = time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	// if
 
 	// Add filter criteria in SQL: 'testSuiteExecutionFromTimeStamp'
-	if !testSuiteExecutionFromTimeStamp.AsTime().Equal(nullTimeStamp) {
+	if !(testSuiteExecutionFromTimeStamp.AsTime().UTC().Nanosecond() == nullTimeStampV2.UTC().Nanosecond()) {
 
 		sqlToExecute = sqlToExecute + fmt.Sprintf(" AND TCEQL.\"ExecutionStartTimeStamp\" > '%s' ",
 			testSuiteExecutionFromTimeStamp.String())
 	}
 
 	// Add filter criteria in SQL: 'testSuiteExecutionToTimeStamp'
-	if !testSuiteExecutionFromTimeStamp.AsTime().Equal(nullTimeStamp) {
+	if !(testSuiteExecutionToTimeStamp.AsTime().UTC().Nanosecond() == nullTimeStampV2.UTC().Nanosecond()) {
 
 		sqlToExecute = sqlToExecute + fmt.Sprintf(" AND TCEQL.\"ExecutionStopTimeStamp\" < '%s' ",
 			testSuiteExecutionToTimeStamp.String())
+	}
+
+	// Check if specific TestCasesExecutions should be fetched from DB
+	if specificTestSuiteExecutionsKeys != nil && len(specificTestSuiteExecutionsKeys) > 0 {
+		sqlToExecute = sqlToExecute + "AND TCEQL.\"TestSuiteExecutionUuid\" IN " +
+			common_config.GenerateSQLINArray(specificTestSuiteExecutionsKeys)
+		sqlToExecute = sqlToExecute + " "
+
 	}
 
 	// Add Ordering for inner SQL

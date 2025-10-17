@@ -50,7 +50,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadFu
 
 	// Map for keep track of all response messages, but in Map-format instead of slice-format
 	// map[TestCaseExecutionKey]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage
-	var tempTestCaseExecutionResponseMessagesMap map[string]*workObjectForTestCaseExecutionResponseMessageStruct
+	var tempTestCaseExecutionResponseMessagesMap map[string]*workObjectForTestCaseExecutionResponseMessageStruct // Key = 'TestCaseExecutionKey'
 	tempTestCaseExecutionResponseMessagesMap = make(map[string]*workObjectForTestCaseExecutionResponseMessageStruct)
 
 	// Convert 'TestCaseExecutionKeys' into slice with 'UniqueCounter' for table 'TestCaseExecutionQueue'
@@ -162,7 +162,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadFu
 	}
 
 	// Convert 'tempTestCaseExecutionResponseMessagesMap' into gRPC-response object
-	err = fenixGuiExecutionServerObject.convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
+	_, err = fenixGuiExecutionServerObject.convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
 		&tempTestCaseExecutionResponseMessagesMap,
 		&testCaseExecutionResponseMessages)
 
@@ -205,6 +205,14 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadUn
 	}
 
 	sqlToExecute = sqlToExecute + "; "
+
+	// Log SQL to be executed if Environment variable is true
+	if common_config.LogAllSQLs == true {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":           "aea47059-f3ad-4195-bd10-5748122a3971",
+			"sqlToExecute": sqlToExecute,
+		}).Debug("SQL to be executed within 'loadUniqueCountersBasedOnTestCaseExecutionKeys'")
+	}
 
 	// Query DB
 	var ctx context.Context
@@ -458,6 +466,14 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 
 	}
 	sqlToExecute = sqlToExecute + "; "
+
+	// Log SQL to be executed if Environment variable is true
+	if common_config.LogAllSQLs == true {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":           "4b026583-ed41-420f-9d22-80f10a5ab14c",
+			"sqlToExecute": sqlToExecute,
+		}).Debug("SQL to be executed within 'loadTestCasesExecutionsFromUnderExecutions'")
+	}
 
 	// Query DB
 	var ctx context.Context
@@ -795,6 +811,14 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 	}
 	sqlToExecute = sqlToExecute + "; "
 
+	// Log SQL to be executed if Environment variable is true
+	if common_config.LogAllSQLs == true {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":           "e2e6c792-a506-4f06-9e14-8884328ba5f4",
+			"sqlToExecute": sqlToExecute,
+		}).Debug("SQL to be executed within 'loadTestInstructionsExecutionsUnderExecution'")
+	}
+
 	// Query DB
 	var ctx context.Context
 	ctx, timeOutCancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -1052,6 +1076,14 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 		}).Info("SQL to be executed")
 	}
 
+	// Log SQL to be executed if Environment variable is true
+	if common_config.LogAllSQLs == true {
+		common_config.Logger.WithFields(logrus.Fields{
+			"Id":           "939cb384-dfb2-4282-81ef-1624e1287e95",
+			"sqlToExecute": sqlToExecute,
+		}).Debug("SQL to be executed within 'loadTestCaseExecutionLogs'")
+	}
+
 	// Query DB
 	var ctx context.Context
 	ctx, timeOutCancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -1261,6 +1293,8 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 	// Get the TestInstructionExecution-object
 	var tempTestInstructionExecutionObjectPtr *workObjectForTestInstructionExecutionsMessageStruct
 
+	vid en hantering av en TestSUite så hamnar man fel mellan olika TestInstructioner
+
 	// Loop TestInstructionExecutions in LogObject and store log-info and values in main TestInstructionExecution-object
 	for testInstructionExecutionMapKey, logPostAndValueSlicePtr := range logPostAndValuesMap {
 
@@ -1320,48 +1354,6 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadRu
 		}
 
 	}
-	/*
-		WITH values AS
-		(SELECT
-		CONCAT(TIAUECH."TestInstructionExecutionUuid", TIAUECH."TestInstructionExecutionVersion", TIAUECH."TestInstructionAttributeUuid") AS key,
-			max(TIAUECH."UniqueId_New") AS id
-
-		FROM "FenixExecution"."TestInstructionAttributesUnderExecutionChangeHistory" TIAUECH
-
-		WHERE CONCAT(TIAUECH."TestInstructionExecutionUuid", TIAUECH."TestInstructionExecutionVersion") IN (
-			'fc200d71-375e-48c2-b479-b16abff70f4a1',
-			'45a90d6e-fc49-4dff-ba75-4f0966f0c2181',
-			'b4251d19-2a8f-4e9a-8e9b-153b6b6dc8351',
-			'df77db68-7a94-45b1-869a-4961f29d981e1',
-			'915bd3d6-c2ce-4f69-814e-7b375cc5b4fb1',
-			'6b484bb4-6a6f-48fc-8de2-f9163a3a8ec31'
-		)
-		GROUP BY
-		TIAUECH."TestInstructionExecutionUuid",
-			TIAUECH."TestInstructionExecutionVersion",
-			TIAUECH."TestInstructionAttributeUuid"
-
-		HAVING  COUNT(*) > 1 )
-
-		SELECT  TIAUECH.* , CONCAT(TIUE."TestCaseExecutionUuid", TIUE."TestCaseExecutionVersion")
-		FROM "FenixExecution"."TestInstructionAttributesUnderExecutionChangeHistory" TIAUECH,  "FenixExecution"."TestInstructionsUnderExecution" TIUE
-		WHERE TIAUECH."UniqueId_New" IN (SELECT id FROM values) AND
-		TIUE."TestInstructionExecutionUuid" = TIAUECH."TestInstructionExecutionUuid" AND  TIUE."TestInstructionInstructionExecutionVersion" = TIAUECH."TestInstructionExecutionVersion";
-
-		sqlToExecute := ""
-		sqlToExecute = sqlToExecute + "SELECT DISTINCT ON (TIAUECH.\"TestInstructionExecutionUuid\") TIAUECH.*, " +
-			"CONCAT(TIUE.\"TestCaseExecutionUuid\", TIUE.\"TestCaseExecutionVersion\") "
-		sqlToExecute = sqlToExecute + "FROM \"FenixExecution\".\"TestInstructionAttributesUnderExecutionChangeHistory\" TIAUECH, " +
-			" \"FenixExecution\".\"TestInstructionsUnderExecution\" TIUE "
-		sqlToExecute = sqlToExecute + "WHERE CONCAT(TIAUECH.\"TestInstructionExecutionUuid\", " +
-			"TIAUECH.\"TestInstructionExecutionVersion\") IN " +
-			fenixGuiExecutionServerObject.generateSQLINArray(testInstructionExecutionUuidList)
-		sqlToExecute = sqlToExecute + " AND "
-		sqlToExecute = sqlToExecute + " TIUE.\"TestInstructionExecutionUuid\" = TIAUECH.\"TestInstructionExecutionUuid\" AND "
-		sqlToExecute = sqlToExecute + " TIUE.\"TestInstructionInstructionExecutionVersion\" = TIAUECH.\"TestInstructionExecutionVersion\" "
-		sqlToExecute = sqlToExecute + "ORDER BY TIAUECH.\"TestInstructionExecutionUuid\", TIAUECH.\"UniqueId\" DESC "
-		sqlToExecute = sqlToExecute + "; "
-	*/
 
 	sqlToExecute := ""
 	sqlToExecute = sqlToExecute + "WITH values AS "
@@ -1633,13 +1625,40 @@ return err
 
 */
 
+type testCaseExecutionKeyType string
+type testSuiteExecutionKeyType string
+type testCaseExecutionKeysForEachTestSuiteExecutionKeyMapType map[testSuiteExecutionKeyType][]testCaseExecutionKeyType
+
 func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) convertTestCaseExecutionResponseMessagesMapIntoGrpcResponse(
-	tempTestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct,
+	tempTestCaseExecutionResponseMessagesMapReference *map[string]*workObjectForTestCaseExecutionResponseMessageStruct, // Key = 'TestCaseExecutionUuid + TestCaseExecutionVersion'
 	testCaseExecutionResponseMessagesReference *[]*fenixExecutionServerGuiGrpcApi.TestCaseExecutionResponseMessage) (
+	testCaseExecutionKeysForEachTestSuiteExecutionKeyMap testCaseExecutionKeysForEachTestSuiteExecutionKeyMapType,
 	err error) {
+
+	var existInMap bool
+	var testCaseExecutionKey testCaseExecutionKeyType
+	var testSuiteExecutionKey testSuiteExecutionKeyType
+	var testCaseExecutionKeys []testCaseExecutionKeyType
+
+	// Initiate 'testCaseExecutionKeysForEachTestSuiteExecutionKeyMap'
+	testCaseExecutionKeysForEachTestSuiteExecutionKeyMap = make(map[testSuiteExecutionKeyType][]testCaseExecutionKeyType)
 
 	// Loop over TestCaseExecutions in Map
 	for _, testCaseExecution := range *tempTestCaseExecutionResponseMessagesMapReference {
+
+		// Check if "testCaseExecutionKeys" for TestSuiteExecution exists in map
+		testCaseExecutionKeys, existInMap = testCaseExecutionKeysForEachTestSuiteExecutionKeyMap[testSuiteExecutionKey]
+		if existInMap == false {
+			testCaseExecutionKeys = []testCaseExecutionKeyType{}
+		}
+
+		// Add key to slice
+		testCaseExecutionKeys = append(testCaseExecutionKeys, testCaseExecutionKey)
+
+		// Save back keys to map
+		testCaseExecutionKeysForEachTestSuiteExecutionKeyMap[testSuiteExecutionKey] = testCaseExecutionKeys
+
+		// Add 'testCaseExecutionKey' to 'testCaseExecutionKeys'
 
 		// Create slice for the TestInstructionExecutions within this TestCaseExecution
 		var tempTestInstructionExecutions []*fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage
@@ -1701,5 +1720,5 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) conver
 		*testCaseExecutionResponseMessagesReference = append(*testCaseExecutionResponseMessagesReference, tempTestCaseExecutionResponseMessage)
 	}
 
-	return err
+	return testCaseExecutionKeysForEachTestSuiteExecutionKeyMap, err
 }
