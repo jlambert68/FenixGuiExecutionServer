@@ -402,7 +402,7 @@ func loadRawTestSuiteExecutionsList(
 
 	// Check if specific TestCasesExecutions should be fetched from DB
 	if specificTestSuiteExecutionsKeys != nil && len(specificTestSuiteExecutionsKeys) > 0 {
-		sqlToExecute = sqlToExecute + "AND TCEQL.\"TestSuiteExecutionUuid\" IN " +
+		sqlToExecute = sqlToExecute + "AND CONCAT(TCEQL.\"TestSuiteExecutionUuid\", TCEQL.\"TestSuiteExecutionVersion\")  IN " +
 			common_config.GenerateSQLINArray(specificTestSuiteExecutionsKeys)
 		sqlToExecute = sqlToExecute + " "
 

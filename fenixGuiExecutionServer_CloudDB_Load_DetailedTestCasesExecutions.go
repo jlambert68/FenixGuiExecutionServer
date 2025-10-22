@@ -1041,8 +1041,13 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 
 	tempTestCaseExecutionResponseMessagesMap = *tempTestCaseExecutionResponseMessagesMapPtr
 
-	var logPostAndValuesMap map[string]*[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage // map[TestInstructionExecutionKey]*[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
-	logPostAndValuesMap = make(map[string]*[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage)
+	type logPostAndValuesMessagesForTestCaseExecutionStruct struct {
+		logPostAndValuesSlice *[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage // map[TestInstructionExecutionKey]*[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+		testCaseExecutionKey  string                                                     // TestCaseExecutionUuid + TestCaseExecutionVersion
+	}
+
+	var logPostAndValuesMap map[string]logPostAndValuesMessagesForTestCaseExecutionStruct     //*[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage // map[TestInstructionExecutionKey]*[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+	logPostAndValuesMap = make(map[string]logPostAndValuesMessagesForTestCaseExecutionStruct) // *[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage)
 
 	var existInMap bool
 
@@ -1223,7 +1228,8 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 		tempLogPostAndValues.FoundVersusExpectedValue = tempFoundVersusExpectedValues
 
 		// Extract RunTimeUpdatedAttributeSlice from map for certain
-		var logPostAndValuesMessageSlicePtr *[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+		var logPostAndValuesMessagesForTestCaseExecution logPostAndValuesMessagesForTestCaseExecutionStruct
+		//var logPostAndValuesMessageSlicePtr *[]*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
 		var logPostAndValuesMessageSlice []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
 
 		// Create 'testInstructionExecutionMapKey'
@@ -1233,21 +1239,24 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 			strconv.FormatUint(uint64(tempLogPostAndValues.TestInstructionExecutionVersion), 10)
 
 		// Try to extract existing log-post slice for TestInstructionExecution
-		logPostAndValuesMessageSlicePtr, existInMap = logPostAndValuesMap[testInstructionExecutionMapKey]
+
+		logPostAndValuesMessagesForTestCaseExecution, existInMap = logPostAndValuesMap[testInstructionExecutionMapKey]
 
 		if existInMap == true {
 			// Slice exist in map, so add to existing slice
-			logPostAndValuesMessageSlice = *logPostAndValuesMessageSlicePtr
+			logPostAndValuesMessageSlice = *logPostAndValuesMessagesForTestCaseExecution.logPostAndValuesSlice
 
 			logPostAndValuesMessageSlice = append(logPostAndValuesMessageSlice, &tempLogPostAndValues)
 
 		} else {
-			// First instance of TestInstructionExecution in map so just add to new slice
+			// First instance of TestInstructionExecution in map so just add to new slice and the TestCaseExecutionMapKey
 			logPostAndValuesMessageSlice = append(logPostAndValuesMessageSlice, &tempLogPostAndValues)
+			logPostAndValuesMessagesForTestCaseExecution.testCaseExecutionKey = tempTestCaseExecutionMapKey
 		}
 
 		// Store slice back in Map
-		logPostAndValuesMap[testInstructionExecutionMapKey] = &logPostAndValuesMessageSlice
+		logPostAndValuesMessagesForTestCaseExecution.logPostAndValuesSlice = &logPostAndValuesMessageSlice
+		logPostAndValuesMap[testInstructionExecutionMapKey] = logPostAndValuesMessagesForTestCaseExecution
 
 	}
 
@@ -1293,14 +1302,33 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 	// Get the TestInstructionExecution-object
 	var tempTestInstructionExecutionObjectPtr *workObjectForTestInstructionExecutionsMessageStruct
 
-	vid en hantering av en TestSUite så hamnar man fel mellan olika TestInstructioner
-
 	// Loop TestInstructionExecutions in LogObject and store log-info and values in main TestInstructionExecution-object
-	for testInstructionExecutionMapKey, logPostAndValueSlicePtr := range logPostAndValuesMap {
+	for testInstructionExecutionMapKey, logPostAndValuesMessagesForTestCaseExecution := range logPostAndValuesMap {
 
 		// Get logPostAndValueSlice
 		var logPostAndValueSlice []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
-		logPostAndValueSlice = *logPostAndValueSlicePtr
+		logPostAndValueSlice = *logPostAndValuesMessagesForTestCaseExecution.logPostAndValuesSlice
+
+		// **************************
+		// Extract TestCaseExecution-object for TestCaseExecutionMap
+		tempTestCaseExecutionPtr, existInMap = tempTestCaseExecutionResponseMessagesMap[logPostAndValuesMessagesForTestCaseExecution.testCaseExecutionKey]
+
+		if existInMap == false {
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
+				"Id":                          "e690f44f-ca06-4ff6-b83e-ab7e6226fb65",
+				"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
+			}).Error("Should never happen that TestCaseExecution is missing in map, 'tempTestCaseExecutionResponseMessagesMap'")
+
+			err = errors.New("should never happen that TestCaseExecution is missing in map, 'tempTestCaseExecutionResponseMessagesMap'")
+
+			return err
+		}
+
+		// Get the object from the Ptr
+		tempTestCaseExecution = *tempTestCaseExecutionPtr
+		tempTestInstructionExecutionsMapPtr = tempTestCaseExecution.TestInstructionExecutionsMap
+		tempTestInstructionExecutionsMap = *tempTestInstructionExecutionsMapPtr
+		// **************************
 
 		// Extract correct TestInstructionExecution-object to store 'logPostAndValueSlice' in
 		tempTestInstructionExecutionObjectPtr, existInMap = tempTestInstructionExecutionsMap[testInstructionExecutionMapKey]
@@ -1330,8 +1358,13 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadRu
 	tempTestCaseExecutionResponseMessagesMapPtr *map[string]*workObjectForTestCaseExecutionResponseMessageStruct) (
 	err error) {
 
-	var runTimeUpdatedAttributesMap map[string]*[]*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
-	runTimeUpdatedAttributesMap = make(map[string]*[]*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage)
+	type runTimeUpdatedAttributeMessageForTestCaseExecutionStruct struct {
+		runTimeUpdatedAttributeMessageSlice *[]*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
+		testCaseExecutionKey                string // TestCaseExecutionUuid + TestCaseExecutionVersion
+	}
+
+	var runTimeUpdatedAttributesMap map[string]runTimeUpdatedAttributeMessageForTestCaseExecutionStruct
+	runTimeUpdatedAttributesMap = make(map[string]runTimeUpdatedAttributeMessageForTestCaseExecutionStruct)
 
 	var existInMap bool
 
@@ -1457,7 +1490,9 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadRu
 		}
 
 		// Extract RunTimeUpdatedAttributeSlice from map for certain
-		var runTimeUpdatedAttributeSlicePtr *[]*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
+		var runTimeUpdatedAttributeMessageForTestCaseExecution runTimeUpdatedAttributeMessageForTestCaseExecutionStruct
+		var runTimeUpdatedAttributeSlice []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
+		// var runTimeUpdatedAttributeSlicePtr *[]*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
 
 		// Create 'testInstructionExecutionMapKey'
 		var testInstructionExecutionMapKey string
@@ -1466,20 +1501,22 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadRu
 			strconv.FormatUint(uint64(tempRunTimeUpdatedAttribute.TestInstructionExecutionVersion), 10)
 
 		// Try to extract existing RuntTimeAttributes slice for TestInstructionExecution
-		runTimeUpdatedAttributeSlicePtr, existInMap = runTimeUpdatedAttributesMap[testInstructionExecutionMapKey]
+		runTimeUpdatedAttributeMessageForTestCaseExecution, existInMap = runTimeUpdatedAttributesMap[testInstructionExecutionMapKey]
 
 		if existInMap == true {
 
-			*runTimeUpdatedAttributeSlicePtr = append(*runTimeUpdatedAttributeSlicePtr, &tempRunTimeUpdatedAttribute)
+			runTimeUpdatedAttributeSlice = *runTimeUpdatedAttributeMessageForTestCaseExecution.runTimeUpdatedAttributeMessageSlice
+			runTimeUpdatedAttributeSlice = append(runTimeUpdatedAttributeSlice, &tempRunTimeUpdatedAttribute)
 
 		} else {
 			// First instance of TestInstructionExecution in map so just add to new slice
-			runTimeUpdatedAttributeSlicePtr = new([]*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage)
-			*runTimeUpdatedAttributeSlicePtr = append(*runTimeUpdatedAttributeSlicePtr, &tempRunTimeUpdatedAttribute)
+			runTimeUpdatedAttributeSlice = append(runTimeUpdatedAttributeSlice, &tempRunTimeUpdatedAttribute)
+			runTimeUpdatedAttributeMessageForTestCaseExecution.testCaseExecutionKey = tempTestCaseExecutionMapKey
 		}
 
 		// Store slice back in Map
-		runTimeUpdatedAttributesMap[testInstructionExecutionMapKey] = runTimeUpdatedAttributeSlicePtr
+		runTimeUpdatedAttributeMessageForTestCaseExecution.runTimeUpdatedAttributeMessageSlice = &runTimeUpdatedAttributeSlice
+		runTimeUpdatedAttributesMap[testInstructionExecutionMapKey] = runTimeUpdatedAttributeMessageForTestCaseExecution
 
 	}
 
@@ -1530,7 +1567,28 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadRu
 
 		// Get runTimeUpdatedAttributeSlice
 		var runTimeUpdatedAttributeSlice []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
-		runTimeUpdatedAttributeSlice = *runTimeUpdatedAttributesSlicePtr
+		runTimeUpdatedAttributeSlice = *runTimeUpdatedAttributesSlicePtr.runTimeUpdatedAttributeMessageSlice
+
+		// **************************
+		// Extract TestCaseExecution-object for TestCaseExecutionMap
+		tempTestCaseExecutionPtr, existInMap = tempTestCaseExecutionResponseMessagesMap[runTimeUpdatedAttributesSlicePtr.testCaseExecutionKey]
+
+		if existInMap == false {
+			fenixGuiExecutionServerObject.logger.WithFields(logrus.Fields{
+				"Id":                          "358fa8e4-4ae1-4947-81b5-2a258502daa4",
+				"tempTestCaseExecutionMapKey": tempTestCaseExecutionMapKey,
+			}).Error("Should never happen that TestCaseExecution is missing in map, 'tempTestCaseExecutionResponseMessagesMap'")
+
+			err = errors.New("should never happen that TestCaseExecution is missing in map, 'tempTestCaseExecutionResponseMessagesMap'")
+
+			return err
+		}
+
+		// Get the object from the Ptr
+		tempTestCaseExecution = *tempTestCaseExecutionPtr
+		tempTestInstructionExecutionsMapPtr = tempTestCaseExecution.TestInstructionExecutionsMap
+		tempTestInstructionExecutionsMap = *tempTestInstructionExecutionsMapPtr
+		// **************************
 
 		// Extract correct TestInstructionExecution-object to store 'runTimeUpdatedAttributeSlice' in
 		tempTestInstructionExecutionObjectPtr, existInMap = tempTestInstructionExecutionsMap[testInstructionExecutionMapKey]
@@ -1645,6 +1703,14 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) conver
 
 	// Loop over TestCaseExecutions in Map
 	for _, testCaseExecution := range *tempTestCaseExecutionResponseMessagesMapReference {
+
+		// Build 'testSuiteExecutionKey'
+		testSuiteExecutionKey = testSuiteExecutionKeyType(testCaseExecution.TestCaseExecutionBasicInformation.GetTestSuiteExecutionUuid() +
+			strconv.FormatUint(uint64(testCaseExecution.TestCaseExecutionBasicInformation.GetTestSuiteExecutionVersion()), 10))
+
+		// Build 'testCaseExecutionKey'
+		testCaseExecutionKey = testCaseExecutionKeyType(testCaseExecution.TestCaseExecutionBasicInformation.GetTestCaseExecutionUuid() +
+			strconv.FormatUint(uint64(testCaseExecution.TestCaseExecutionBasicInformation.GetTestCaseExecutionVersion()), 10))
 
 		// Check if "testCaseExecutionKeys" for TestSuiteExecution exists in map
 		testCaseExecutionKeys, existInMap = testCaseExecutionKeysForEachTestSuiteExecutionKeyMap[testSuiteExecutionKey]

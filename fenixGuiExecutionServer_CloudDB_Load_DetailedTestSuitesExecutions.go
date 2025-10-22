@@ -271,13 +271,29 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadFu
 			// Loop 'tempTestInstructionExecutionsMap' and produce a slice with the data
 			for _, tempTestInstructionExecutionsMapEntry := range tempTestInstructionExecutionsMap {
 
+				// 'LogPostAndValuesMessage'
+				var tempExecutionLogPostsAndValues []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage
+				if tempTestInstructionExecutionsMapEntry.ExecutionLogPostsAndValues == nil {
+					tempExecutionLogPostsAndValues = []*fenixExecutionServerGuiGrpcApi.LogPostAndValuesMessage{}
+				} else {
+					tempExecutionLogPostsAndValues = *tempTestInstructionExecutionsMapEntry.ExecutionLogPostsAndValues
+				}
+
+				// Extract 'RunTimeUpdatedAttributes'
+				var tempRunTimeUpdatedAttributes []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage
+				if tempTestInstructionExecutionsMapEntry.RunTimeUpdatedAttributes == nil {
+					tempRunTimeUpdatedAttributes = []*fenixExecutionServerGuiGrpcApi.RunTimeUpdatedAttributeMessage{}
+				} else {
+					tempRunTimeUpdatedAttributes = *tempTestInstructionExecutionsMapEntry.RunTimeUpdatedAttributes
+				}
+
 				// Create 'TestInstructionExecutionsMessage'-structure
 				var tempTestInstructionExecution *fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage
 				tempTestInstructionExecution = &fenixExecutionServerGuiGrpcApi.TestInstructionExecutionsMessage{
 					TestInstructionExecutionBasicInformation: tempTestInstructionExecutionsMapEntry.TestInstructionExecutionBasicInformation,
 					TestInstructionExecutionsInformation:     *tempTestInstructionExecutionsMapEntry.TestInstructionExecutionsInformation,
-					ExecutionLogPostsAndValues:               *tempTestInstructionExecutionsMapEntry.ExecutionLogPostsAndValues,
-					RunTimeUpdatedAttributes:                 *tempTestInstructionExecutionsMapEntry.RunTimeUpdatedAttributes,
+					ExecutionLogPostsAndValues:               tempExecutionLogPostsAndValues,
+					RunTimeUpdatedAttributes:                 tempRunTimeUpdatedAttributes,
 				}
 
 				// Add 'tempTestInstructionExecution' to the slice
@@ -298,7 +314,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadFu
 
 		}
 
-		// Make repsonse object
+		// Make response object
 		var testSuiteExecutionResponseMessage *fenixExecutionServerGuiGrpcApi.TestSuiteExecutionResponseMessage
 		testSuiteExecutionResponseMessage = &fenixExecutionServerGuiGrpcApi.TestSuiteExecutionResponseMessage{
 			TestSuiteExecutionBasicInformation: &fenixExecutionServerGuiGrpcApi.TestSuiteExecutionBasicInformationMessage{
