@@ -854,6 +854,10 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 		tempQueueTimeStamp                       *time.Time
 		tempExecutionPriority                    *int
 		tempExecutionStatusReportLevel           fenixExecutionServerGuiGrpcApi.ExecutionStatusReportLevelEnum
+
+		tempTestCaseuid     string
+		tempTestCaseVersion uint32
+		tempTestCaseName    string
 	)
 
 	// Extract data from DB result set
@@ -892,6 +896,10 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 			&tempExecutionStatusReportLevel,
 			&tempTestInstructionExecutionBasicInformation.ExecutionDomainUuid,
 			&tempTestInstructionExecutionBasicInformation.ExecutionDomainName,
+
+			&tempTestCaseuid,
+			&tempTestCaseVersion,
+			&tempTestCaseName,
 		)
 
 		if err != nil {

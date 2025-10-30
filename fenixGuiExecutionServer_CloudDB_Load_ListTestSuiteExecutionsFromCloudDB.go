@@ -198,6 +198,7 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) listTe
 						TestInstructionsExecutionStatusPreviewValuesMessage{
 						TestCaseExecutionUuid:                       tempTestCasesExecutionStatus.executionUuid,
 						TestCaseExecutionVersion:                    tempTestCasesExecutionStatus.executionVersion,
+						TestCaseName:                                "Set Name here!",
 						TestCaseExecutionStatus:                     fenixExecutionServerGuiGrpcApi.TestCaseExecutionStatusEnum(tempTestCasesExecutionStatus.testCaseExecutionStatus),
 						TestInstructionExecutionStatusPreviewValues: testInstructionsExecutionStatusPreviewValuesMap[tempTestCasesExecutionMapKey],
 					}
