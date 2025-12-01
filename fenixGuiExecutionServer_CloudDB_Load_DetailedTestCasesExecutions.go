@@ -664,6 +664,11 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 	var tempExecutionPriority int
 	var tempUniqueCounter int
 	var tempExecutionStatusReportLevel fenixExecutionServerGuiGrpcApi.TestInstructionExecutionStatusEnum
+	var (
+		tempTestCaseUuid    string
+		tempTestCaseVersion uint32
+		tempTestCaseName    string
+	)
 
 	// Extract data from DB result set
 	for rows.Next() {
@@ -691,6 +696,9 @@ func (fenixGuiExecutionServerObject *fenixGuiExecutionServerObjectStruct) loadTe
 			&tempExecutionStatusReportLevel,
 			&testInstructionExecutionBasicInformation.ExecutionDomainUuid,
 			&testInstructionExecutionBasicInformation.ExecutionDomainName,
+			&tempTestCaseUuid,
+			&tempTestCaseVersion,
+			&tempTestCaseName,
 		)
 
 		if err != nil {
